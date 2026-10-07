@@ -123,6 +123,10 @@ Assert-Template ($entry.parameters.Count -eq 1 -and $entry.parameters.ContainsKe
 $password = $entry.parameters.vmAdministratorAccountPassword
 Assert-Template ($password.type -eq 'securestring' -and -not $password.ContainsKey('defaultValue')) 'The password must be secure and have no default.'
 Assert-Template ($password.minLength -eq 12 -and $password.maxLength -eq 123) 'The password length must be bounded.'
+$readmeText = Get-Content -LiteralPath (Join-Path $root 'README.md') -Raw
+$day1Text = Get-Content -LiteralPath (Join-Path $root 'day1-handson.md') -Raw
+Assert-Template ($readmeText -match '12～123文字が必須' -and $readmeText -match 'InvalidTemplate') 'README must explain the minimum password length error.'
+Assert-Template ($day1Text -match '12～123文字が必須' -and $day1Text -match 'InvalidTemplate') 'Day 1 guide must explain the minimum password length error.'
 Assert-Template ($entry.resources.Count -eq 1) 'AVD entry must contain one embedded module.'
 $deployment = $entry.resources[0]
 Assert-Template ($deployment.type -eq 'Microsoft.Resources/deployments' -and -not $deployment.properties.ContainsKey('templateLink')) 'AVD must use an embedded template, not a remote dependency.'
