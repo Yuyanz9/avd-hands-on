@@ -1,0 +1,146 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.42.1.51946",
+      "templateHash": "10015410070129837437"
+    }
+  },
+  "variables": {
+    "$fxv#0": {
+      "resourceGroupName": "rg-vdi",
+      "location": "japaneast",
+      "network": {
+        "vnetName": "vnet-vdi",
+        "addressPrefix": "10.10.0.0/16",
+        "natGatewayName": "nat-vdi",
+        "publicIpName": "pip-vdi",
+        "idleTimeoutInMinutes": 4,
+        "subnets": [
+          {
+            "name": "snet-cloudpc",
+            "addressPrefix": "10.10.1.0/24"
+          },
+          {
+            "name": "snet-server",
+            "addressPrefix": "10.10.2.0/24"
+          },
+          {
+            "name": "snet-avd",
+            "addressPrefix": "10.10.3.0/24"
+          }
+        ]
+      },
+      "avd": {
+        "hostpoolName": "DefaultHostPool",
+        "workspaceName": "AVD Session Host",
+        "vmNamePrefix": "avd",
+        "vmAdminUsername": "vmadmin",
+        "vmSize": "Standard_D4as_v6",
+        "vmDiskType": "StandardSSD_LRS",
+        "vmDiskSizeGB": 128,
+        "imagePublisher": "microsoftwindowsdesktop",
+        "imageOffer": "office-365",
+        "imageSku": "win11-25h2-avd-m365",
+        "imageVersion": "latest",
+        "maxSessionLimit": 5,
+        "customConfigurationScriptUrl": "https://nogujapanese.blob.core.windows.net/avd-deploy/JPNOFLNG.ps1",
+        "configurationPackageUrl": "https://wvdportalstorageblob.blob.core.windows.net/galleryartifacts/Configuration_1.0.03537.1471.zip"
+      }
+    },
+    "settings": "[variables('$fxv#0')]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "2024-05-01",
+      "name": "[variables('settings').network.publicIpName]",
+      "location": "[variables('settings').location]",
+      "sku": {
+        "name": "Standard"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Static",
+        "publicIPAddressVersion": "IPv4"
+      }
+    },
+    {
+      "type": "Microsoft.Network/natGateways",
+      "apiVersion": "2024-05-01",
+      "name": "[variables('settings').network.natGatewayName]",
+      "location": "[variables('settings').location]",
+      "sku": {
+        "name": "Standard"
+      },
+      "properties": {
+        "idleTimeoutInMinutes": "[variables('settings').network.idleTimeoutInMinutes]",
+        "publicIpAddresses": [
+          {
+            "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('settings').network.publicIpName)]"
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('settings').network.publicIpName)]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2024-05-01",
+      "name": "[variables('settings').network.vnetName]",
+      "location": "[variables('settings').location]",
+      "properties": {
+        "copy": [
+          {
+            "name": "subnets",
+            "count": "[length(variables('settings').network.subnets)]",
+            "input": {
+              "name": "[variables('settings').network.subnets[copyIndex('subnets')].name]",
+              "properties": {
+                "addressPrefix": "[variables('settings').network.subnets[copyIndex('subnets')].addressPrefix]",
+                "defaultOutboundAccess": false,
+                "natGateway": {
+                  "id": "[resourceId('Microsoft.Network/natGateways', variables('settings').network.natGatewayName)]"
+                },
+                "privateEndpointNetworkPolicies": "Disabled",
+                "privateLinkServiceNetworkPolicies": "Enabled"
+              }
+            }
+          }
+        ],
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('settings').network.addressPrefix]"
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/natGateways', variables('settings').network.natGatewayName)]"
+      ]
+    }
+  ],
+  "outputs": {
+    "resourceGroupName": {
+      "type": "string",
+      "value": "[resourceGroup().name]"
+    },
+    "vnetId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Network/virtualNetworks', variables('settings').network.vnetName)]"
+    },
+    "cloudPcSubnetId": {
+      "type": "string",
+      "value": "[format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', variables('settings').network.vnetName), variables('settings').network.subnets[0].name)]"
+    },
+    "serverSubnetId": {
+      "type": "string",
+      "value": "[format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', variables('settings').network.vnetName), variables('settings').network.subnets[1].name)]"
+    },
+    "avdSubnetId": {
+      "type": "string",
+      "value": "[format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', variables('settings').network.vnetName), variables('settings').network.subnets[2].name)]"
+    }
+  }
+}

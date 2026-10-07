@@ -1,0 +1,32 @@
+{
+  "resourceGroupName": "rg-vdi",
+  "location": "japaneast",
+  "network": {
+    "vnetName": "vnet-vdi",
+    "addressPrefix": "10.10.0.0/16",
+    "natGatewayName": "nat-vdi",
+    "publicIpName": "pip-vdi",
+    "idleTimeoutInMinutes": 4,
+    "subnets": [
+      { "name": "snet-cloudpc", "addressPrefix": "10.10.1.0/24" },
+      { "name": "snet-server", "addressPrefix": "10.10.2.0/24" },
+      { "name": "snet-avd", "addressPrefix": "10.10.3.0/24" }
+    ]
+  },
+  "avd": {
+    "hostpoolName": "DefaultHostPool",
+    "workspaceName": "AVD Session Host",
+    "vmNamePrefix": "avd",
+    "vmAdminUsername": "vmadmin",
+    "vmSize": "Standard_D4as_v6",
+    "vmDiskType": "StandardSSD_LRS",
+    "vmDiskSizeGB": 128,
+    "imagePublisher": "microsoftwindowsdesktop",
+    "imageOffer": "office-365",
+    "imageSku": "win11-25h2-avd-m365",
+    "imageVersion": "latest",
+    "maxSessionLimit": 5,
+    "customConfigurationScriptUrl": "https://nogujapanese.blob.core.windows.net/avd-deploy/JPNOFLNG.ps1",
+    "configurationPackageUrl": "https://wvdportalstorageblob.blob.core.windows.net/galleryartifacts/Configuration_1.0.03537.1471.zip"
+  }
+}

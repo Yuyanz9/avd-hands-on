@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "status": "preparation-not-production-approved",
+  "recordedOn": "2026-10-07",
+  "sourceRoot": "avd-hands-on",
+  "destinationRoot": "avd-hands-on\\production",
+  "snapshotBaseCommit": "94f13da9276743b87022b3565412af4ea8931a12",
+  "copiedFiles": [
+    {
+      "source": "docs\\images\\day1\\resource-group-tags.png",
+      "destination": "resources\\images\\manual\\resource-group-tags.png",
+      "kind": "reference-screenshot",
+      "sha256": "A024491C0ECB154ED96FF781F1A69BE034FB9F3F26B36B6773F03F58B90D2B32"
+    },
+    {
+      "source": "docs\\images\\portal-deploy\\01-network-deploy.png",
+      "destination": "resources\\images\\portal-deploy\\01-network-deploy.png",
+      "kind": "reuse-screenshot",
+      "sha256": "D7B7864E6CAD868BFEBE208BF8B0864A3A6155E9A41384B25C84FB1CD80D0553"
+    },
+    {
+      "source": "docs\\images\\portal-deploy\\02-avd-deploy.png",
+      "destination": "resources\\images\\portal-deploy\\02-avd-deploy.png",
+      "kind": "reuse-screenshot",
+      "sha256": "6B4285778F751AD255EA2247BBA393F28C420CBD50B01D40E250A1B200CB959C"
+    },
+    {
+      "source": "docs\\images\\portal-deploy\\03-existing-network-detail.png",
+      "destination": "resources\\images\\portal-deploy\\03-existing-network-detail.png",
+      "kind": "reuse-screenshot",
+      "sha256": "F789E65BE69EB971F13DC24C164F5C3BBEBD7A31B0A96ADE7393EBF6EF02F712"
+    },
+    {
+      "source": "docs\\images\\portal-deploy\\04-admin-password-detail.png",
+      "destination": "resources\\images\\portal-deploy\\04-admin-password-detail.png",
+      "kind": "reuse-screenshot",
+      "sha256": "A7FD9EC03A3666EE921966423D24266BD09447F65C3CC0758249F51E7369D5C7"
+    },
+    {
+      "source": "infra\\network.bicep",
+      "destination": "reference\\iac\\network.bicep",
+      "kind": "reference-iac-not-production-entry",
+      "sha256": "CDC83E6662137584845D0E873CC5D557AFCA045205F02142103662A79DBBAEC7"
+    },
+    {
+      "source": "infra\\avd.bicep",
+      "destination": "reference\\iac\\avd.bicep",
+      "kind": "reference-iac-not-production-entry",
+      "sha256": "08B2C02A0A5613220AC7BE86FF1659C16E549774F9AC2875ADF7337194D1989D"
+    },
+    {
+      "source": "bicepconfig.json",
+      "destination": "reference\\iac\\bicepconfig.json",
+      "kind": "reference-iac-config",
+      "sha256": "46FDADAB61CAE538CB12F52C78B74DE6DC9F79628D133A46AE7F55967B1631E8"
+    }
+  ],
+  "adaptedDocuments": [
+    {
+      "source": "docs\\portal-deploy-handson.md",
+      "sha256": "F99DEB5CA25480E54DFEDA96508A4E6F9D9ED5EC368481A6008E94294CEA5236",
+      "treatment": "selected-content-adapted-not-verbatim-copy"
+    },
+    {
+      "source": "docs\\day1-screenshot-guide-draft.md",
+      "sha256": "8EBC9CBDE398851E3BE3223B609D158BD8CA6989FA48D65403EEA6D5F8497452",
+      "treatment": "selected-content-adapted-not-verbatim-copy"
+    },
+    {
+      "source": "docs\\instructor-checklist.md",
+      "sha256": "C8CB2A40830258270424B8AE6FF878E18F0FE8A2F6D40C0467AE6B56FFAD51FC",
+      "treatment": "selected-content-adapted-not-verbatim-copy"
+    },
+    {
+      "source": "docs\\instructor-checklist-screenshot-draft.md",
+      "sha256": "ECA02278AB808F8ECA04097541236C23BC8F9DD6CD4D689EE919794FD8EC83E2",
+      "treatment": "selected-content-adapted-not-verbatim-copy"
+    }
+  ],
+  "externalArmTemplatesCopied": false,
+  "azureResourcesDeployed": false
+}

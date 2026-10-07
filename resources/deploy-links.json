@@ -1,0 +1,36 @@
+{
+  "status": "fixed-local-templates-unpublished-not-live-validated",
+  "settingsFile": "infra/settings.json",
+  "publication": {
+    "repository": null,
+    "templateCommit": null,
+    "templatePathPrefix": null,
+    "rawUrlsVerified": false
+  },
+  "orderedDay1Phases": [
+    "manual-prerequisites-and-resource-group",
+    "network-deploy-to-azure",
+    "windows365-owner-part",
+    "avd-deploy-to-azure"
+  ],
+  "links": [
+    {
+      "phase": "network",
+      "localTemplate": "templates/network.json",
+      "templateUri": null,
+      "deployToAzureUrl": null,
+      "localTemplateSha256": null,
+      "productionApproved": false,
+      "executionValidatedForThisFlow": false
+    },
+    {
+      "phase": "avd",
+      "localTemplate": "templates/avd.json",
+      "templateUri": null,
+      "deployToAzureUrl": null,
+      "localTemplateSha256": null,
+      "productionApproved": false,
+      "executionValidatedForThisFlow": false
+    }
+  ]
+}
