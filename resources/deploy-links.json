@@ -1,11 +1,11 @@
 {
-  "status": "fixed-local-templates-unpublished-not-live-validated",
+  "status": "public-fixed-templates-raw-urls-and-hashes-verified-not-live-deployed",
   "settingsFile": "infra/settings.json",
   "publication": {
-    "repository": null,
-    "templateCommit": null,
-    "templatePathPrefix": null,
-    "rawUrlsVerified": false
+    "repository": "Yuyanz9/avd-hands-on",
+    "templatePathPrefix": "",
+    "templateCommit": "092c61ff9cacfab625ede038c211ed21e3d59f74",
+    "rawUrlsVerified": true
   },
   "orderedDay1Phases": [
     "manual-prerequisites-and-resource-group",
@@ -17,18 +17,18 @@
     {
       "phase": "network",
       "localTemplate": "templates/network.json",
-      "templateUri": null,
-      "deployToAzureUrl": null,
-      "localTemplateSha256": null,
+      "templateUri": "https://raw.githubusercontent.com/Yuyanz9/avd-hands-on/092c61ff9cacfab625ede038c211ed21e3d59f74/templates/network.json",
+      "deployToAzureUrl": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F092c61ff9cacfab625ede038c211ed21e3d59f74%2Ftemplates%2Fnetwork.json",
+      "localTemplateSha256": "0ADDB0D1B1054DF4971D5DCCD05EB8E4A44113F704A42EF589602EE0E79384B8",
       "productionApproved": false,
       "executionValidatedForThisFlow": false
     },
     {
       "phase": "avd",
       "localTemplate": "templates/avd.json",
-      "templateUri": null,
-      "deployToAzureUrl": null,
-      "localTemplateSha256": null,
+      "templateUri": "https://raw.githubusercontent.com/Yuyanz9/avd-hands-on/092c61ff9cacfab625ede038c211ed21e3d59f74/templates/avd.json",
+      "deployToAzureUrl": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F092c61ff9cacfab625ede038c211ed21e3d59f74%2Ftemplates%2Favd.json",
+      "localTemplateSha256": "99AE18E5341A5F6AE5DE80C713186A8A93468C47609B9735955036775297AFCF",
       "productionApproved": false,
       "executionValidatedForThisFlow": false
     }

@@ -1,6 +1,6 @@
 # 本番化前の修正・確定事項
 
-記事の3サブネットと固定値、手動 `rg-vdi`、AVD の自動 RBAC・SSO を採用しました。**ローカル実装済みと Azure 実機確認済みを区別**します。公開・push・実デプロイは未実施です。
+記事の3サブネットと固定値、手動 `rg-vdi`、AVD の自動 RBAC・SSO を採用しました。**公開 URL の到達確認と Azure 実機確認済みを区別**します。固定版のテンプレートを公開し匿名取得と SHA-256 を検証済みですが、実デプロイ・SSO 接続は未実施です。
 
 ## 実装状況と配布前の残項目
 
@@ -8,8 +8,8 @@
 | --- | --- | --- | --- |
 | R01 | ローカル実装済み | 共通ネットワークの統一 | `vnet-vdi`／`10.10.0.0/16`、Cloud PC・Server・AVD の3サブネットに統一。実作成・NAT 関連付け確認は R10 |
 | R02 | 担当確認待ち | Windows 365 の受け渡し | `snet-cloudpc` を用意。担当者と ANC／Microsoft ホスト型の方式、VNet 利用、通信・権限、待機・復帰条件を照合。Windows 365 実装は担当側 |
-| R03 | ローカル実装済み | 2つの ARM JSON | `templates/network.json` と `templates/avd.json` を生成。AVD モジュールは埋め込み済み。公開取得と portal 実行は未確認 |
-| R04 | 未公開 | 配信・版固定 | README バッジはリンクなし。将来公開先を指定して `Set-DeployButtons.ps1` で固定コミット URL を設定し、匿名取得と同梱 JSON のハッシュを確認。repo 作成・公開・push は別途依頼時のみ |
+| R03 | 公開・raw取得確認済み | 2つの ARM JSON | `templates/network.json` と `templates/avd.json` を固定コミットに公開。AVD モジュールは埋め込み済み。匿名 HTTP 取得・JSON 解析・ローカル SHA-256 一致を確認。実 Azure portal デプロイは未確認 |
+| R04 | 対応済み・実デプロイ待ち | 配信・版固定 | `Yuyanz9/avd-hands-on` を公開 repo とし、ボタンは `092c61ff9cacfab625ede038c211ed21e3d59f74` のテンプレートを参照。元の `M-Training` repo は変更なし。Azure デプロイでの動作確認は R10 |
 | R05 | 方針反映済み・画像待ち | 手動 RG と権限 | 記事同様 `rg-vdi`／Japan East、必須タグなし、既存 RG を両ボタンで選択。作成・IAM 画面の撮影と権限リハーサルは未実施。固定名のため個別演習の環境分離も要確認 |
 | R06 | 一部実装・設計確認待ち | 送信・受信制御 | 3サブネットに NAT と `defaultOutboundAccess: false` を明示。記事同様 NSG は未追加。Windows 365／AVD の通信と受信・東西制御を配布前に確認 |
 | R07 | ローカル実装済み | Windows 365 後の Network 保護 | AVD は既存ネットワーク参照のみ。VNet・サブネット・NAT の作成／再適用は含まない。実際の ANC 等への影響は担当者と R10 で確認 |
@@ -25,4 +25,4 @@
 
 記事と異なり、日時ベースの VM 名を `avd-0` に固定し、暗黙の送信を無効にしています。RBAC とホストプール SSO も IaC へ追加しました。登録トークン・パスワードは保護設定／secure parameter に限定し、秘密を出力しません。
 
-Windows Cloud Login のテナント設定、Windows 365、NSG の追加設計、実機確認、配信先の公開、保持・削除はローカル IaC の完成とは別です。**実機成功・完成版とはまだ表示しません。**
+Windows Cloud Login のテナント設定、Windows 365、NSG の追加設計、実機確認、保持・削除は公開とローカル IaC の完成とは別です。**Azure 実機成功・完成版とはまだ表示しません。**

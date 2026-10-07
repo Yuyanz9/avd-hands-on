@@ -2,7 +2,7 @@
 
 **手動の前提確認・RG 設定 → Network ボタン → Windows 365 担当パート → AVD ボタン**の順で使う一式です。記事の3サブネットと固定値を採用し、AVD は接続用 RBAC とホストプールの SSO 設定まで IaC に含めています。
 
-**公開前・実機リハーサル前の準備版です。** ARM JSON は同梱済みですが、公開配信先は未設定のため、下のバッジはクリックできません。別 repo の作成・公開・push、Azure へのデプロイは行っていません。配布前の残項目は [修正一覧](revision-list.md)で管理します。
+**公開済みの準備版です。** この repo の Network／AVD ボタンは Azure portal を開き、固定コミットの ARM JSON を参照します。両 JSON の匿名取得・構文・SHA-256 は確認済みですが、Azure への実デプロイ、Windows 365 との通しリハーサル、SSO 接続は未確認です。[修正一覧](revision-list.md)の実機確認が済むまで受講者に［作成］を実行させないでください。
 
 ## 1. 受講者が前提確認と RG を手動設定
 
@@ -17,9 +17,7 @@ SSO のテナント側準備は講師が実施します。Microsoft Entra 管理
 ## 2. Network を Deploy to Azure
 
 <!-- deploy-button-network:start -->
-![Deploy to Azure](https://aka.ms/deploytoazurebutton)
-
-**公開 URL 未設定：このバッジはクリックできません。**
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F092c61ff9cacfab625ede038c211ed21e3d59f74%2Ftemplates%2Fnetwork.json)
 <!-- deploy-button-network:end -->
 
 使用するテンプレート：[templates/network.json](templates/network.json)。**テンプレート固有の入力パラメーターはありません。** Azure portal でサブスクリプションと既存 `rg-vdi` を選択します。
@@ -42,9 +40,7 @@ Network の成功と3サブネットを確認後、Windows 365 担当者の資�
 ## 4. AVD を Deploy to Azure
 
 <!-- deploy-button-avd:start -->
-![Deploy to Azure](https://aka.ms/deploytoazurebutton)
-
-**公開 URL 未設定：このバッジはクリックできません。**
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F092c61ff9cacfab625ede038c211ed21e3d59f74%2Ftemplates%2Favd.json)
 <!-- deploy-button-avd:end -->
 
 使用するテンプレート：[templates/avd.json](templates/avd.json)。**入力するテンプレートパラメーターは VM ローカル管理者のパスワード1つだけ**です。秘密を固定値・ファイル・スクリーンショットに保存しません。
@@ -87,7 +83,7 @@ AVD は既存の `rg-vdi`／`vnet-vdi`／`snet-avd` を参照するだけで、N
 
 AVD のモジュールは生成 JSON に埋め込まれ、リモート Bicep や別の ARM テンプレートの配信は不要です。生成後はソースと JSON をセットで管理してください。
 
-将来、公開先を明示的に決めて ARM JSON を配信した後、その**テンプレートが含まれる40桁のコミット SHA**でボタンを設定します。以下は設定方法の例であり、この作業では実行しません。
+現在のボタンは `Yuyanz9/avd-hands-on` のコミット `092c61ff9cacfab625ede038c211ed21e3d59f74` に含まれる JSON に固定しています。配布管理データには URL と SHA-256 を記録し、匿名取得した両テンプレートのハッシュ一致を確認済みです。別の版を公開する場合は、その**テンプレートが含まれる40桁のコミット SHA**でボタンを設定します。
 
 ```powershell
 .\scripts\Set-DeployButtons.ps1 `
@@ -95,11 +91,11 @@ AVD のモジュールは生成 JSON に埋め込まれ、リモート Bicep や
     -TemplateCommit '<テンプレートを含む40桁のコミットSHA>'
 ```
 
-公開 repo 内のサブフォルダーに置く場合は `-TemplatePathPrefix 'avd-hands-on/production'` 等を指定します。スクリプトはローカル README と [配信管理データ](resources/deploy-links.json)のみを更新し、repo 作成・公開・push はしません。設定だけで URL の存在や公開を確認したことにはならず、管理データの `rawUrlsVerified` は `false` のままです。
+公開 repo 内のサブフォルダーに置く場合は `-TemplatePathPrefix 'avd-hands-on/production'` 等を指定します。スクリプトはローカル README と [配信管理データ](resources/deploy-links.json)のみを更新し、repo 作成・公開・push はしません。再実行後は両 raw URL を匿名取得し、ローカルファイルとの SHA-256 一致を確認するまで管理データの `rawUrlsVerified` を `false` のままにします。
 
 ボタンは [Microsoft 公式の README パターン](https://learn.microsoft.com/ja-jp/azure/azure-resource-manager/templates/deploy-to-azure-button)に沿い、公開 raw ARM JSON の URL をエンコードして Azure portal へ渡します。**非公開 GitHub repo の raw URL はそのままでは ARM が取得できません。** 配信時は固定コミットのファイルが匿名取得でき、同梱 JSON のハッシュと一致することを確認してから、ボタンを配布します。
 
-切り出す場合はこの `production` フォルダー一式だけで完結します。親の内部資料・顧客固有情報は含めません。別 repo への切り出し・公開・push は別途明示依頼があった場合のみ実施します。
+この公開 repo は `avd-hands-on\production\` の一式だけをルートに配置しています。元の非公開 `M-Training` repo はそのままです。親の内部資料・PowerPoint・顧客固有情報は含めていません。
 
 ## 関連資料
 

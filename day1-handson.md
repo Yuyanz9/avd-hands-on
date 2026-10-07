@@ -1,6 +1,6 @@
 # Day 1：手動準備から Windows 365・AVD の構築へ
 
-> **公開・実機リハーサル前の準備版。** 固定構成の ARM JSON は作成済みですが、[README のデプロイバッジ](README.md)は公開 URL 未設定のためクリックできません。配布前の[残項目](revision-list.md)が完了するまで受講者に［作成］を実行させません。掲載画像は記事・旧資料の参考で、今回の新規テンプレートの実行結果ではありません。
+> **公開済み・実機リハーサル前の準備版。** [README のデプロイバッジ](README.md)をクリックすると固定コミットのテンプレートで Azure portal が開きます。匿名取得と SHA-256 は確認済みですが、実際の Azure デプロイ・SSO 接続は未確認です。[残項目](revision-list.md)の実機確認が済むまで受講者に［作成］を実行させません。掲載画像は記事・旧資料の参考で、今回のテンプレートの実行結果ではありません。
 
 ## 今回の進み方
 
@@ -59,7 +59,7 @@ RG 新規作成画面は実機リハーサルで撮影予定です。旧タグ�
 
 ### 2.1 Network ボタンと固定構成
 
-[README の Network ボタン欄](README.md#2-network-を-deploy-to-azure)を使用します。記事の旧外部テンプレートのボタンではなく、同梱 [network.json](templates/network.json)を配信した入口です。現時点では未公開のため実行できません。
+[README の Network ボタン欄](README.md#2-network-を-deploy-to-azure)を使用します。記事の旧外部テンプレートではなく、同梱 [network.json](templates/network.json) の固定コミット版を参照します。クリックで Azure portal が開くこと、JSON の匿名取得・ハッシュ一致を確認済みです。実際の Azure 作成は未リハーサルです。
 
 ![記事の旧 Network 入力画面。新版の実行画面ではない](resources/images/portal-deploy/01-network-deploy.png)
 
@@ -106,7 +106,7 @@ NAT の Public IP は VM への受信用ではありません。Server 用の VM
 
 ### 4.1 AVD ボタンと入力
 
-[README の AVD ボタン欄](README.md#4-avd-を-deploy-to-azure)を使用します。使用するのは同梱 [avd.json](templates/avd.json)で、旧記事の汎用テンプレートとは異なります。現時点では未公開です。
+[README の AVD ボタン欄](README.md#4-avd-を-deploy-to-azure)を使用します。使用するのは同梱 [avd.json](templates/avd.json) の固定コミット版で、旧記事の汎用テンプレートとは異なります。クリックで Azure portal が開く URL とテンプレートの匿名取得を確認済みですが、Azure デプロイ・SSO 接続は未リハーサルです。
 
 ![記事の旧 AVD 入力画面。新版ではパスワード以外の項目は固定](resources/images/portal-deploy/02-avd-deploy.png)
 
