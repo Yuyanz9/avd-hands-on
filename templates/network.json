@@ -5,12 +5,11 @@
     "_generator": {
       "name": "bicep",
       "version": "0.42.1.51946",
-      "templateHash": "10015410070129837437"
+      "templateHash": "7441207478573754645"
     }
   },
   "variables": {
     "$fxv#0": {
-      "resourceGroupName": "rg-vdi",
       "location": "japaneast",
       "network": {
         "vnetName": "vnet-vdi",

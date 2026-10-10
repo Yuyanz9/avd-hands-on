@@ -2,13 +2,15 @@
 
 **手動の前提確認・RG 設定 → Network ボタン → Windows 365 担当パート → AVD ボタン**の順で使う一式です。記事の3サブネットと固定値を採用し、AVD は接続用 RBAC とホストプールの SSO 設定まで IaC に含めています。
 
-**公開済みの準備版です。** この repo の Network／AVD ボタンは Azure portal を開き、固定コミットの ARM JSON を参照します。両 JSON の匿名取得・構文・SHA-256 は確認済みですが、Azure への実デプロイ、Windows 365 との通しリハーサル、SSO 接続は未確認です。[修正一覧](revision-list.md)の実機確認が済むまで受講者に［作成］を実行させないでください。
+**公開済みの準備版です。** 2026-10-07 に旧版の Network／AVD ボタンを試行し、Windows App からの接続成功と日本語化に問題がなさそうとの利用者報告がありました。今回の更新では portal で選んだ任意名の RG を AVD のネットワーク参照先にも使いますが、この更新版の Azure 実デプロイは未確認です。Windows 365 との通しリハーサルと SSO のシームレスな資格情報フローも未確認のため、[修正一覧](revision-list.md) R10 の確認を講師が済ませてから受講者へ配布してください。
+
+> **公開切替中：** Deploy to Azure ボタンは次の更新まで旧テンプレートを参照します。ボタンが切り替わるまでは既存どおり `rg-vdi` を選んでください。
 
 ## 1. 受講者が前提確認と RG を手動設定
 
-[Day 1 の統合手順](day1-handson.md)のパート1に従い、指定テナント・サブスクリプションを確認して **`rg-vdi`／Japan East** を手動で作成します。両ボタンでも同じ既存 RG を選びます。テンプレートは RG を作成しません。
+[Day 1 の統合手順](day1-handson.md)のパート1に従い、指定テナント・サブスクリプションを確認し、講師が指定する任意の名前で演習用 RG を Japan East に手動作成します。両ボタンで同じ既存 RG を選びます。テンプレートは RG を作成しません。
 
-**名前が固定のため、同一サブスクリプションの受講者は同じ環境を共有します。** 個別演習では受講者ごとに別サブスクリプションを用意するか、配布前に講師が構成を変更してください。共有・業務用 RG への実行は禁止です。
+**RG 名は任意ですが、Network と AVD は同じ RG にデプロイしてください。** 参加者ごとの環境を分ける場合は、同じサブスクリプション内でも受講者ごとに専用 RG を用意します。固定の VNet／VM 名を使うため、同一 RG を複数参加者で共有しないでください。共有・業務用 RG への実行は禁止です。
 
 講師は事前に、利用資格、VM サイズ・イメージ・クォータ、Azure Policy、必要な外向き通信とロール割り当て権限を確認します。**Contributor だけでは AVD の RBAC 作成はできません。**
 
@@ -20,7 +22,7 @@ SSO のテナント側準備は講師が実施します。Microsoft Entra 管理
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F092c61ff9cacfab625ede038c211ed21e3d59f74%2Ftemplates%2Fnetwork.json)
 <!-- deploy-button-network:end -->
 
-使用するテンプレート：[templates/network.json](templates/network.json)。**テンプレート固有の入力パラメーターはありません。** Azure portal でサブスクリプションと既存 `rg-vdi` を選択します。
+使用するテンプレート：[templates/network.json](templates/network.json)。**テンプレート固有の入力パラメーターはありません。** Azure portal でサブスクリプションと手順1で作成した既存の演習用 RG を選択します。RG 名は固定されていません。
 
 | 対象 | 固定設定 |
 | --- | --- |
@@ -62,7 +64,7 @@ Network の成功と3サブネットを確認後、Windows 365 担当者の資�
 
 Azure portal へサインインして**デプロイしたメンバーユーザー本人で接続**します。`deployer().objectId` で実行者を取得するため Object ID の入力は不要です。サービスプリンシパル・グループ・別ユーザー向けの配布入口ではありません。講師が別アカウントで再実行すると、その講師にも接続権限が追加されます。
 
-AVD は既存の `rg-vdi`／`vnet-vdi`／`snet-avd` を参照するだけで、Network は再適用しません。登録トークンの有効期間はデプロイから2時間で、VM 拡張機能の `protectedSettings` のみに渡します。登録済みホストの利用期限ではありません。
+AVD は、portal で選択したデプロイ先 RG にある既存の `vnet-vdi`／`snet-avd` を参照するだけで、Network は再適用しません。Network のデプロイ先と同じ RG を選んでください。登録トークンの有効期間はデプロイから2時間で、VM 拡張機能の `protectedSettings` のみに渡します。登録済みホストの利用期限ではありません。
 
 ## 記事からの意図的な変更と未確認事項
 
@@ -91,7 +93,7 @@ AVD テンプレートは公開 Blob Storage の `JPNOFLNG.ps1` を取得し、C
 
 AVD のモジュールは生成 JSON に埋め込まれ、リモート Bicep や別の ARM テンプレートの配信は不要です。生成後はソースと JSON をセットで管理してください。
 
-現在のボタンは `Yuyanz9/avd-hands-on` のコミット `092c61ff9cacfab625ede038c211ed21e3d59f74` に含まれる JSON に固定しています。配布管理データには URL と SHA-256 を記録し、匿名取得した両テンプレートのハッシュ一致を確認済みです。別の版を公開する場合は、その**テンプレートが含まれる40桁のコミット SHA**でボタンを設定します。
+現在のボタンは、[配信管理データ](resources/deploy-links.json)に記録した公開コミットの ARM JSON に固定しています。匿名取得した両テンプレートの SHA-256 を同ファイルに記録します。別の版を公開する場合は、その**テンプレートが含まれる40桁のコミット SHA**でボタンを設定します。
 
 ```powershell
 .\scripts\Set-DeployButtons.ps1 `

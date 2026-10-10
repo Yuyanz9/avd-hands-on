@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.42.1.51946",
-      "templateHash": "8255592329001337166"
+      "templateHash": "10896166099207299138"
     }
   },
   "parameters": {
@@ -43,7 +43,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.42.1.51946",
-              "templateHash": "17179327204679699004"
+              "templateHash": "6904642574764173387"
             }
           },
           "parameters": {
@@ -64,7 +64,6 @@
           },
           "variables": {
             "$fxv#0": {
-              "resourceGroupName": "rg-vdi",
               "location": "japaneast",
               "network": {
                 "vnetName": "vnet-vdi",
@@ -185,7 +184,7 @@
                     "properties": {
                       "privateIPAllocationMethod": "Dynamic",
                       "subnet": {
-                        "id": "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('settings').resourceGroupName), 'Microsoft.Network/virtualNetworks/subnets', variables('settings').network.vnetName, variables('settings').network.subnets[2].name)]"
+                        "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('settings').network.vnetName, variables('settings').network.subnets[2].name)]"
                       }
                     }
                   }

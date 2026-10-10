@@ -1,5 +1,4 @@
 {
-  "resourceGroupName": "rg-vdi",
   "location": "japaneast",
   "network": {
     "vnetName": "vnet-vdi",

@@ -17,7 +17,6 @@ var desktopUserRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefi
 var vmUserLoginRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'fb879df8-f326-4884-b1cf-06f3ad86be52')
 
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' existing = {
-  scope: resourceGroup(settings.resourceGroupName)
   name: settings.network.vnetName
 }
 

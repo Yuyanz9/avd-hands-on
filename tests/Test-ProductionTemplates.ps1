@@ -46,7 +46,6 @@ function Get-FixedSettings {
 
 $settings = Read-Json (Join-Path $root 'infra\settings.json')
 $expected = @{
-    resourceGroupName = 'rg-vdi'
     location = 'japaneast'
     'network.vnetName' = 'vnet-vdi'
     'network.addressPrefix' = '10.10.0.0/16'
@@ -73,6 +72,7 @@ foreach ($path in $expected.Keys) {
     foreach ($segment in ($path -split '\.')) { $value = $value[$segment] }
     Assert-Template ($value -ceq $expected[$path]) "Unexpected fixed setting: $path."
 }
+Assert-Template (-not $settings.ContainsKey('resourceGroupName')) 'Resource group must come from the portal deployment scope, not fixed settings.'
 Assert-Template ($settings.network.subnets.Count -eq 3) 'Expected exactly three article subnets.'
 $subnetNames = @('snet-cloudpc', 'snet-server', 'snet-avd')
 $subnetPrefixes = @('10.10.1.0/24', '10.10.2.0/24', '10.10.3.0/24')
@@ -167,7 +167,7 @@ Assert-Template ($vm.properties.osProfile.adminUsername -ceq "[variables('settin
 Assert-Template ($vm.properties.securityProfile.securityType -eq 'TrustedLaunch' -and $vm.properties.securityProfile.uefiSettings.secureBootEnabled -eq $true -and $vm.properties.securityProfile.uefiSettings.vTpmEnabled -eq $true) 'Trusted Launch, Secure Boot and vTPM must be enabled.'
 $ip = $nics[0].properties.ipConfigurations[0].properties
 Assert-Template (-not $ip.ContainsKey('publicIPAddress') -and $ip.privateIPAllocationMethod -eq 'Dynamic') 'No VM public IP is allowed.'
-Assert-Template ($ip.subnet.id -match "settings'\)\.resourceGroupName" -and $ip.subnet.id -match "settings'\)\.network\.vnetName" -and $ip.subnet.id -match "settings'\)\.network\.subnets\[2\]\.name") 'NIC must reference rg-vdi/vnet-vdi/snet-avd.'
+Assert-Template ($ip.subnet.id -match "resourceId\('Microsoft.Network/virtualNetworks/subnets'" -and $ip.subnet.id -match "settings'\)\.network\.vnetName" -and $ip.subnet.id -match "settings'\)\.network\.subnets\[2\]\.name" -and $ip.subnet.id -notmatch 'resourceGroups/') 'NIC must resolve vnet-vdi/snet-avd from the selected deployment resource group.'
 
 $roles = Find-Resources $avd 'Microsoft.Authorization/roleAssignments'
 Assert-Template ($roles.Count -eq 2) 'Expected desktop access and VM login assignments.'
