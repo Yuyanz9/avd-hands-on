@@ -11,7 +11,7 @@ $root = Split-Path $PSScriptRoot -Parent
 Get-Command az -ErrorAction Stop | Out-Null
 New-Item -ItemType Directory -Path $OutputDirectory -Force | Out-Null
 
-foreach ($phase in @('network', 'avd')) {
+foreach ($phase in @('network', 'avd', 'session-host')) {
     Invoke-TrainingAzureCli -Arguments @(
         'bicep', 'build',
         '--file', (Join-Path $root "infra\$phase.bicep"),
@@ -20,4 +20,4 @@ foreach ($phase in @('network', 'avd')) {
     ) | Out-Host
 }
 
-Write-Host 'Built Network and AVD ARM JSON. No Azure resources were deployed.'
+Write-Host 'Built Network, AVD, and session-host ARM JSON. No Azure resources were deployed.'

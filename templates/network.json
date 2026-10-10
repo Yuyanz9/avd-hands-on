@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.42.1.51946",
-      "templateHash": "12462721957467429757"
+      "templateHash": "15607939129465523646"
     }
   },
   "variables": {
@@ -35,16 +35,11 @@
       "avd": {
         "hostpoolName": "DefaultHostPool",
         "workspaceName": "AVD Session Host",
-        "vmNamePrefix": "avd",
         "vmAdminUsername": "vmadmin",
-        "vmSize": "Standard_D4as_v6",
-        "vmDiskType": "StandardSSD_LRS",
         "vmDiskSizeGB": 128,
         "imagePublisher": "microsoftwindowsdesktop",
         "imageOffer": "windows-11",
-        "imageSku": "win11-25h2-avd",
         "imageVersion": "latest",
-        "maxSessionLimit": 5,
         "customConfigurationScriptUrl": "https://nogujapanese.blob.core.windows.net/avd-deploy/JPNOFLNG.ps1",
         "configurationPackageUrl": "https://wvdportalstorageblob.blob.core.windows.net/galleryartifacts/Configuration_1.0.03537.1471.zip"
       }

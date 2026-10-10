@@ -1,0 +1,446 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.42.1.51946",
+      "templateHash": "12124589399751950967"
+    }
+  },
+  "parameters": {
+    "vmAdministratorAccountPassword": {
+      "type": "securestring",
+      "minLength": 12,
+      "maxLength": 123
+    },
+    "registrationToken": {
+      "type": "securestring",
+      "minLength": 1,
+      "metadata": {
+        "description": "Active registration token created for the existing host pool."
+      }
+    },
+    "hostPoolName": {
+      "type": "string",
+      "defaultValue": "DefaultHostPool",
+      "minLength": 3,
+      "maxLength": 64,
+      "metadata": {
+        "description": "Existing Standard-management AVD host pool name. The token must belong to this pool."
+      }
+    },
+    "networkResourceGroupName": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().name]",
+      "metadata": {
+        "description": "Resource group containing the existing VNet. Defaults to the selected deployment resource group."
+      }
+    },
+    "virtualNetworkName": {
+      "type": "string",
+      "defaultValue": "vnet-vdi",
+      "minLength": 2,
+      "maxLength": 64,
+      "metadata": {
+        "description": "Name of the existing virtual network."
+      }
+    },
+    "subnetName": {
+      "type": "string",
+      "defaultValue": "snet-avd",
+      "minLength": 1,
+      "maxLength": 80,
+      "metadata": {
+        "description": "Name of the existing subnet used for AVD session hosts."
+      }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "japaneast",
+      "metadata": {
+        "description": "Location for the session host. It must match the existing VNet location."
+      }
+    },
+    "imageSku": {
+      "type": "string",
+      "defaultValue": "win11-25h2-avd",
+      "metadata": {
+        "description": "Windows image SKU. The publisher, offer, and version remain the current training defaults."
+      }
+    },
+    "vmSize": {
+      "type": "string",
+      "defaultValue": "Standard_D4as_v6",
+      "metadata": {
+        "description": "Size of the session host VM. Keep it compatible with the existing host pool."
+      }
+    },
+    "vmDiskType": {
+      "type": "string",
+      "defaultValue": "StandardSSD_LRS",
+      "metadata": {
+        "description": "OS disk storage account type supported by the selected VM size and region."
+      }
+    },
+    "vmNamePrefix": {
+      "type": "string",
+      "defaultValue": "[dateTimeAdd(utcNow(), 'PT9H', 'AVDMMddHHmm')]",
+      "minLength": 1,
+      "maxLength": 13,
+      "metadata": {
+        "description": "Prefix for the Windows computer and Azure VM name. The template appends -0; maximum prefix length is 13."
+      }
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "add-avd-session-host",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "vmAdministratorAccountPassword": {
+            "value": "[parameters('vmAdministratorAccountPassword')]"
+          },
+          "registrationToken": {
+            "value": "[parameters('registrationToken')]"
+          },
+          "connectionUserObjectId": {
+            "value": "[deployer().objectId]"
+          },
+          "hostPoolName": {
+            "value": "[parameters('hostPoolName')]"
+          },
+          "networkResourceGroupName": {
+            "value": "[parameters('networkResourceGroupName')]"
+          },
+          "virtualNetworkName": {
+            "value": "[parameters('virtualNetworkName')]"
+          },
+          "subnetName": {
+            "value": "[parameters('subnetName')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "imageSku": {
+            "value": "[parameters('imageSku')]"
+          },
+          "vmSize": {
+            "value": "[parameters('vmSize')]"
+          },
+          "vmDiskType": {
+            "value": "[parameters('vmDiskType')]"
+          },
+          "vmNamePrefix": {
+            "value": "[parameters('vmNamePrefix')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.42.1.51946",
+              "templateHash": "359946341520720771"
+            }
+          },
+          "parameters": {
+            "vmAdministratorAccountPassword": {
+              "type": "securestring",
+              "minLength": 12,
+              "maxLength": 123
+            },
+            "registrationToken": {
+              "type": "securestring",
+              "minLength": 1
+            },
+            "connectionUserObjectId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "hostPoolName": {
+              "type": "string"
+            },
+            "networkResourceGroupName": {
+              "type": "string"
+            },
+            "virtualNetworkName": {
+              "type": "string"
+            },
+            "subnetName": {
+              "type": "string"
+            },
+            "location": {
+              "type": "string"
+            },
+            "imageSku": {
+              "type": "string"
+            },
+            "vmSize": {
+              "type": "string"
+            },
+            "vmDiskType": {
+              "type": "string"
+            },
+            "vmNamePrefix": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 13
+            }
+          },
+          "variables": {
+            "$fxv#0": {
+              "location": "japaneast",
+              "network": {
+                "vnetName": "vnet-vdi",
+                "addressPrefix": "10.10.0.0/16",
+                "natGatewayName": "nat-vdi",
+                "publicIpName": "pip-vdi",
+                "idleTimeoutInMinutes": 4,
+                "subnets": [
+                  {
+                    "name": "snet-cloudpc",
+                    "addressPrefix": "10.10.1.0/24"
+                  },
+                  {
+                    "name": "snet-server",
+                    "addressPrefix": "10.10.2.0/24"
+                  },
+                  {
+                    "name": "snet-avd",
+                    "addressPrefix": "10.10.3.0/24"
+                  }
+                ]
+              },
+              "avd": {
+                "hostpoolName": "DefaultHostPool",
+                "workspaceName": "AVD Session Host",
+                "vmAdminUsername": "vmadmin",
+                "vmDiskSizeGB": 128,
+                "imagePublisher": "microsoftwindowsdesktop",
+                "imageOffer": "windows-11",
+                "imageVersion": "latest",
+                "customConfigurationScriptUrl": "https://nogujapanese.blob.core.windows.net/avd-deploy/JPNOFLNG.ps1",
+                "configurationPackageUrl": "https://wvdportalstorageblob.blob.core.windows.net/galleryartifacts/Configuration_1.0.03537.1471.zip"
+              }
+            },
+            "settings": "[variables('$fxv#0')]",
+            "vmName": "[format('{0}-0', parameters('vmNamePrefix'))]",
+            "vmUserLoginRoleId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'fb879df8-f326-4884-b1cf-06f3ad86be52')]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Network/networkInterfaces",
+              "apiVersion": "2024-05-01",
+              "name": "[format('{0}-nic', variables('vmName'))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "ipConfigurations": [
+                  {
+                    "name": "ipconfig1",
+                    "properties": {
+                      "privateIPAllocationMethod": "Dynamic",
+                      "subnet": {
+                        "id": "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('networkResourceGroupName')), 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('subnetName'))]"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Microsoft.Compute/virtualMachines",
+              "apiVersion": "2024-11-01",
+              "name": "[variables('vmName')]",
+              "location": "[parameters('location')]",
+              "identity": {
+                "type": "SystemAssigned"
+              },
+              "properties": {
+                "licenseType": "Windows_Client",
+                "hardwareProfile": {
+                  "vmSize": "[parameters('vmSize')]"
+                },
+                "storageProfile": {
+                  "imageReference": {
+                    "publisher": "[variables('settings').avd.imagePublisher]",
+                    "offer": "[variables('settings').avd.imageOffer]",
+                    "sku": "[parameters('imageSku')]",
+                    "version": "[variables('settings').avd.imageVersion]"
+                  },
+                  "osDisk": {
+                    "createOption": "FromImage",
+                    "diskSizeGB": "[variables('settings').avd.vmDiskSizeGB]",
+                    "deleteOption": "Delete",
+                    "managedDisk": {
+                      "storageAccountType": "[parameters('vmDiskType')]"
+                    }
+                  }
+                },
+                "osProfile": {
+                  "computerName": "[variables('vmName')]",
+                  "adminUsername": "[variables('settings').avd.vmAdminUsername]",
+                  "adminPassword": "[parameters('vmAdministratorAccountPassword')]",
+                  "windowsConfiguration": {
+                    "provisionVMAgent": true,
+                    "enableAutomaticUpdates": true
+                  }
+                },
+                "networkProfile": {
+                  "networkInterfaces": [
+                    {
+                      "id": "[resourceId('Microsoft.Network/networkInterfaces', format('{0}-nic', variables('vmName')))]",
+                      "properties": {
+                        "deleteOption": "Delete"
+                      }
+                    }
+                  ]
+                },
+                "securityProfile": {
+                  "securityType": "TrustedLaunch",
+                  "uefiSettings": {
+                    "secureBootEnabled": true,
+                    "vTpmEnabled": true
+                  }
+                },
+                "diagnosticsProfile": {
+                  "bootDiagnostics": {
+                    "enabled": true
+                  }
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', format('{0}-nic', variables('vmName')))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]",
+              "name": "[guid(resourceId('Microsoft.Compute/virtualMachines', variables('vmName')), parameters('connectionUserObjectId'), variables('vmUserLoginRoleId'))]",
+              "properties": {
+                "principalId": "[parameters('connectionUserObjectId')]",
+                "principalType": "User",
+                "roleDefinitionId": "[variables('vmUserLoginRoleId')]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Compute/virtualMachines/extensions",
+              "apiVersion": "2024-11-01",
+              "name": "[format('{0}/{1}', variables('vmName'), 'AADLoginForWindows')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "publisher": "Microsoft.Azure.ActiveDirectory",
+                "type": "AADLoginForWindows",
+                "typeHandlerVersion": "2.0",
+                "autoUpgradeMinorVersion": true
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Compute/virtualMachines/extensions",
+              "apiVersion": "2024-11-01",
+              "name": "[format('{0}/{1}', variables('vmName'), 'MicrosoftPowershellDSC')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "publisher": "Microsoft.Powershell",
+                "type": "DSC",
+                "typeHandlerVersion": "2.73",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                  "modulesUrl": "[variables('settings').avd.configurationPackageUrl]",
+                  "configurationFunction": "Configuration.ps1\\AddSessionHost",
+                  "properties": {
+                    "hostPoolName": "[parameters('hostPoolName')]",
+                    "aadJoin": true,
+                    "UseAgentDownloadEndpoint": true
+                  }
+                },
+                "protectedSettings": {
+                  "properties": {
+                    "registrationInfoToken": "[parameters('registrationToken')]"
+                  }
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines/extensions', variables('vmName'), 'AADLoginForWindows')]",
+                "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Compute/virtualMachines/extensions",
+              "apiVersion": "2024-11-01",
+              "name": "[format('{0}/{1}', variables('vmName'), 'Microsoft.Compute.CustomScriptExtension')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "publisher": "Microsoft.Compute",
+                "type": "CustomScriptExtension",
+                "typeHandlerVersion": "1.10",
+                "autoUpgradeMinorVersion": true,
+                "protectedSettings": {
+                  "fileUris": [
+                    "[variables('settings').avd.customConfigurationScriptUrl]"
+                  ],
+                  "commandToExecute": "powershell -ExecutionPolicy Bypass -File JPNOFLNG.ps1"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines/extensions', variables('vmName'), 'MicrosoftPowershellDSC')]",
+                "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.DevTestLab/schedules",
+              "apiVersion": "2018-09-15",
+              "name": "[format('shutdown-computevm-{0}', variables('vmName'))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "dailyRecurrence": {
+                  "time": "2200"
+                },
+                "notificationSettings": {
+                  "emailRecipient": "",
+                  "status": "Disabled",
+                  "timeInMinutes": 30,
+                  "webhookUrl": ""
+                },
+                "status": "Enabled",
+                "targetResourceId": "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]",
+                "taskType": "ComputeVmShutdownTask",
+                "timeZoneId": "Tokyo Standard Time"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "sessionHostName": {
+              "type": "string",
+              "value": "[variables('vmName')]"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "sessionHostName": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'add-avd-session-host'), '2025-04-01').outputs.sessionHostName.value]"
+    }
+  }
+}

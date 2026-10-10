@@ -30,7 +30,7 @@ if ($prefix) {
     $prefix += '/'
 }
 
-foreach ($phase in @('network', 'avd')) {
+foreach ($phase in @('network', 'avd', 'session-host')) {
     $template = Join-Path $root "templates\$phase.json"
     if (-not (Test-Path -LiteralPath $template -PathType Leaf)) {
         throw "Missing compiled template: $template. Run Build-Templates.ps1 first."
