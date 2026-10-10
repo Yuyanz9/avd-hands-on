@@ -6,15 +6,17 @@
 
 | ファイル | 用途 |
 | --- | --- |
-| [固定設定](infra/settings.json) | 記事の値、3サブネット、AVD の固定設定 |
+| [固定設定](infra/settings.json) | 記事の値、3サブネット、AVD の固定設定部分 |
 | [Network ソース](infra/network.bicep) | VNet・3サブネット・NAT・Public IP |
-| [AVD 入口](infra/avd.bicep)／[モジュール](infra/modules/avd.bicep) | secure password、実行者 ID、VM・AVD・RBAC・SSO |
-| [Network JSON](templates/network.json)／[AVD JSON](templates/avd.json) | Deploy to Azure 用に生成。モジュールは JSON に埋め込み |
+| [AVD 入口](infra/avd.bicep)／[モジュール](infra/modules/avd.bicep) | 既定値付き編集可能パラメーター、secure password、実行者 ID、VM・AVD・RBAC・SSO・22:00停止 |
+| [セッションホスト共通モジュール](infra/modules/session-host.bicep) | Entra 参加、既存プール登録、日本語設定拡張機能、VM Login RBAC、自動停止 |
+| [追加ホスト入口](infra/session-host.bicep) | 既存 Standard 管理プールへ1台を追加。登録キーは secure parameter |
+| [Network／AVD／追加ホスト JSON](templates/network.json)／[AVD JSON](templates/avd.json)／[追加ホスト JSON](templates/session-host.json) | Deploy to Azure 用に生成。モジュールは JSON に埋め込み |
 | [生成スクリプト](scripts/Build-Templates.ps1) | Azure リソースを作らないローカルコンパイル |
-| [ボタン設定スクリプト](scripts/Set-DeployButtons.ps1) | 将来の公開先と固定コミットでローカル README／メタデータを更新 |
+| [ボタン設定スクリプト](scripts/Set-DeployButtons.ps1) | 公開リポジトリとテンプレートを含む固定コミットを指定し、ローカル README／メタデータを更新 |
 | [契約テスト](tests/Test-ProductionTemplates.ps1) | 固定値、生成物、接続設定、ボタン生成・失敗時の非更新を確認 |
 
-記事の ARM をコピーしたものではなく、記事の固定設定と既存 Bicep の実装パターンを使って新規に作成しています。外部 ARM の旧ボタンは本番の実行入口から外しました。
+記事の ARM をコピーしたものではなく、記事の固定設定と既存 Bicep の実装パターンを使って新規に作成しています。外部 ARM の旧ボタンは本番の実行入口から外しました。Day 2 のセキュアジャンプ環境と Peering は、[手動手順](day2-secure-jump.md)だけで行います。
 
 ## 取り込んだ参考素材
 
@@ -41,9 +43,9 @@
 | ネットワーク | `10.10.0.0/16`、Cloud PC・Server・AVD の3サブネット | `10.42.0.0/16`、Session Hosts・Targets の2サブネット |
 | NSG | 記事に合わせ未追加 | 用途別 NSG あり |
 | 送信 | 3サブネットに NAT、暗黙送信なし | 2サブネットに NAT、暗黙送信なし |
-| 入力 | Network なし、AVD はパスワードのみ | 名前・台数・Object ID 等を指定 |
+| 入力 | Network なし、AVD は既定値付き編集可能欄と secure password | 名前・台数・Object ID 等を指定 |
 | VM／OS | D4as_v6、Microsoft 365 Apps なしの Windows 11 25H2 AVD | D2s_v5、Windows 11 24H2 |
 | 接続・SSO | 実行ユーザーへ RBAC、SSO 常時設定、テナント準備は講師 | Object ID の RBAC、SSO オプトイン |
 | 実機確認 | 未実施 | 別ルートの限定確認記録で、本番用一式の実証ではない |
 
-Network＋AVD の一括ルート、旧デプロイ・タグ依存の削除スクリプト、Day 2 の VM、Windows 365 の実装は同梱しません。親の資料・内部メモ・PowerPoint・顧客固有情報も対象外です。比較用コピーは自動同期しないため、更新時は差分・ハッシュと本番への影響を確認します。
+Network＋AVD の一括ルート、旧デプロイ・タグ依存の削除スクリプト、Day 2 の VM／Peering の IaC、Windows 365 の実装は同梱しません。Day 2 の VM と Peering は手動手順に従います。親の資料・内部メモ・PowerPoint・顧客固有情報も対象外です。比較用コピーは自動同期しないため、更新時は差分・ハッシュと本番への影響を確認します。
