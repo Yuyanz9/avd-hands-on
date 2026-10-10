@@ -4,8 +4,6 @@
 
 **公開済みの準備版です。** 2026-10-07 に旧版の Network／AVD ボタンを試行し、Windows App からの接続成功と日本語化に問題がなさそうとの利用者報告がありました。今回の更新では portal で選んだ任意名の RG を AVD のネットワーク参照先にも使いますが、この更新版の Azure 実デプロイは未確認です。Windows 365 との通しリハーサルと SSO のシームレスな資格情報フローも未確認のため、[修正一覧](revision-list.md) R10 の確認を講師が済ませてから受講者へ配布してください。
 
-> **公開切替中：** Deploy to Azure ボタンは次の更新まで旧テンプレートを参照します。ボタンが切り替わるまでは既存どおり `rg-vdi` を選んでください。
-
 ## 1. 受講者が前提確認と RG を手動設定
 
 [Day 1 の統合手順](day1-handson.md)のパート1に従い、指定テナント・サブスクリプションを確認し、講師が指定する任意の名前で演習用 RG を Japan East に手動作成します。両ボタンで同じ既存 RG を選びます。テンプレートは RG を作成しません。
@@ -19,7 +17,7 @@ SSO のテナント側準備は講師が実施します。Microsoft Entra 管理
 ## 2. Network を Deploy to Azure
 
 <!-- deploy-button-network:start -->
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F092c61ff9cacfab625ede038c211ed21e3d59f74%2Ftemplates%2Fnetwork.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2Fc42336345433c34a8c878df7795d5dcd20dadc95%2Ftemplates%2Fnetwork.json)
 <!-- deploy-button-network:end -->
 
 使用するテンプレート：[templates/network.json](templates/network.json)。**テンプレート固有の入力パラメーターはありません。** Azure portal でサブスクリプションと手順1で作成した既存の演習用 RG を選択します。RG 名は固定されていません。
@@ -42,7 +40,7 @@ Network の成功と3サブネットを確認後、Windows 365 担当者の資�
 ## 4. AVD を Deploy to Azure
 
 <!-- deploy-button-avd:start -->
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F092c61ff9cacfab625ede038c211ed21e3d59f74%2Ftemplates%2Favd.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2Fc42336345433c34a8c878df7795d5dcd20dadc95%2Ftemplates%2Favd.json)
 <!-- deploy-button-avd:end -->
 
 使用するテンプレート：[templates/avd.json](templates/avd.json)。**入力するテンプレートパラメーターは VM ローカル管理者のパスワード1つだけ**です。秘密を固定値・ファイル・スクリーンショットに保存しません。
