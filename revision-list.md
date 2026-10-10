@@ -14,7 +14,7 @@
 | R06 | 一部実装・設計確認待ち | 送信・受信制御 | 3サブネットに NAT と `defaultOutboundAccess: false` を明示。記事同様 NSG は未追加。Windows 365／AVD の通信と受信・東西制御を配布前に確認 |
 | R07 | ローカル実装済み | Windows 365 後の Network 保護 | AVD は既存ネットワーク参照のみ。VNet・サブネット・NAT の作成／再適用は含まない。実際の ANC 等への影響は担当者と R10 で確認 |
 | R08 | ローカル実装済み | 固定パラメーター | Network は入力なし、AVD は secure password 1つだけ。Object ID は `deployer()`、VM 名は固定 `avd-0`。サブスクリプションと同じ演習用 RG は portal で選択し、両デプロイで一致させる |
-| R09 | 設定済み・実機確認待ち | VM・イメージ・外部スクリプト | 記事の D4as_v6／Office 入り Windows 11 25H2／日本語設定を採用。提供可否・クォータ・利用資格、`latest` の版固定、日本語設定スクリプトの更新・自動再起動による失敗と時間を確認 |
+| R09 | 設定済み・実機確認待ち | VM・イメージ・外部スクリプト | D4as_v6／Microsoft 365 Apps なしの Windows 11 25H2 AVD イメージ（`windows-11`／`win11-25h2-avd`）／日本語設定を採用。提供可否・クォータ・利用資格、`latest` の版固定、日本語設定スクリプトの更新・自動再起動による失敗と時間を確認 |
 | R10 | 一部確認済み・更新版の実機確認待ち | 通しリハーサル | 旧版は利用者報告で Network／AVD を試行し、Windows App 接続と日本語化を確認。任意 RG 対応版を講師権限で同一 RG にデプロイし、Network → Windows 365 → AVD → SSO 接続を通し確認する。SSO のシームレスな資格情報フロー、待機・失敗・再実行・Windows 365 への影響も記録 |
 | R11 | 未整備 | 保持・削除 | Day 2 保持、停止後の課金、Windows 365 担当者への確認、RG 削除可否、ANC／Entra デバイス等の残存処理を具体化。旧タグ依存の削除スクリプトは使わない |
 | R12 | ローカル実装済み | 接続用 RBAC | 実行メンバーユーザーへ DAG の Desktop Virtualization User と VM の Virtual Machine User Login を付与。ロール作成権限、反映、別アカウントによる代行時の挙動を実機確認 |

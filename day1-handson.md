@@ -28,7 +28,7 @@
 | 利用者・ライセンス | 対象テナントのメンバーアカウント、AVD と Windows 365 の利用資格 |
 | Azure の権限 | RG 作成権限、リソース作成権限、DAG と VM に必要な RBAC を割り当てる権限。Contributor のみでは不足 |
 | プロバイダー | `Microsoft.Network`、`Microsoft.Compute`、`Microsoft.DesktopVirtualization` の登録 |
-| SKU・イメージ | Japan East の `Standard_D4as_v6`、vCPU クォータ、Office 入り Windows 11 25H2 イメージ、Trusted Launch の利用可否 |
+| SKU・イメージ | Japan East の `Standard_D4as_v6`、vCPU クォータ、Microsoft 365 Apps なしの Windows 11 25H2 AVD イメージ、Trusted Launch の利用可否 |
 | 通信・制約 | AVD、Entra ID、更新、構成パッケージ等への外向き通信。Azure Policy、Conditional Access／MFA |
 | SSO のテナント設定 | Windows Cloud Login の RDP 認証有効化。以下の講師準備を実施 |
 | 運用 | Windows 365 側の準備、Day 2 保持、停止・削除日、残存費用 |
@@ -129,7 +129,7 @@ NAT の Public IP は VM への受信用ではありません。Server 用の VM
 | ホストプール | `DefaultHostPool`、Pooled／Standard／BreadthFirst、最大5セッション |
 | DAG／Workspace | `DefaultHostPool-DAG`／`AVD Session Host`、Workspace へ DAG 登録 |
 | VM | `avd-0`、1台、`Standard_D4as_v6`、128 GiB `StandardSSD_LRS` |
-| OS | `microsoftwindowsdesktop`／`office-365`／`win11-25h2-avd-m365`／`latest` |
+| OS | `microsoftwindowsdesktop`／`windows-11`／`win11-25h2-avd`／`latest`（Microsoft 365 Apps なし） |
 | ID・保護 | Entra ID 参加、システム割り当て ID、Intune なし、Trusted Launch／Secure Boot／vTPM |
 | 接続権限 | 実行したユーザーへ DAG の Desktop Virtualization User と VM の Virtual Machine User Login |
 | SSO | ホストプールへ `enablerdsaadauth:i:1` を設定 |

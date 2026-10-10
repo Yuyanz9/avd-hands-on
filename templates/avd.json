@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.42.1.51946",
-      "templateHash": "10896166099207299138"
+      "templateHash": "12905914098983211034"
     }
   },
   "parameters": {
@@ -43,7 +43,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.42.1.51946",
-              "templateHash": "6904642574764173387"
+              "templateHash": "15061045933610155528"
             }
           },
           "parameters": {
@@ -95,8 +95,8 @@
                 "vmDiskType": "StandardSSD_LRS",
                 "vmDiskSizeGB": 128,
                 "imagePublisher": "microsoftwindowsdesktop",
-                "imageOffer": "office-365",
-                "imageSku": "win11-25h2-avd-m365",
+                "imageOffer": "windows-11",
+                "imageSku": "win11-25h2-avd",
                 "imageVersion": "latest",
                 "maxSessionLimit": 5,
                 "customConfigurationScriptUrl": "https://nogujapanese.blob.core.windows.net/avd-deploy/JPNOFLNG.ps1",

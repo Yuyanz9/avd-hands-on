@@ -42,7 +42,7 @@
 | NSG | 記事に合わせ未追加 | 用途別 NSG あり |
 | 送信 | 3サブネットに NAT、暗黙送信なし | 2サブネットに NAT、暗黙送信なし |
 | 入力 | Network なし、AVD はパスワードのみ | 名前・台数・Object ID 等を指定 |
-| VM／OS | D4as_v6、Office 入り Windows 11 25H2 | D2s_v5、Windows 11 24H2 |
+| VM／OS | D4as_v6、Microsoft 365 Apps なしの Windows 11 25H2 AVD | D2s_v5、Windows 11 24H2 |
 | 接続・SSO | 実行ユーザーへ RBAC、SSO 常時設定、テナント準備は講師 | Object ID の RBAC、SSO オプトイン |
 | 実機確認 | 未実施 | 別ルートの限定確認記録で、本番用一式の実証ではない |
 

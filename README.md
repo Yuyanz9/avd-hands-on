@@ -53,7 +53,7 @@ Network の成功と3サブネットを確認後、Windows 365 担当者の資�
 | Workspace | `AVD Session Host` |
 | セッションホスト | `avd-0`、1台、`Standard_D4as_v6` |
 | 管理者／OS ディスク | `vmadmin`／128 GiB、`StandardSSD_LRS` |
-| イメージ | `microsoftwindowsdesktop`／`office-365`／`win11-25h2-avd-m365`／`latest` |
+| イメージ | `microsoftwindowsdesktop`／`windows-11`／`win11-25h2-avd`／`latest`（Microsoft 365 Apps なし） |
 | ホストプール方式 | Pooled／Standard／BreadthFirst、最大5セッション |
 | 参加・保護 | Microsoft Entra ID 参加、Intune なし、Trusted Launch／Secure Boot／vTPM |
 | SSO | `enablerdsaadauth:i:1` を常に設定 |
