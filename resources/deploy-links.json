@@ -2,10 +2,10 @@
   "status": "fixed-templates-with-raw-urls-verified-not-live-validated",
   "settingsFile": "infra/settings.json",
   "publication": {
-    "repository": "Yuyanz9/avd-hands-on",
-    "templatePathPrefix": "",
+    "templateCommit": "501ca0597ed19a945e82a8734f4d70e8a6174120",
     "rawUrlsVerified": true,
-    "templateCommit": "923bfbeb456d8569e8fb811c44339f92bb94b326"
+    "repository": "Yuyanz9/avd-hands-on",
+    "templatePathPrefix": ""
   },
   "orderedDay1Phases": [
     "manual-prerequisites-and-resource-group",
@@ -17,17 +17,26 @@
     {
       "phase": "network",
       "localTemplate": "templates/network.json",
-      "templateUri": "https://raw.githubusercontent.com/Yuyanz9/avd-hands-on/923bfbeb456d8569e8fb811c44339f92bb94b326/templates/network.json",
-      "deployToAzureUrl": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F923bfbeb456d8569e8fb811c44339f92bb94b326%2Ftemplates%2Fnetwork.json",
-      "localTemplateSha256": "AA396246E134FF2F32400DA2BB9228AA1552B72E2C928CE7A708F19D62740CC8",
+      "templateUri": "https://raw.githubusercontent.com/Yuyanz9/avd-hands-on/501ca0597ed19a945e82a8734f4d70e8a6174120/templates/network.json",
+      "deployToAzureUrl": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F501ca0597ed19a945e82a8734f4d70e8a6174120%2Ftemplates%2Fnetwork.json",
+      "localTemplateSha256": "350A508179AD840BAAD6BD33D0B7B2B7D15BE74D10E0D1E1DE66CF3FC2A1B331",
+      "productionApproved": false,
+      "executionValidatedForThisFlow": false
+    },
+    {
+      "phase": "network-validation",
+      "localTemplate": "templates/network-validation.json",
+      "templateUri": "https://raw.githubusercontent.com/Yuyanz9/avd-hands-on/501ca0597ed19a945e82a8734f4d70e8a6174120/templates/network-validation.json",
+      "deployToAzureUrl": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F501ca0597ed19a945e82a8734f4d70e8a6174120%2Ftemplates%2Fnetwork-validation.json",
+      "localTemplateSha256": "17EE7AD945C4D67E3352B806607D519F0B59E11B38A32DEF631AC7C54CE3A5EB",
       "productionApproved": false,
       "executionValidatedForThisFlow": false
     },
     {
       "phase": "avd",
       "localTemplate": "templates/avd.json",
-      "templateUri": "https://raw.githubusercontent.com/Yuyanz9/avd-hands-on/923bfbeb456d8569e8fb811c44339f92bb94b326/templates/avd.json",
-      "deployToAzureUrl": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F923bfbeb456d8569e8fb811c44339f92bb94b326%2Ftemplates%2Favd.json",
+      "templateUri": "https://raw.githubusercontent.com/Yuyanz9/avd-hands-on/501ca0597ed19a945e82a8734f4d70e8a6174120/templates/avd.json",
+      "deployToAzureUrl": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F501ca0597ed19a945e82a8734f4d70e8a6174120%2Ftemplates%2Favd.json",
       "localTemplateSha256": "503E5FFDF87A26DF955014172EA3EECAD12370257C0B1F0627F13B22D5C1BCAF",
       "productionApproved": false,
       "executionValidatedForThisFlow": false
@@ -35,8 +44,8 @@
     {
       "phase": "session-host",
       "localTemplate": "templates/session-host.json",
-      "templateUri": "https://raw.githubusercontent.com/Yuyanz9/avd-hands-on/923bfbeb456d8569e8fb811c44339f92bb94b326/templates/session-host.json",
-      "deployToAzureUrl": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F923bfbeb456d8569e8fb811c44339f92bb94b326%2Ftemplates%2Fsession-host.json",
+      "templateUri": "https://raw.githubusercontent.com/Yuyanz9/avd-hands-on/501ca0597ed19a945e82a8734f4d70e8a6174120/templates/session-host.json",
+      "deployToAzureUrl": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F501ca0597ed19a945e82a8734f4d70e8a6174120%2Ftemplates%2Fsession-host.json",
       "localTemplateSha256": "9810376C0E4F1CC792FECD41F902612DD04B67B680E090147C11D8C232602EB8",
       "productionApproved": false,
       "executionValidatedForThisFlow": false

@@ -1,30 +1,60 @@
 targetScope = 'resourceGroup'
 
-var settings = loadJsonContent('./settings.json')
+@description('Azure region for the virtual network and network resources.')
+@metadata({ displayName: 'Location' })
+param location string = 'japaneast'
 
-resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' = {
-  name: settings.network.vnetName
-  location: settings.location
-  properties: {
-    addressSpace: {
-      addressPrefixes: [
-        settings.network.addressPrefix
-      ]
-    }
-    subnets: [for subnet in settings.network.subnets: {
-      name: subnet.name
-      properties: {
-        addressPrefix: subnet.addressPrefix
-        defaultOutboundAccess: true
-        privateEndpointNetworkPolicies: 'Disabled'
-        privateLinkServiceNetworkPolicies: 'Enabled'
-      }
-    }]
+@description('Name of the virtual network.')
+@metadata({ displayName: 'Virtual Network Name' })
+@minLength(2)
+@maxLength(64)
+param vnetName string = 'vnet-vdi'
+
+@description('Virtual network CIDR. Keep all subnet prefixes inside this address space.')
+@metadata({ displayName: 'Virtual Network Address Prefix' })
+param vnetAddressPrefix string = '10.10.0.0/16'
+
+@description('Cloud PC subnet CIDR. Subnet prefixes must not overlap.')
+@metadata({ displayName: 'Cloud PC Subnet Address Prefix' })
+param cloudPcSubnetPrefix string = '10.10.1.0/24'
+
+@description('Server subnet CIDR. Subnet prefixes must not overlap.')
+@metadata({ displayName: 'Server Subnet Address Prefix' })
+param serverSubnetPrefix string = '10.10.2.0/24'
+
+@description('AVD subnet CIDR. Subnet prefixes must not overlap.')
+@metadata({ displayName: 'AVD Subnet Address Prefix' })
+param avdSubnetPrefix string = '10.10.3.0/24'
+
+@description('Name of the Standard NAT Gateway.')
+@metadata({ displayName: 'NAT Gateway Name' })
+@minLength(1)
+@maxLength(80)
+param natGatewayName string = 'nat-vdi'
+
+@description('Name of the static Standard public IP used by the NAT Gateway.')
+@metadata({ displayName: 'Public IP Name' })
+@minLength(1)
+@maxLength(80)
+param publicIpName string = 'pip-vdi'
+
+module network './modules/network-core.bicep' = {
+  name: 'network'
+  params: {
+    location: location
+    vnetName: vnetName
+    vnetAddressPrefix: vnetAddressPrefix
+    cloudPcSubnetPrefix: cloudPcSubnetPrefix
+    serverSubnetPrefix: serverSubnetPrefix
+    avdSubnetPrefix: avdSubnetPrefix
+    natGatewayName: natGatewayName
+    publicIpName: publicIpName
+    useNatGateway: true
   }
 }
 
-output resourceGroupName string = resourceGroup().name
-output vnetId string = virtualNetwork.id
-output cloudPcSubnetId string = '${virtualNetwork.id}/subnets/${settings.network.subnets[0].name}'
-output serverSubnetId string = '${virtualNetwork.id}/subnets/${settings.network.subnets[1].name}'
-output avdSubnetId string = '${virtualNetwork.id}/subnets/${settings.network.subnets[2].name}'
+output resourceGroupName string = network.outputs.resourceGroupName
+output vnetId string = network.outputs.vnetId
+output cloudPcSubnetId string = network.outputs.cloudPcSubnetId
+output serverSubnetId string = network.outputs.serverSubnetId
+output avdSubnetId string = network.outputs.avdSubnetId

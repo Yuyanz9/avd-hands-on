@@ -1,14 +1,16 @@
 # Day 1 本番用ハンズオン：Network → Windows 365 → AVD
 
-**手動の前提確認・RG 設定 → Network ボタン → Windows 365 担当パート → AVD ボタン**の順で使う一式です。記事の3サブネットと固定値を採用し、AVD は接続用 RBAC とホストプールの SSO 設定まで IaC に含めています。既存プールへのホスト追加ボタンと、手動で行う Day 2 セキュアジャンプ演習も用意しています。
+**手動の前提確認・RG 設定 → Network（運用または検証）ボタン → Windows 365 担当パート → AVD ボタン**の順で使う一式です。Network は NAT Gateway あり／なしの2方式を用意し、3サブネットの既定値を保ったままネットワーク設定を変更できます。AVD は接続用 RBAC とホストプールの SSO 設定まで IaC に含めています。既存プールへのホスト追加ボタンと、手動で行う Day 2 セキュアジャンプ演習も用意しています。
 
-**更新版を公開済みです。** Network／AVD／session-host の3つの ARM JSON は、公開コミットに固定した raw URL から匿名取得し、同梱ファイルとの SHA-256 一致を確認済みです。今回の更新で Network は NAT Gateway／送信用 Public IP を作らず、3サブネットで Azure の既定の送信アクセスを有効にします。AVD／Windows 365 用の動的デバイスグループ手順も追加しました。これらの変更を含む版の Azure 実デプロイ、動的グループの評価、Windows 365 との通しリハーサル、SSO のシームレスな資格情報フローは未確認です。2026-10-07 の旧版 Network／AVD ボタンでは Windows App 接続成功と日本語化に問題がなさそうとの利用者報告がありますが、[修正一覧](revision-list.md) R10 の確認を講師が済ませてから受講者へ配布してください。
+**Network は運用版と検証版を選べます。** 運用版は Standard NAT Gateway と静的 Standard Public IP を作成するため継続費用が発生します。検証版は NAT Gateway／Public IP を作らず、Azure の既定の送信アクセスを使います。4つの ARM JSON は公開コミットに固定した raw URL から匿名取得し、同梱ファイルとの SHA-256 一致を確認済みです。Network の Azure 実デプロイ、動的デバイスグループの評価、Windows 365 との通しリハーサル、SSO のシームレスな資格情報フローは未確認です。2026-10-07 の旧版 Network／AVD ボタンでは Windows App 接続成功と日本語化に問題がなさそうとの利用者報告がありますが、[修正一覧](revision-list.md) R10 の確認を講師が済ませてから受講者へ配布してください。
+
+![Network・AVD・追加セッションホストの IaC リソースとデプロイ時の選択肢](resources/images/iac-resource-map.svg)
 
 ## 1. 受講者が前提確認と RG を手動設定
 
 [Day 1 の統合手順](day1-handson.md)のパート1に従い、指定テナント・サブスクリプションを確認し、講師が指定する任意の名前で演習用 RG を Japan East に手動作成します。両ボタンで同じ既存 RG を選びます。テンプレートは RG を作成しません。
 
-**RG 名は任意です。既定では Network と AVD を同じ RG にデプロイします。** VNet が別 RG にある場合は、同じサブスクリプション内の既存 VNet RG を AVD の `Virtual Network Resource Group Name` に指定できます。VNet 名は既定値のままでも変更可能、VM 名には分単位の日時プレフィックスを使います。参加者ごとの環境を分ける場合は、受講者ごとに専用 RG を用意してください。共有・業務用 RG への実行は禁止です。
+**RG 名は任意です。既定では選択した Network 方式と AVD を同じ RG にデプロイします。** Network の2方式は同じ既定 VNet 名を使うため、1つの VNet にはどちらか一方だけを選びます。既存 VNet が別 RG にある場合は、同じサブスクリプション内の VNet RG を AVD の `Virtual Network Resource Group Name` に指定できます。VNet 名とネットワーク CIDR は変更可能です。参加者ごとの環境を分ける場合は、受講者ごとに専用 RG と重複しない VNet 名・CIDR を用意してください。共有・業務用 RG への実行は禁止です。
 
 講師は事前に、利用資格、VM サイズ・イメージ・クォータ、Azure Policy、必要な外向き通信とロール割り当て権限を確認します。**Contributor だけでは AVD の RBAC 作成はできません。**
 
@@ -16,22 +18,37 @@ SSO のテナント側準備は講師が実施します。Microsoft Entra 管理
 
 ## 2. Network を Deploy to Azure
 
+Network のどちらか一方を選んでください。2つのボタンはどちらも既存の RG にデプロイし、同じ既定値で実行すると同じ VNet とサブネットを対象にします。
+
+### 2.1 運用（NAT Gateway あり）
+
 <!-- deploy-button-network:start -->
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F923bfbeb456d8569e8fb811c44339f92bb94b326%2Ftemplates%2Fnetwork.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F501ca0597ed19a945e82a8734f4d70e8a6174120%2Ftemplates%2Fnetwork.json)
 <!-- deploy-button-network:end -->
 
-使用するテンプレート：[templates/network.json](templates/network.json)。**テンプレート固有の入力パラメーターはありません。** Azure portal でサブスクリプションと手順1で作成した既存の演習用 RG を選択します。RG 名は固定されていません。
+使用するテンプレート：[templates/network.json](templates/network.json)。Azure portal でサブスクリプションと手順1で作成した既存の演習用 RG を選び、必要に応じて以下の既定値を変更します。
+
+### 2.2 検証（NAT なし）
+
+<!-- deploy-button-network-validation:start -->
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F501ca0597ed19a945e82a8734f4d70e8a6174120%2Ftemplates%2Fnetwork-validation.json)
+<!-- deploy-button-network-validation:end -->
+
+使用するテンプレート：[templates/network-validation.json](templates/network-validation.json)。既定の送信アクセスで検証する場合はこちらを選びます。NAT Gateway と送信用 Public IP は作成しません。
 
 | 対象 | 既定値・自動処理 |
 | --- | --- |
-| リージョン／VNet | `japaneast`／`vnet-vdi`、`10.10.0.0/16` |
-| Cloud PC 用 | `snet-cloudpc`、`10.10.1.0/24` |
-| Server 用 | `snet-server`、`10.10.2.0/24`（今回は VM を作らない） |
-| AVD 用 | `snet-avd`、`10.10.3.0/24` |
-| 送信経路 | NAT Gateway／送信用 Public IP なし。Azure の既定の送信アクセスを使用 |
-| サブネット | 3つとも `defaultOutboundAccess: true`（プライベート サブネットではない） |
+| Location／VNet | `japaneast`／`vnet-vdi`／`10.10.0.0/16`。両方式で変更可能 |
+| Cloud PC 用 | `snet-cloudpc`／`10.10.1.0/24`。CIDR は変更可能 |
+| Server 用 | `snet-server`／`10.10.2.0/24`（今回は VM を作らない）。CIDR は変更可能 |
+| AVD 用 | `snet-avd`／`10.10.3.0/24`。CIDR は変更可能 |
+| 運用方式 | `nat-vdi`／`pip-vdi`（名前は変更可能）、Standard NAT Gateway と静的 Standard IPv4 Public IP |
+| 検証方式 | NAT Gateway／送信用 Public IP なし。Azure の既定の送信アクセスを使用 |
+| サブネット | 運用方式は `defaultOutboundAccess: false` で NAT Gateway を関連付け。検証方式は `true`（プライベート サブネットではない） |
 
-記事に合わせ **NSG は未追加**です。受信・東西通信の制御は配布前の検討事項です。既定の送信アクセスは固定・予測可能な送信元 IP を提供しません。VM に Public IP は付けません。Cloud PC 用サブネットだけでは ANC や Cloud PC は作成されません。既存 VNet の再適用で旧 NAT Gateway／Public IP が自動削除されるわけではなく、残存リソースに料金が続く場合があります。
+CIDR は VNet の範囲内に収め、サブネット同士が重複しない値を指定してください。記事に合わせ **NSG は未追加**です。受信・東西通信の制御は配布前の検討事項です。既定の送信アクセスは固定・予測可能な送信元 IP を提供しません。VM に Public IP は付けません。Cloud PC 用サブネットだけでは ANC や Cloud PC は作成されません。
+
+**運用版には NAT Gateway と Public IP の継続費用が発生します。** 既存 VNet を NAT ありから検証版へ切り替えると、サブネットの NAT 関連付けは外れますが、増分デプロイでは NAT Gateway／Public IP リソース自体は自動削除されず、料金が続く場合があります。1つの VNet には一方の方式を選び、切り替え時は残存リソースと依存関係を講師が確認してください。
 
 ## 3. Windows 365 担当パート
 
@@ -40,7 +57,7 @@ Network の成功と3サブネットを確認後、Windows 365 担当者の資�
 ## 4. AVD を Deploy to Azure
 
 <!-- deploy-button-avd:start -->
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F923bfbeb456d8569e8fb811c44339f92bb94b326%2Ftemplates%2Favd.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F501ca0597ed19a945e82a8734f4d70e8a6174120%2Ftemplates%2Favd.json)
 <!-- deploy-button-avd:end -->
 
 使用するテンプレート：[templates/avd.json](templates/avd.json)。パスワード以外は現在の標準値が初期入力され、必要に応じて変更できます。パスワードと既存リソースの名前・配置、イメージ、Workspace 表示名、VM サイズ／ディスク種別、最大セッション数、VM 名プレフィックスを確認してください。
@@ -68,7 +85,7 @@ AVD は、入力した VNet の RG／名前／サブネットを参照するだ�
 ## 5. 既存プールへセッションホストを追加
 
 <!-- deploy-button-session-host:start -->
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F923bfbeb456d8569e8fb811c44339f92bb94b326%2Ftemplates%2Fsession-host.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F501ca0597ed19a945e82a8734f4d70e8a6174120%2Ftemplates%2Fsession-host.json)
 <!-- deploy-button-session-host:end -->
 
 使用するテンプレート：[templates/session-host.json](templates/session-host.json)。このテンプレートは既存の Standard 管理ホストプールへ VM を1台だけ追加します。既存のホストプール、アプリケーショングループ、Workspace は作成・更新しません。Azure portal で対象プールと既存 VNet があるリソースグループをデプロイ先に選びます（VNet は別 RG も指定可能です）。
@@ -103,7 +120,7 @@ Windows 365 のプロビジョニング ポリシーを割り当てる対象は 
 
 - VM 名プレフィックス、VM サイズ、ディスク種別、イメージ SKU、最大セッション数、VNet／サブネット名、配置 RG、ロケーション、Workspace 表示名は既定値を確認・変更できます。名前の重複や VNet とリージョンの不整合を避けます。
 - AVD と追加ホストの VM は毎日22:00（日本時間）に自動停止します。Day 2 のセキュアジャンプ VM は IaC 対象外で、手動で同じ停止時刻を設定します。
-- Network テンプレートは NAT Gateway／Public IP を作らず、3サブネットで `defaultOutboundAccess: true` を指定します。既定の送信アクセスは固定 IP や送信経路の保証ではありません。
+- Network は運用版（NAT Gateway／静的 Public IP、`defaultOutboundAccess: false`）と検証版（NAT なし、`defaultOutboundAccess: true`）から選びます。運用版には継続費用がかかり、検証版の既定送信元 IP は固定されません。
 - 接続権限2種類とホストプール SSO を自動設定します。Windows Cloud Login のテナント側準備は講師担当です。
 
 イメージの `latest`、DSC パッケージ、記事の日本語設定スクリプトは外部依存です。**スクリプトは可変で、自動再起動による拡張機能の失敗・待機時間を含め未実証**です。配布前に通しリハーサルし、版固定・再起動方式の調整要否を判断します。デプロイ成功と SSO 接続成功は別の確認です。
@@ -118,7 +135,7 @@ AVD テンプレートは公開 Blob Storage の `JPNOFLNG.ps1` を取得し、C
 
 ## 講師・作成者向け：生成と配信リンクの準備
 
-Network の固定値と AVD の変更しない基礎設定は [infra/settings.json](infra/settings.json)です。利用者が変更する AVD 値の既定値は Bicep のパラメーターに記載しています。このフォルダーを作業ディレクトリにして PowerShell 7 と Azure CLI の Bicep コンパイラーで実行します。ローカル生成は Bicep 0.42.1 で確認しています。以下は Azure ログインやデプロイを行いません。
+Network の編集可能な既定値と AVD の変更しない基礎設定は [infra/settings.json](infra/settings.json)および対応する Bicep のパラメーターに記載しています。Network の portal 既定値は settings と一致するよう契約テストで検証します。このフォルダーを作業ディレクトリにして PowerShell 7 と Azure CLI の Bicep コンパイラーで実行します。ローカル生成は Bicep 0.42.1 で確認しています。以下は Azure ログインやデプロイを行いません。
 
 ```powershell
 .\scripts\Build-Templates.ps1
@@ -127,7 +144,7 @@ Network の固定値と AVD の変更しない基礎設定は [infra/settings.js
 
 AVD のモジュールは生成 JSON に埋め込まれ、リモート Bicep や別の ARM テンプレートの配信は不要です。生成後はソースと JSON をセットで管理してください。
 
-現在のボタンは、[配信管理データ](resources/deploy-links.json)に記録した公開コミットの ARM JSON に固定しています。3テンプレートの SHA-256 を同ファイルに記録し、公開 raw URL からの匿名取得結果と一致することを確認済みです。別の版を公開する場合は、その**テンプレートが含まれる40桁のコミット SHA**でボタンを設定します。
+現在のボタンは、[配信管理データ](resources/deploy-links.json)に記録した公開コミットの ARM JSON に固定しています。4テンプレートの SHA-256 を同ファイルに記録し、公開 raw URL からの匿名取得結果と一致することを確認済みです。別の版を公開する場合は、その**テンプレートが含まれる40桁のコミット SHA**でボタンを設定します。
 
 ```powershell
 .\scripts\Set-DeployButtons.ps1 `
@@ -135,7 +152,7 @@ AVD のモジュールは生成 JSON に埋め込まれ、リモート Bicep や
     -TemplateCommit '<テンプレートを含む40桁のコミットSHA>'
 ```
 
-公開 repo 内のサブフォルダーに置く場合は `-TemplatePathPrefix 'avd-hands-on/production'` 等を指定します。スクリプトはローカル README と [配信管理データ](resources/deploy-links.json)のみを更新し、repo 作成・公開・push はしません。再実行後は3つの raw URL を匿名取得し、ローカルファイルとの SHA-256 一致を確認するまで管理データの `rawUrlsVerified` を `false` のままにします。
+公開 repo 内のサブフォルダーに置く場合は `-TemplatePathPrefix 'avd-hands-on/production'` 等を指定します。スクリプトはローカル README と [配信管理データ](resources/deploy-links.json)のみを更新し、repo 作成・公開・push はしません。再実行後は4つの raw URL を匿名取得し、ローカルファイルとの SHA-256 一致を確認するまで管理データの `rawUrlsVerified` を `false` のままにします。
 
 ボタンは [Microsoft 公式の README パターン](https://learn.microsoft.com/ja-jp/azure/azure-resource-manager/templates/deploy-to-azure-button)に沿い、公開 raw ARM JSON の URL をエンコードして Azure portal へ渡します。**非公開 GitHub repo の raw URL はそのままでは ARM が取得できません。** 配信時は固定コミットのファイルが匿名取得でき、同梱 JSON のハッシュと一致することを確認してから、ボタンを配布します。
 

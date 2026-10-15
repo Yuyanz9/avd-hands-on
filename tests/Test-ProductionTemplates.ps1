@@ -74,7 +74,7 @@ for ($index = 0; $index -lt 3; $index++) {
 }
 
 $templates = @{}
-foreach ($phase in @('network', 'avd', 'session-host')) {
+foreach ($phase in @('network', 'network-validation', 'avd', 'session-host')) {
     $stored = Read-Json (Join-Path $root "templates\$phase.json")
     $compiled = Invoke-TrainingAzureCli -Arguments @(
         'bicep', 'build', '--file', (Join-Path $root "infra\$phase.bicep"),
@@ -89,23 +89,64 @@ foreach ($phase in @('network', 'avd', 'session-host')) {
 }
 
 $network = $templates.network
-Assert-Template (-not $network.ContainsKey('parameters') -or $network.parameters.Count -eq 0) 'Network must have no attendee parameters.'
-Assert-Template ((Convert-CompactJson (Get-FixedSettings $network)) -ceq (Convert-CompactJson $settings)) 'Network fixed settings must match the source.'
-Assert-Template ($network.resources.Count -eq 1) 'Network must create only the VNet.'
-$vnets = Find-Resources $network 'Microsoft.Network/virtualNetworks'
-$nats = Find-Resources $network 'Microsoft.Network/natGateways'
-$publicIps = Find-Resources $network 'Microsoft.Network/publicIPAddresses'
-Assert-Template ($vnets.Count -eq 1 -and $nats.Count -eq 0 -and $publicIps.Count -eq 0) 'Expected one VNet and no NAT Gateway or public IP.'
-Assert-Template ($vnets[0].name -ceq "[variables('settings').network.vnetName]") 'VNet name must use fixed settings.'
-Assert-Template ($vnets[0].properties.addressSpace.addressPrefixes[0] -ceq "[variables('settings').network.addressPrefix]") 'VNet address space must use fixed settings.'
-$subnetCopy = @($vnets[0].properties.copy | Where-Object { $_.name -eq 'subnets' })
-Assert-Template ($subnetCopy.Count -eq 1 -and $subnetCopy[0].count -ceq "[length(variables('settings').network.subnets)]") 'All three fixed subnets must be deployed.'
-$subnet = $subnetCopy[0].input
-Assert-Template ($subnet.name -ceq "[variables('settings').network.subnets[copyIndex('subnets')].name]") 'Subnet names must use the fixed array.'
-Assert-Template ($subnet.properties.addressPrefix -ceq "[variables('settings').network.subnets[copyIndex('subnets')].addressPrefix]") 'Subnet prefixes must use the fixed array.'
-Assert-Template ($subnet.properties.defaultOutboundAccess -eq $true) 'Default outbound access must be enabled for non-private subnets.'
-Assert-Template (-not $subnet.properties.ContainsKey('natGateway')) 'Subnets must not use a NAT Gateway.'
-Assert-Template ($subnet.properties.privateEndpointNetworkPolicies -eq 'Disabled' -and $subnet.properties.privateLinkServiceNetworkPolicies -eq 'Enabled') 'Subnet policies must match the article.'
+$networkDefaults = @{
+    location = 'japaneast'
+    vnetName = 'vnet-vdi'
+    vnetAddressPrefix = '10.10.0.0/16'
+    cloudPcSubnetPrefix = '10.10.1.0/24'
+    serverSubnetPrefix = '10.10.2.0/24'
+    avdSubnetPrefix = '10.10.3.0/24'
+}
+foreach ($phase in @('network', 'network-validation')) {
+    $template = $templates[$phase]
+    $operational = $phase -eq 'network'
+    Assert-Template ($template.parameters.Count -eq $(if ($operational) { 8 } else { 6 })) "$phase must expose only the agreed editable parameters."
+    foreach ($name in $networkDefaults.Keys) {
+        Assert-Template ($template.parameters[$name].defaultValue -ceq $networkDefaults[$name]) "$phase must preserve the editable network default: $name."
+        Assert-Template (-not [string]::IsNullOrWhiteSpace($template.parameters[$name].metadata.displayName)) "$phase must show a friendly portal label for $name."
+    }
+    if ($operational) {
+        Assert-Template ($template.parameters.natGatewayName.defaultValue -ceq 'nat-vdi') 'Operational NAT Gateway name must keep its current default.'
+        Assert-Template ($template.parameters.publicIpName.defaultValue -ceq 'pip-vdi') 'Operational public IP name must keep its current default.'
+        Assert-Template ($template.parameters.natGatewayName.metadata.displayName -eq 'NAT Gateway Name' -and $template.parameters.publicIpName.metadata.displayName -eq 'Public IP Name') 'NAT and public IP names must be editable with clear labels.'
+    } else {
+        Assert-Template (-not $template.parameters.ContainsKey('natGatewayName') -and -not $template.parameters.ContainsKey('publicIpName')) 'Validation mode must not expose NAT or public IP names.'
+    }
+
+    Assert-Template ($template.resources.Count -eq 1) "$phase must invoke one shared network module."
+    $deployment = $template.resources[0]
+    Assert-Template ($deployment.type -eq 'Microsoft.Resources/deployments' -and $deployment.properties.mode -eq 'Incremental') "$phase must use an embedded incremental deployment."
+    Assert-Template ($deployment.properties.parameters.useNatGateway.value -eq $operational) "$phase must select the intended NAT mode."
+    foreach ($name in $networkDefaults.Keys) {
+        Assert-Template ($deployment.properties.parameters[$name].value -ceq "[parameters('$name')]") "$phase must forward the editable $name input."
+    }
+    $networkCore = $deployment.properties.template
+    $vnets = Find-Resources $networkCore 'Microsoft.Network/virtualNetworks'
+    $nats = Find-Resources $networkCore 'Microsoft.Network/natGateways'
+    $publicIps = Find-Resources $networkCore 'Microsoft.Network/publicIPAddresses'
+    Assert-Template ($vnets.Count -eq 1 -and $nats.Count -eq 1 -and $publicIps.Count -eq 1) "$phase must use the shared VNet/NAT implementation."
+    Assert-Template ($nats[0].condition -ceq "[parameters('useNatGateway')]" -and $publicIps[0].condition -ceq "[parameters('useNatGateway')]") "$phase must conditionally create NAT resources."
+    Assert-Template ($nats[0].sku.name -eq 'Standard' -and $nats[0].properties.idleTimeoutInMinutes -eq 4) 'Operational NAT Gateway must use Standard SKU and a four-minute idle timeout.'
+    Assert-Template ($publicIps[0].sku.name -eq 'Standard' -and $publicIps[0].properties.publicIPAllocationMethod -eq 'Static' -and $publicIps[0].properties.publicIPAddressVersion -eq 'IPv4') 'Operational NAT must use a static Standard IPv4 public IP.'
+    $expectedSubnetNames = @('snet-cloudpc', 'snet-server', 'snet-avd')
+    $expectedSubnetParameters = @('cloudPcSubnetPrefix', 'serverSubnetPrefix', 'avdSubnetPrefix')
+    $subnetDefinitions = @($networkCore.variables.subnets)
+    Assert-Template ($subnetDefinitions.Count -eq 3) "$phase must preserve all three subnet definitions."
+    for ($index = 0; $index -lt 3; $index++) {
+        Assert-Template ($subnetDefinitions[$index].name -ceq $expectedSubnetNames[$index]) "$phase subnet names must stay fixed and ordered."
+        $prefixParameter = $expectedSubnetParameters[$index]
+        Assert-Template ($subnetDefinitions[$index].addressPrefix -ceq "[parameters('$prefixParameter')]") "$phase subnet CIDRs must use editable parameters."
+    }
+    Assert-Template ($vnets[0].name -ceq "[parameters('vnetName')]") "$phase VNet name must use its editable input."
+    Assert-Template ($vnets[0].properties.addressSpace.addressPrefixes[0] -ceq "[parameters('vnetAddressPrefix')]") "$phase VNet address space must use its editable input."
+    $subnetCopy = @($vnets[0].properties.copy | Where-Object { $_.name -eq 'subnets' })
+    Assert-Template ($subnetCopy.Count -eq 1 -and $subnetCopy[0].count -ceq "[length(variables('subnets'))]") "$phase must deploy all three subnets."
+    $subnet = $subnetCopy[0].input
+    Assert-Template ($subnet.name -ceq "[variables('subnets')[copyIndex('subnets')].name]") 'Subnet names must remain fixed.'
+    Assert-Template ($subnet.properties -match "defaultOutboundAccess', not\(parameters\('useNatGateway'\)\)") 'Outbound access must be enabled only in NAT-free validation mode.'
+    Assert-Template ($subnet.properties -match "if\(parameters\('useNatGateway'\), createObject\('natGateway'") 'Only operational subnets may receive a NAT Gateway association.'
+    Assert-Template ($subnet.properties -match "'privateEndpointNetworkPolicies', 'Disabled'.*'privateLinkServiceNetworkPolicies', 'Enabled'") 'Subnet policies must remain unchanged.'
+}
 
 $entry = $templates.avd
 Assert-Template ($entry.parameters.Count -eq 11 -and $entry.parameters.ContainsKey('vmAdministratorAccountPassword')) 'AVD must expose the editable configuration parameters and password.'
@@ -136,6 +177,8 @@ Assert-Template ($day1Text -match '12～123文字が必須' -and $day1Text -matc
 Assert-Template ($day1Text.Contains('Virtual Network Resource Group Name') -and $day1Text.Contains('Work Space Name') -and $day1Text.Contains('Max Session Limit')) 'Day 1 guide must describe the editable fields.'
 Assert-Template ($day1Text.Contains('(device.displayName -startsWith "AVD")') -and $day1Text.Contains('(device.deviceModel -startsWith "Cloud PC") -or (device.deviceModel -startsWith "Windows 365")')) 'Day 1 guide must document AVD and Cloud PC dynamic device rules.'
 Assert-Template ($day1Text.Contains('プロビジョニング ポリシー') -and $day1Text.Contains('ユーザー グループ')) 'Day 1 guide must distinguish Windows 365 provisioning policy assignments from device groups.'
+Assert-Template ($readmeText.Contains('運用（NAT Gateway あり）') -and $readmeText.Contains('検証（NAT なし）')) 'README must label both Network deployment modes.'
+Assert-Template ($day1Text.Contains('defaultOutboundAccess: false') -and $day1Text.Contains('defaultOutboundAccess: true') -and $day1Text.Contains('NAT Gateway')) 'Day 1 guide must explain both Network outbound modes.'
 Assert-Template ($day2Text.Contains('Public IP') -and $day2Text.Contains('NAT Gateway') -and $day2Text.Contains('Peering') -and $day2Text.Contains('22:00')) 'Day 2 guide must cover the manual secure-jump requirements.'
 Assert-Template ($entry.resources.Count -eq 1) 'AVD entry must contain one embedded module.'
 $deployment = $entry.resources[0]
@@ -233,15 +276,18 @@ foreach ($template in @($sessionHost, $addHostLeaf)) {
     Assert-Template ($schedules[0].properties.targetResourceId -match 'virtualMachines') 'Target the created VM with the shutdown schedule.'
 }
 
-foreach ($resource in @($network.resources | Where-Object { $_.ContainsKey('location') })) {
-    Assert-Template ($resource.location -ceq "[variables('settings').location]") 'All deployed resources must use Japan East.'
+foreach ($phase in @('network', 'network-validation')) {
+    $networkCore = $templates[$phase].resources[0].properties.template
+    foreach ($resource in @($networkCore.resources | Where-Object { $_.ContainsKey('location') })) {
+        Assert-Template ($resource.location -ceq "[parameters('location')]") "$phase resources must use the editable location."
+    }
 }
 
 $liveReadme = Get-Content -LiteralPath (Join-Path $root 'README.md') -Raw
 $liveManifest = Read-Json (Join-Path $root 'resources\deploy-links.json')
 Assert-Template (($liveManifest.orderedDay1Phases -join ',') -ceq 'manual-prerequisites-and-resource-group,network-deploy-to-azure,windows365-owner-part,avd-deploy-to-azure') 'Preserve the Day 1 phase order.'
 Assert-Template ($liveManifest.publication.rawUrlsVerified -eq $false -or $liveManifest.publication.repository) 'Verified publication must identify its repository.'
-foreach ($phase in @('network', 'avd', 'session-host')) {
+foreach ($phase in @('network', 'network-validation', 'avd', 'session-host')) {
     $link = @($liveManifest.links | Where-Object { $_.phase -eq $phase })
     Assert-Template ($link.Count -eq 1 -and $link[0].localTemplate -eq "templates/$phase.json") 'Metadata must identify each local production template.'
     if (-not $liveManifest.publication.repository) {
@@ -261,7 +307,7 @@ function Reset-ButtonFixture {
     foreach ($directory in @('scripts', 'resources', 'templates')) {
         New-Item -ItemType Directory -Path (Join-Path $fixture $directory) -Force | Out-Null
     }
-    foreach ($relative in @('README.md', 'resources\deploy-links.json', 'scripts\Set-DeployButtons.ps1', 'templates\network.json', 'templates\avd.json', 'templates\session-host.json')) {
+    foreach ($relative in @('README.md', 'resources\deploy-links.json', 'scripts\Set-DeployButtons.ps1', 'templates\network.json', 'templates\network-validation.json', 'templates\avd.json', 'templates\session-host.json')) {
         Copy-Item -LiteralPath (Join-Path $root $relative) -Destination (Join-Path $fixture $relative) -Force
     }
 }
@@ -291,7 +337,7 @@ try {
     $configured = Read-Json (Join-Path $fixture 'resources\deploy-links.json')
     $configuredReadme = Get-Content -LiteralPath (Join-Path $fixture 'README.md') -Raw
     Assert-Template ($configured.publication.templateCommit -ceq $arguments.TemplateCommit.ToLowerInvariant() -and $configured.publication.rawUrlsVerified -eq $false) 'Normalize the commit without claiming URL verification.'
-    foreach ($phase in @('network', 'avd', 'session-host')) {
+    foreach ($phase in @('network', 'network-validation', 'avd', 'session-host')) {
         $link = @($configured.links | Where-Object { $_.phase -eq $phase })[0]
         $uri = "https://raw.githubusercontent.com/example-org/example-avd/$($arguments.TemplateCommit.ToLowerInvariant())/avd-hands-on/production/templates/$phase.json"
         Assert-Template ($link.templateUri -ceq $uri) 'Button template URI must use a fixed commit and prefix.'
@@ -320,7 +366,7 @@ try {
     Assert-ButtonFailure $arguments 'exactly one start and end marker for avd'
     Reset-ButtonFixture
     $fixtureManifest = Read-Json (Join-Path $fixture 'resources\deploy-links.json')
-    $fixtureManifest.links += $fixtureManifest.links[1]
+    $fixtureManifest.links += @($fixtureManifest.links | Where-Object { $_.phase -eq 'avd' })[0]
     $fixtureManifest | ConvertTo-Json -Depth 100 | Set-Content -LiteralPath (Join-Path $fixture 'resources\deploy-links.json') -Encoding utf8
     Assert-ButtonFailure $arguments 'one link entry for avd'
     Reset-ButtonFixture
