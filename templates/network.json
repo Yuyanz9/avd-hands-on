@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.42.1.51946",
-      "templateHash": "15607939129465523646"
+      "templateHash": "16170976692510343102"
     }
   },
   "variables": {
@@ -14,9 +14,6 @@
       "network": {
         "vnetName": "vnet-vdi",
         "addressPrefix": "10.10.0.0/16",
-        "natGatewayName": "nat-vdi",
-        "publicIpName": "pip-vdi",
-        "idleTimeoutInMinutes": 4,
         "subnets": [
           {
             "name": "snet-cloudpc",
@@ -48,39 +45,6 @@
   },
   "resources": [
     {
-      "type": "Microsoft.Network/publicIPAddresses",
-      "apiVersion": "2024-05-01",
-      "name": "[variables('settings').network.publicIpName]",
-      "location": "[variables('settings').location]",
-      "sku": {
-        "name": "Standard"
-      },
-      "properties": {
-        "publicIPAllocationMethod": "Static",
-        "publicIPAddressVersion": "IPv4"
-      }
-    },
-    {
-      "type": "Microsoft.Network/natGateways",
-      "apiVersion": "2024-05-01",
-      "name": "[variables('settings').network.natGatewayName]",
-      "location": "[variables('settings').location]",
-      "sku": {
-        "name": "Standard"
-      },
-      "properties": {
-        "idleTimeoutInMinutes": "[variables('settings').network.idleTimeoutInMinutes]",
-        "publicIpAddresses": [
-          {
-            "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('settings').network.publicIpName)]"
-          }
-        ]
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/publicIPAddresses', variables('settings').network.publicIpName)]"
-      ]
-    },
-    {
       "type": "Microsoft.Network/virtualNetworks",
       "apiVersion": "2024-05-01",
       "name": "[variables('settings').network.vnetName]",
@@ -94,10 +58,7 @@
               "name": "[variables('settings').network.subnets[copyIndex('subnets')].name]",
               "properties": {
                 "addressPrefix": "[variables('settings').network.subnets[copyIndex('subnets')].addressPrefix]",
-                "defaultOutboundAccess": false,
-                "natGateway": {
-                  "id": "[resourceId('Microsoft.Network/natGateways', variables('settings').network.natGatewayName)]"
-                },
+                "defaultOutboundAccess": true,
                 "privateEndpointNetworkPolicies": "Disabled",
                 "privateLinkServiceNetworkPolicies": "Enabled"
               }
@@ -109,10 +70,7 @@
             "[variables('settings').network.addressPrefix]"
           ]
         }
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/natGateways', variables('settings').network.natGatewayName)]"
-      ]
+      }
     }
   ],
   "outputs": {

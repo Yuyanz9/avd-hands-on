@@ -49,9 +49,6 @@ $expected = @{
     location = 'japaneast'
     'network.vnetName' = 'vnet-vdi'
     'network.addressPrefix' = '10.10.0.0/16'
-    'network.natGatewayName' = 'nat-vdi'
-    'network.publicIpName' = 'pip-vdi'
-    'network.idleTimeoutInMinutes' = 4
     'avd.hostpoolName' = 'DefaultHostPool'
     'avd.workspaceName' = 'AVD Session Host'
     'avd.vmAdminUsername' = 'vmadmin'
@@ -94,11 +91,11 @@ foreach ($phase in @('network', 'avd', 'session-host')) {
 $network = $templates.network
 Assert-Template (-not $network.ContainsKey('parameters') -or $network.parameters.Count -eq 0) 'Network must have no attendee parameters.'
 Assert-Template ((Convert-CompactJson (Get-FixedSettings $network)) -ceq (Convert-CompactJson $settings)) 'Network fixed settings must match the source.'
-Assert-Template ($network.resources.Count -eq 3) 'Network must create only VNet, NAT and public IP.'
+Assert-Template ($network.resources.Count -eq 1) 'Network must create only the VNet.'
 $vnets = Find-Resources $network 'Microsoft.Network/virtualNetworks'
 $nats = Find-Resources $network 'Microsoft.Network/natGateways'
 $publicIps = Find-Resources $network 'Microsoft.Network/publicIPAddresses'
-Assert-Template ($vnets.Count -eq 1 -and $nats.Count -eq 1 -and $publicIps.Count -eq 1) 'Expected one VNet, NAT Gateway and outbound public IP.'
+Assert-Template ($vnets.Count -eq 1 -and $nats.Count -eq 0 -and $publicIps.Count -eq 0) 'Expected one VNet and no NAT Gateway or public IP.'
 Assert-Template ($vnets[0].name -ceq "[variables('settings').network.vnetName]") 'VNet name must use fixed settings.'
 Assert-Template ($vnets[0].properties.addressSpace.addressPrefixes[0] -ceq "[variables('settings').network.addressPrefix]") 'VNet address space must use fixed settings.'
 $subnetCopy = @($vnets[0].properties.copy | Where-Object { $_.name -eq 'subnets' })
@@ -106,12 +103,9 @@ Assert-Template ($subnetCopy.Count -eq 1 -and $subnetCopy[0].count -ceq "[length
 $subnet = $subnetCopy[0].input
 Assert-Template ($subnet.name -ceq "[variables('settings').network.subnets[copyIndex('subnets')].name]") 'Subnet names must use the fixed array.'
 Assert-Template ($subnet.properties.addressPrefix -ceq "[variables('settings').network.subnets[copyIndex('subnets')].addressPrefix]") 'Subnet prefixes must use the fixed array.'
-Assert-Template ($subnet.properties.defaultOutboundAccess -eq $false) 'Implicit outbound access must be disabled.'
-Assert-Template ($subnet.properties.natGateway.id -ceq "[resourceId('Microsoft.Network/natGateways', variables('settings').network.natGatewayName)]") 'Each subnet must use the fixed NAT Gateway.'
+Assert-Template ($subnet.properties.defaultOutboundAccess -eq $true) 'Default outbound access must be enabled for non-private subnets.'
+Assert-Template (-not $subnet.properties.ContainsKey('natGateway')) 'Subnets must not use a NAT Gateway.'
 Assert-Template ($subnet.properties.privateEndpointNetworkPolicies -eq 'Disabled' -and $subnet.properties.privateLinkServiceNetworkPolicies -eq 'Enabled') 'Subnet policies must match the article.'
-Assert-Template ($nats[0].sku.name -eq 'Standard' -and $nats[0].properties.idleTimeoutInMinutes -ceq "[variables('settings').network.idleTimeoutInMinutes]") 'Expected Standard NAT with fixed timeout.'
-Assert-Template ($nats[0].properties.publicIpAddresses[0].id -match 'publicIPAddresses.*publicIpName') 'NAT must use the fixed public IP.'
-Assert-Template ($publicIps[0].sku.name -eq 'Standard' -and $publicIps[0].properties.publicIPAllocationMethod -eq 'Static' -and $publicIps[0].properties.publicIPAddressVersion -eq 'IPv4') 'Expected Standard static IPv4.'
 
 $entry = $templates.avd
 Assert-Template ($entry.parameters.Count -eq 11 -and $entry.parameters.ContainsKey('vmAdministratorAccountPassword')) 'AVD must expose the editable configuration parameters and password.'
@@ -140,6 +134,8 @@ $day2Text = Get-Content -LiteralPath (Join-Path $root 'day2-secure-jump.md') -Ra
 Assert-Template ($readmeText -match '12～123文字が必須' -and $readmeText -match 'InvalidTemplate') 'README must explain the minimum password length error.'
 Assert-Template ($day1Text -match '12～123文字が必須' -and $day1Text -match 'InvalidTemplate') 'Day 1 guide must explain the minimum password length error.'
 Assert-Template ($day1Text.Contains('Virtual Network Resource Group Name') -and $day1Text.Contains('Work Space Name') -and $day1Text.Contains('Max Session Limit')) 'Day 1 guide must describe the editable fields.'
+Assert-Template ($day1Text.Contains('(device.displayName -startsWith "AVD")') -and $day1Text.Contains('(device.deviceModel -startsWith "Cloud PC") -or (device.deviceModel -startsWith "Windows 365")')) 'Day 1 guide must document AVD and Cloud PC dynamic device rules.'
+Assert-Template ($day1Text.Contains('プロビジョニング ポリシー') -and $day1Text.Contains('ユーザー グループ')) 'Day 1 guide must distinguish Windows 365 provisioning policy assignments from device groups.'
 Assert-Template ($day2Text.Contains('Public IP') -and $day2Text.Contains('NAT Gateway') -and $day2Text.Contains('Peering') -and $day2Text.Contains('22:00')) 'Day 2 guide must cover the manual secure-jump requirements.'
 Assert-Template ($entry.resources.Count -eq 1) 'AVD entry must contain one embedded module.'
 $deployment = $entry.resources[0]

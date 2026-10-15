@@ -3,9 +3,6 @@
   "network": {
     "vnetName": "vnet-vdi",
     "addressPrefix": "10.10.0.0/16",
-    "natGatewayName": "nat-vdi",
-    "publicIpName": "pip-vdi",
-    "idleTimeoutInMinutes": 4,
     "subnets": [
       { "name": "snet-cloudpc", "addressPrefix": "10.10.1.0/24" },
       { "name": "snet-server", "addressPrefix": "10.10.2.0/24" },
