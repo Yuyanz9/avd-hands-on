@@ -2,7 +2,7 @@
 
 **手動の前提確認・RG 設定 → Network ボタン → Windows 365 担当パート → AVD ボタン**の順で使う一式です。記事の3サブネットと固定値を採用し、AVD は接続用 RBAC とホストプールの SSO 設定まで IaC に含めています。既存プールへのホスト追加ボタンと、手動で行う Day 2 セキュアジャンプ演習も用意しています。
 
-**更新版を公開済みです。** Network／AVD／session-host の3つの ARM JSON は、公開コミットに固定した raw URL から匿名取得し、同梱ファイルとの SHA-256 一致を確認済みです。2026-10-07 に旧版の Network／AVD ボタンを試行し、Windows App からの接続成功と日本語化に問題がなさそうとの利用者報告がありましたが、今回の更新版の Azure 実デプロイは未確認です。Windows 365 との通しリハーサルと SSO のシームレスな資格情報フローも未確認のため、[修正一覧](revision-list.md) R10 の確認を講師が済ませてから受講者へ配布してください。
+**更新版を公開済みです。** Network／AVD／session-host の3つの ARM JSON は、公開コミットに固定した raw URL から匿名取得し、同梱ファイルとの SHA-256 一致を確認済みです。今回の更新で Network は NAT Gateway／送信用 Public IP を作らず、3サブネットで Azure の既定の送信アクセスを有効にします。AVD／Windows 365 用の動的デバイスグループ手順も追加しました。これらの変更を含む版の Azure 実デプロイ、動的グループの評価、Windows 365 との通しリハーサル、SSO のシームレスな資格情報フローは未確認です。2026-10-07 の旧版 Network／AVD ボタンでは Windows App 接続成功と日本語化に問題がなさそうとの利用者報告がありますが、[修正一覧](revision-list.md) R10 の確認を講師が済ませてから受講者へ配布してください。
 
 ## 1. 受講者が前提確認と RG を手動設定
 
@@ -17,7 +17,7 @@ SSO のテナント側準備は講師が実施します。Microsoft Entra 管理
 ## 2. Network を Deploy to Azure
 
 <!-- deploy-button-network:start -->
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2Fb18d7d073fcf11f83f3ba6f5decef5b4c999bede%2Ftemplates%2Fnetwork.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F923bfbeb456d8569e8fb811c44339f92bb94b326%2Ftemplates%2Fnetwork.json)
 <!-- deploy-button-network:end -->
 
 使用するテンプレート：[templates/network.json](templates/network.json)。**テンプレート固有の入力パラメーターはありません。** Azure portal でサブスクリプションと手順1で作成した既存の演習用 RG を選択します。RG 名は固定されていません。
@@ -28,10 +28,10 @@ SSO のテナント側準備は講師が実施します。Microsoft Entra 管理
 | Cloud PC 用 | `snet-cloudpc`、`10.10.1.0/24` |
 | Server 用 | `snet-server`、`10.10.2.0/24`（今回は VM を作らない） |
 | AVD 用 | `snet-avd`、`10.10.3.0/24` |
-| 送信経路 | `nat-vdi`＋`pip-vdi`、Standard／静的 IPv4、3サブネットに関連付け |
-| 明示的な送信 | 各サブネットで `defaultOutboundAccess: false` |
+| 送信経路 | NAT Gateway／送信用 Public IP なし。Azure の既定の送信アクセスを使用 |
+| サブネット | 3つとも `defaultOutboundAccess: true`（プライベート サブネットではない） |
 
-記事に合わせ **NSG は未追加**です。受信・東西通信の制御は配布前の検討事項です。NAT の Public IP は送信専用で、VM に Public IP は付けません。Cloud PC 用サブネットだけでは ANC や Cloud PC は作成されません。
+記事に合わせ **NSG は未追加**です。受信・東西通信の制御は配布前の検討事項です。既定の送信アクセスは固定・予測可能な送信元 IP を提供しません。VM に Public IP は付けません。Cloud PC 用サブネットだけでは ANC や Cloud PC は作成されません。既存 VNet の再適用で旧 NAT Gateway／Public IP が自動削除されるわけではなく、残存リソースに料金が続く場合があります。
 
 ## 3. Windows 365 担当パート
 
@@ -40,7 +40,7 @@ Network の成功と3サブネットを確認後、Windows 365 担当者の資�
 ## 4. AVD を Deploy to Azure
 
 <!-- deploy-button-avd:start -->
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2Fb18d7d073fcf11f83f3ba6f5decef5b4c999bede%2Ftemplates%2Favd.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F923bfbeb456d8569e8fb811c44339f92bb94b326%2Ftemplates%2Favd.json)
 <!-- deploy-button-avd:end -->
 
 使用するテンプレート：[templates/avd.json](templates/avd.json)。パスワード以外は現在の標準値が初期入力され、必要に応じて変更できます。パスワードと既存リソースの名前・配置、イメージ、Workspace 表示名、VM サイズ／ディスク種別、最大セッション数、VM 名プレフィックスを確認してください。
@@ -68,7 +68,7 @@ AVD は、入力した VNet の RG／名前／サブネットを参照するだ�
 ## 5. 既存プールへセッションホストを追加
 
 <!-- deploy-button-session-host:start -->
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2Fb18d7d073fcf11f83f3ba6f5decef5b4c999bede%2Ftemplates%2Fsession-host.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F923bfbeb456d8569e8fb811c44339f92bb94b326%2Ftemplates%2Fsession-host.json)
 <!-- deploy-button-session-host:end -->
 
 使用するテンプレート：[templates/session-host.json](templates/session-host.json)。このテンプレートは既存の Standard 管理ホストプールへ VM を1台だけ追加します。既存のホストプール、アプリケーショングループ、Workspace は作成・更新しません。Azure portal で対象プールと既存 VNet があるリソースグループをデプロイ先に選びます（VNet は別 RG も指定可能です）。
@@ -86,11 +86,24 @@ AVD は、入力した VNet の RG／名前／サブネットを参照するだ�
 | Vm Name Prefix | JST の日時 `AVDMMddHHmm` | 実行時刻が近い場合は一意になる値へ変更 |
 | Registration Token／Vm Administrator Account Password | 既定なし | 必須の secure parameter。秘密を保存しない |
 
+## 6. 動的デバイスグループ（任意・手動）
+
+動的デバイスグループは、作成済みの AVD セッションホストや Windows 365 Cloud PC に Intune などのデバイス ポリシーを割り当てるためのものです。**AVD ホストの作成・プールへの登録にも、Windows 365 の Cloud PC プロビジョニングにも必須ではありません。** Entra 管理センターで［グループ］→［新しいグループ］を開き、グループの種類を［セキュリティ］、メンバーシップの種類を［動的デバイス］にして作成します。
+
+| 対象 | グループ名の例 | 動的メンバーシップ ルール |
+| --- | --- | --- |
+| AVD セッションホスト | `AVD-SessionHosts` | `(device.displayName -startsWith "AVD")` |
+| Windows 365 Cloud PC | `Windows365-CloudPCs` | `(device.deviceModel -startsWith "Cloud PC") -or (device.deviceModel -startsWith "Windows 365")` |
+
+AVD のルールは VM 名プレフィックス `AVD` を前提にします。既定プレフィックスから変更した場合はルールも合わせてください。ポリシーを割り当てる前に、ルール検証と実際のデバイス オブジェクトで対象・除外を確認します。動的グループの評価には時間がかかることがあります。動的メンバーシップ機能の利用条件・ライセンスは講師がテナントで確認してください。
+
+Windows 365 のプロビジョニング ポリシーを割り当てる対象は **ユーザー グループ**です。Cloud PC の動的デバイスグループとは別の用途なので、混同しないでください。これらの Entra グループは本テンプレートでは作成しません。
+
 ## 記事からの意図的な変更と未確認事項
 
 - VM 名プレフィックス、VM サイズ、ディスク種別、イメージ SKU、最大セッション数、VNet／サブネット名、配置 RG、ロケーション、Workspace 表示名は既定値を確認・変更できます。名前の重複や VNet とリージョンの不整合を避けます。
 - AVD と追加ホストの VM は毎日22:00（日本時間）に自動停止します。Day 2 のセキュアジャンプ VM は IaC 対象外で、手動で同じ停止時刻を設定します。
-- NAT に加え `defaultOutboundAccess: false` を明示し、暗黙の送信経路に依存しません。
+- Network テンプレートは NAT Gateway／Public IP を作らず、3サブネットで `defaultOutboundAccess: true` を指定します。既定の送信アクセスは固定 IP や送信経路の保証ではありません。
 - 接続権限2種類とホストプール SSO を自動設定します。Windows Cloud Login のテナント側準備は講師担当です。
 
 イメージの `latest`、DSC パッケージ、記事の日本語設定スクリプトは外部依存です。**スクリプトは可変で、自動再起動による拡張機能の失敗・待機時間を含め未実証**です。配布前に通しリハーサルし、版固定・再起動方式の調整要否を判断します。デプロイ成功と SSO 接続成功は別の確認です。

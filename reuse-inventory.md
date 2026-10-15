@@ -7,7 +7,7 @@
 | ファイル | 用途 |
 | --- | --- |
 | [固定設定](infra/settings.json) | 記事の値、3サブネット、AVD の固定設定部分 |
-| [Network ソース](infra/network.bicep) | VNet・3サブネット・NAT・Public IP |
+| [Network ソース](infra/network.bicep) | VNet・3サブネット。NAT Gateway／送信用 Public IP なし |
 | [AVD 入口](infra/avd.bicep)／[モジュール](infra/modules/avd.bicep) | 既定値付き編集可能パラメーター、secure password、実行者 ID、VM・AVD・RBAC・SSO・22:00停止 |
 | [セッションホスト共通モジュール](infra/modules/session-host.bicep) | Entra 参加、既存プール登録、日本語設定拡張機能、VM Login RBAC、自動停止 |
 | [追加ホスト入口](infra/session-host.bicep) | 既存 Standard 管理プールへ1台を追加。登録キーは secure parameter |
@@ -42,7 +42,7 @@
 | --- | --- | --- |
 | ネットワーク | `10.10.0.0/16`、Cloud PC・Server・AVD の3サブネット | `10.42.0.0/16`、Session Hosts・Targets の2サブネット |
 | NSG | 記事に合わせ未追加 | 用途別 NSG あり |
-| 送信 | 3サブネットに NAT、暗黙送信なし | 2サブネットに NAT、暗黙送信なし |
+| 送信 | 3サブネットで既定の送信アクセスを有効化。NAT なし | 2サブネットに NAT、暗黙送信なし |
 | 入力 | Network なし、AVD は既定値付き編集可能欄と secure password | 名前・台数・Object ID 等を指定 |
 | VM／OS | D4as_v6、Microsoft 365 Apps なしの Windows 11 25H2 AVD | D2s_v5、Windows 11 24H2 |
 | 接続・SSO | 実行ユーザーへ RBAC、SSO 常時設定、テナント準備は講師 | Object ID の RBAC、SSO オプトイン |

@@ -2,10 +2,10 @@
   "status": "fixed-templates-with-raw-urls-verified-not-live-validated",
   "settingsFile": "infra/settings.json",
   "publication": {
+    "repository": "Yuyanz9/avd-hands-on",
     "templatePathPrefix": "",
     "rawUrlsVerified": true,
-    "repository": "Yuyanz9/avd-hands-on",
-    "templateCommit": "b18d7d073fcf11f83f3ba6f5decef5b4c999bede"
+    "templateCommit": "923bfbeb456d8569e8fb811c44339f92bb94b326"
   },
   "orderedDay1Phases": [
     "manual-prerequisites-and-resource-group",
@@ -17,27 +17,27 @@
     {
       "phase": "network",
       "localTemplate": "templates/network.json",
-      "templateUri": "https://raw.githubusercontent.com/Yuyanz9/avd-hands-on/b18d7d073fcf11f83f3ba6f5decef5b4c999bede/templates/network.json",
-      "deployToAzureUrl": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2Fb18d7d073fcf11f83f3ba6f5decef5b4c999bede%2Ftemplates%2Fnetwork.json",
-      "localTemplateSha256": "B80C8714B96D3271BAADD1362023B7B5510242E2D1EF26512CEC3BC2B6E443F7",
+      "templateUri": "https://raw.githubusercontent.com/Yuyanz9/avd-hands-on/923bfbeb456d8569e8fb811c44339f92bb94b326/templates/network.json",
+      "deployToAzureUrl": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F923bfbeb456d8569e8fb811c44339f92bb94b326%2Ftemplates%2Fnetwork.json",
+      "localTemplateSha256": "AA396246E134FF2F32400DA2BB9228AA1552B72E2C928CE7A708F19D62740CC8",
       "productionApproved": false,
       "executionValidatedForThisFlow": false
     },
     {
       "phase": "avd",
       "localTemplate": "templates/avd.json",
-      "templateUri": "https://raw.githubusercontent.com/Yuyanz9/avd-hands-on/b18d7d073fcf11f83f3ba6f5decef5b4c999bede/templates/avd.json",
-      "deployToAzureUrl": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2Fb18d7d073fcf11f83f3ba6f5decef5b4c999bede%2Ftemplates%2Favd.json",
-      "localTemplateSha256": "AB239ABF8C1A3A56871AF5575C7622808148F6CD6E50F205F52FEB95F9E5D5B5",
+      "templateUri": "https://raw.githubusercontent.com/Yuyanz9/avd-hands-on/923bfbeb456d8569e8fb811c44339f92bb94b326/templates/avd.json",
+      "deployToAzureUrl": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F923bfbeb456d8569e8fb811c44339f92bb94b326%2Ftemplates%2Favd.json",
+      "localTemplateSha256": "503E5FFDF87A26DF955014172EA3EECAD12370257C0B1F0627F13B22D5C1BCAF",
       "productionApproved": false,
       "executionValidatedForThisFlow": false
     },
     {
       "phase": "session-host",
       "localTemplate": "templates/session-host.json",
-      "templateUri": "https://raw.githubusercontent.com/Yuyanz9/avd-hands-on/b18d7d073fcf11f83f3ba6f5decef5b4c999bede/templates/session-host.json",
-      "deployToAzureUrl": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2Fb18d7d073fcf11f83f3ba6f5decef5b4c999bede%2Ftemplates%2Fsession-host.json",
-      "localTemplateSha256": "08D325261CA97BF4A0D5FD15E85DAD8BE080762F483E4497D05A64B77C3F8969",
+      "templateUri": "https://raw.githubusercontent.com/Yuyanz9/avd-hands-on/923bfbeb456d8569e8fb811c44339f92bb94b326/templates/session-host.json",
+      "deployToAzureUrl": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F923bfbeb456d8569e8fb811c44339f92bb94b326%2Ftemplates%2Fsession-host.json",
+      "localTemplateSha256": "9810376C0E4F1CC792FECD41F902612DD04B67B680E090147C11D8C232602EB8",
       "productionApproved": false,
       "executionValidatedForThisFlow": false
     }
