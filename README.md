@@ -8,7 +8,7 @@
 
 > **RDP 2項目も公開済み（2026-10-18）：** CredSSP とビデオ再生の既定値を明示する修正を公開 Deploy ボタンへ反映しました。デバイス／ディスプレイ全体の照合と実機確認は [R19](revision-list.md) に残しています。
 
-> **ローカル更新版・未公開（日本語化 URL の変更）：** スクリプト本体は GitHub の固定コミットに公開済みです。以下の既定 URL の変更はまだ Deploy ボタンへ反映していません。現在のボタンは前回公開版を参照します。
+> **日本語化スクリプトも GitHub へ移行・公開済み（2026-10-18）：** 初回 AVD／ホスト追加の既定 URL は、同梱スクリプトの固定コミット Raw URL です。空欄での省略は維持しています。OS 日本語化と Windows Update 用で、Office の日本語化は別途 Intune で行います。
 
 **元の資料を残して Azure portal を開くには、ボタンを Ctrl＋クリック、マウスの中ボタンクリック、または右クリック →［新しいタブでリンクを開く］で開きます（macOS は Command＋クリック）。** GitHub の README ではリンクの `target="_blank"` が除去されるため、資料側から別タブを強制できません。通常クリックは同じタブで遷移します。
 
@@ -31,7 +31,7 @@ Network のどちらか一方を選んでください。2つのボタンはど�
 ### 2.1 運用（NAT Gateway あり）
 
 <!-- deploy-button-network:start -->
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F6e815486ec7c2fd94ca0c4bfd989736bb09cd04d%2Ftemplates%2Fnetwork.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2Fe66d1a82f77faac3d432d05e64f8f4869a7b7f69%2Ftemplates%2Fnetwork.json)
 <!-- deploy-button-network:end -->
 
 **Ctrl＋クリックで、Azure portal を別タブで開けます（macOS は Command＋クリック）。**
@@ -41,7 +41,7 @@ Network のどちらか一方を選んでください。2つのボタンはど�
 ### 2.2 検証（NAT なし）
 
 <!-- deploy-button-network-validation:start -->
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F6e815486ec7c2fd94ca0c4bfd989736bb09cd04d%2Ftemplates%2Fnetwork-validation.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2Fe66d1a82f77faac3d432d05e64f8f4869a7b7f69%2Ftemplates%2Fnetwork-validation.json)
 <!-- deploy-button-network-validation:end -->
 
 **Ctrl＋クリックで、Azure portal を別タブで開けます（macOS は Command＋クリック）。**
@@ -69,7 +69,7 @@ Network の成功と3サブネットを確認後、Windows 365 担当者の資�
 ## 4. AVD を Deploy to Azure
 
 <!-- deploy-button-avd:start -->
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F6e815486ec7c2fd94ca0c4bfd989736bb09cd04d%2Ftemplates%2Favd.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2Fe66d1a82f77faac3d432d05e64f8f4869a7b7f69%2Ftemplates%2Favd.json)
 <!-- deploy-button-avd:end -->
 
 **Ctrl＋クリックで、Azure portal を別タブで開けます（macOS は Command＋クリック）。**
@@ -118,7 +118,7 @@ VM 名の既定プレフィックスはデプロイ時刻から作られ、1回�
 ## 5. 既存プールへセッションホストを追加
 
 <!-- deploy-button-session-host:start -->
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F6e815486ec7c2fd94ca0c4bfd989736bb09cd04d%2Ftemplates%2Fsession-host.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2Fe66d1a82f77faac3d432d05e64f8f4869a7b7f69%2Ftemplates%2Fsession-host.json)
 <!-- deploy-button-session-host:end -->
 
 **Ctrl＋クリックで、Azure portal を別タブで開けます（macOS は Command＋クリック）。**
@@ -183,7 +183,7 @@ Network の編集可能な既定値と AVD の変更しない基礎設定は [in
 
 AVD のモジュールは生成 JSON に埋め込まれ、リモート Bicep や別の ARM テンプレートの配信は不要です。生成後はソースと JSON をセットで管理してください。
 
-現在のボタンは、[配信管理データ](resources/deploy-links.json)に記録した公開コミット `6e815486ec7c2fd94ca0c4bfd989736bb09cd04d` の ARM JSON に固定しています。4つの URL は匿名取得・JSON 解析・同梱 JSON との SHA-256 一致を確認済みです。AVD JSON には RDP 2項目の修正も含まれます。今後更新する際も、**テンプレートが含まれる40桁のコミット SHA**でボタンを設定し、匿名取得とハッシュ照合をやり直します。テンプレート配信・Portal 入力画面の確認と、Azure リソース作成・実接続の確認は別です。
+現在のボタンは、[配信管理データ](resources/deploy-links.json)に記録した公開コミット `e66d1a82f77faac3d432d05e64f8f4869a7b7f69` の ARM JSON に固定しています。4つの URL は匿名取得・JSON 解析・同梱 JSON との SHA-256 一致を確認済みです。AVD／追加ホスト JSON は日本語化スクリプトの GitHub 固定 URL を既定にし、RDP 2項目の修正も維持します。今後更新する際も、**テンプレートが含まれる40桁のコミット SHA**でボタンを設定し、匿名取得とハッシュ照合をやり直します。テンプレート配信・Portal 入力画面の確認と、Azure リソース作成・実接続の確認は別です。
 
 ```powershell
 .\scripts\Set-DeployButtons.ps1 `

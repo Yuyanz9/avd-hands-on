@@ -35,7 +35,7 @@
 
 画像の出典・加工・許可は [画像一覧](resources/images/README.md)、当初の取り込み元とハッシュは [コピー記録](resources/reuse-manifest.json)を参照します。コピー記録は取り込み時点の資料記録であり、新規に書いた IaC が比較用ファイルと同一であることを示すものではありません。
 
-記事の OS 日本語化スクリプトは出典付きで同梱し、GitHub 固定コミットに公開しました。初回 AVD と追加ホストの既定 URL の切替は準備中です。URL は変更可能で、空欄なら Custom Script Extension を省略します。Microsoft の DSC パッケージは同梱せず、固定設定の URL から取得します。依存モジュール・Windows Update と再起動の課題は [R09](revision-list.md)に残しています。AVD／追加ホストの編集可能な入力と CredSSP／ビデオ再生の RDP 2項目修正（[R19](revision-list.md)）は2026-10-18に公開済みです。Azure 実機確認は別途必要です。
+記事の OS 日本語化スクリプトは出典付きで同梱し、GitHub 固定コミットに公開しました。初回 AVD と追加ホストの既定 URL もこの不変な Raw URL へ切替済みです。URL は変更可能で、空欄なら Custom Script Extension を省略します。Microsoft の DSC パッケージは同梱せず、固定設定の URL から取得します。依存モジュール・Windows Update と再起動の課題は [R09](revision-list.md)に残しています。AVD／追加ホストの編集可能な入力と CredSSP／ビデオ再生の RDP 2項目修正（[R19](revision-list.md)）は2026-10-18に公開済みです。Azure 実機確認は別途必要です。
 
 ## 混在させない構成
 
