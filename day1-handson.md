@@ -4,7 +4,7 @@
 
 > **新版公開済み（2026-10-18）：** 初回構築・ホスト追加とも、英語での新規展開を早めるには `Custom Configuration Script Url` の既定 URL を消して空欄にします。日本語設定を省略しても Entra ID 参加・AVD 登録・RBAC・22時停止は設定します。SKU 選択、台数などの新しい入力も公開ボタンから利用できます。Azure 実機での所要時間・接続は未確認です。
 
-> **RDP 2項目のローカル更新版・未公開：** CredSSP とビデオ再生の既定値を明示する修正は同梱 IaC のみで、公開ボタンには未反映です。デバイス／ディスプレイ全体の照合は [R19](revision-list.md) の残課題です。
+> **RDP 2項目も公開済み（2026-10-18）：** CredSSP とビデオ再生の既定値を明示する修正を公開ボタンへ反映しました。デバイス／ディスプレイ全体の照合は [R19](revision-list.md) の残課題です。
 
 ## 今回の進み方
 
@@ -158,12 +158,12 @@ NAT ありから検証方式へ切り替える場合、増分デプロイでは 
 | ID・保護 | Entra ID 参加、システム割り当て ID、Intune なし、Trusted Launch／Secure Boot／vTPM |
 | 接続権限 | 実行したユーザーへ DAG の Desktop Virtualization User と VM の Virtual Machine User Login |
 | SSO | ホストプールへ `enablerdsaadauth:i:1` を設定 |
-| RDP 追加既定値（ローカル修正・未公開） | `enablecredsspsupport:i:1` と `videoplaybackmode:i:1` を明示。SSO・既存クリップボード転送・音声設定は維持 |
+| RDP 追加既定値 | `enablecredsspsupport:i:1` と `videoplaybackmode:i:1` を明示。SSO・既存クリップボード転送・音声設定は維持 |
 | 登録 | Entra ID 参加 → DSC による AVD 登録。登録トークンは2時間、保護設定にのみ格納 |
 | 日本語設定等 | URL がある場合のみ登録後に Custom Script を実行。既定 `JPNOFLNG.ps1` は Windows Update・自動再起動を含む。空欄なら拡張機能を作らない |
 | 自動停止 | 毎日22:00（`Tokyo Standard Time`）。実行中のセッションが中断される場合あり |
 
-RDP 2項目は未指定から [Microsoft の仕様上の既定値](https://learn.microsoft.com/azure/virtual-desktop/rdp-properties) `1` を明示するローカル修正で、実機 GUI 表示・接続は未確認です。「構成されていません」だけでは機能が無効とは断定できません。残るデバイス／画面設定は期待値側の［詳細］文字列と比較するまで変更せず、Intune／グループ ポリシーの制限も別途確認します。
+RDP 2項目は未指定から [Microsoft の仕様上の既定値](https://learn.microsoft.com/azure/virtual-desktop/rdp-properties) `1` を明示する修正で、実際に作成したホストプールの GUI 表示・接続は未確認です。「構成されていません」だけでは機能が無効とは断定できません。残るデバイス／画面設定は期待値側の［詳細］文字列と比較するまで変更せず、Intune／グループ ポリシーの制限も別途確認します。
 
 1回の展開で指定した台数には同じプレフィックスと異なる連番が付きます。追加・再実行時は既存 VM と重複しないプレフィックスを使います。台数を増やすと費用・クォータ・IP 消費も増えます。SKU の提供地域とサポート期限は事前に確認します。イメージの `latest` と外部スクリプトは可変で、同じテンプレートでも取得内容が変わる可能性があります。サイズ・イメージの利用可否と、スクリプトの再起動・拡張機能結果は配布前の実機確認が必要です。
 
