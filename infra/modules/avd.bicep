@@ -62,7 +62,7 @@ resource hostPool 'Microsoft.DesktopVirtualization/hostPools@2025-10-10' = {
     validationEnvironment: false
     startVMOnConnect: false
     publicNetworkAccess: 'Enabled'
-    customRdpProperty: 'enablerdsaadauth:i:1;redirectclipboard:i:1;audiomode:i:0;'
+    customRdpProperty: 'enablerdsaadauth:i:1;enablecredsspsupport:i:1;videoplaybackmode:i:1;redirectclipboard:i:1;audiomode:i:0;'
     registrationInfo: {
       expirationTime: tokenExpirationTime
       registrationTokenOperation: 'Update'

@@ -1,10 +1,10 @@
 {
-  "status": "published-templates-urls-verified-not-azure-validated",
+  "status": "local-updates-not-published-buttons-reference-previous-release",
   "settingsFile": "infra/settings.json",
   "publication": {
     "templatePathPrefix": "",
     "repository": "Yuyanz9/avd-hands-on",
-    "rawUrlsVerified": true,
+    "rawUrlsVerified": false,
     "templateCommit": "050547368fda298c904d7bcf037caebd26046801"
   },
   "orderedDay1Phases": [
@@ -37,7 +37,7 @@
       "localTemplate": "templates/avd.json",
       "templateUri": "https://raw.githubusercontent.com/Yuyanz9/avd-hands-on/050547368fda298c904d7bcf037caebd26046801/templates/avd.json",
       "deployToAzureUrl": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F050547368fda298c904d7bcf037caebd26046801%2Ftemplates%2Favd.json",
-      "localTemplateSha256": "4CDB8845151FEBE61807CAD7BBF049D861D66E52B26EED317D6E7CF9602750B1",
+      "localTemplateSha256": "9F562CA732168219B055950CF49B38E53AA0C1641A0BE242341E7A8D2AC48CF9",
       "productionApproved": false,
       "executionValidatedForThisFlow": false
     },

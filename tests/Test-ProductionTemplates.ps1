@@ -204,6 +204,7 @@ foreach ($text in @($readmeText, $day1Text)) {
     Assert-Template ($text.Contains('Network Resource Group Name') -and $text.Contains('rg-avd') -and $text.Contains('rg-network')) 'Explain the VM deployment RG and existing VNet RG with distinct examples.'
     Assert-Template ($text.Contains('Ctrl＋クリック') -and $text.Contains('新しいタブでリンクを開く') -and $text.Contains('Command＋クリック')) 'Document a reliable new-tab operation instead of promising target=_blank on GitHub.'
     Assert-Template ($text.Contains('空欄') -and $text.Contains('日本語') -and $text.Contains('英語')) 'Explain how an empty script URL skips Japanese configuration for English deployments.'
+    Assert-Template ($text.Contains('enablecredsspsupport:i:1') -and $text.Contains('videoplaybackmode:i:1')) 'Document the two explicitly restored RDP defaults.'
     Assert-Template ($text.Contains('Office 利用ライセンスは付与されません') -and $text.Contains('Custom Configuration Script Url') -and $text.Contains('Vm Number Of Instances')) 'Explain licensing and optional script/count inputs.'
 }
 Assert-Template ($entry.resources.Count -eq 1) 'AVD entry must contain one embedded module.'
@@ -231,7 +232,7 @@ Assert-Template ($hosts[0].properties.hostPoolType -ceq "[parameters('hostpoolTy
 Assert-Template ($hosts[0].properties.loadBalancerType -ceq "[if(equals(parameters('hostpoolType'), 'Personal'), 'Persistent', parameters('loadBalancerType'))]") 'Pooled must use the selected algorithm; Personal must use Persistent.'
 Assert-Template ($hosts[0].properties.personalDesktopAssignmentType -ceq "[if(equals(parameters('hostpoolType'), 'Personal'), 'Automatic', null())]") 'Personal must use automatic desktop assignment; Pooled must not configure it.'
 Assert-Template ($hosts[0].properties.maxSessionLimit -ceq "[if(equals(parameters('hostpoolType'), 'Personal'), 1, parameters('maxSessionLimit'))]") 'Use the editable Pooled session limit and one session for Personal.'
-Assert-Template ($hosts[0].properties.customRdpProperty -ceq 'enablerdsaadauth:i:1;redirectclipboard:i:1;audiomode:i:0;') 'SSO must always be enabled, not opt-in.'
+Assert-Template ($hosts[0].properties.customRdpProperty -ceq 'enablerdsaadauth:i:1;enablecredsspsupport:i:1;videoplaybackmode:i:1;redirectclipboard:i:1;audiomode:i:0;') 'Keep SSO enabled and explicitly restore CredSSP/video defaults without changing other RDP settings.'
 Assert-Template ($hosts[0].properties.registrationInfo.expirationTime -ceq "[parameters('tokenExpirationTime')]") 'Host pool must use the relative expiry.'
 Assert-Template ($dags[0].properties.applicationGroupType -eq 'Desktop' -and $dags[0].properties.hostPoolArmPath -match 'hostPools') 'DAG must belong to the host pool.'
 Assert-Template ($workspaces[0].properties.applicationGroupReferences.Count -eq 1 -and $workspaces[0].properties.applicationGroupReferences[0] -match 'applicationGroups') 'DAG must be registered in the workspace.'

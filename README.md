@@ -6,6 +6,8 @@
 
 > **新版公開済み（2026-10-18）：** Deploy ボタンから Office 入り既定イメージ、SKU 選択、スクリプト省略、複数台、ホストプール方式の入力を利用できます。**英語での新規展開を早める場合は `Custom Configuration Script Url` の既定 URL をすべて消して空欄にします。** 日本語化用 Custom Script Extension を作成せず、Entra ID 参加・AVD 登録・RBAC・22時停止は引き続き設定します。初回構築・ホスト追加の両方で利用でき、Azure 実機での所要時間・接続は別途確認が必要です。
 
+> **RDP 2項目のローカル更新版・未公開：** CredSSP とビデオ再生の既定値を明示する修正は同梱 IaC のみで、公開 Deploy ボタンには未反映です。上記の SKU・スクリプト省略などは公開済みです。デバイス／ディスプレイ全体の照合は [R19](revision-list.md) に残しています。
+
 **元の資料を残して Azure portal を開くには、ボタンを Ctrl＋クリック、マウスの中ボタンクリック、または右クリック →［新しいタブでリンクを開く］で開きます（macOS は Command＋クリック）。** GitHub の README ではリンクの `target="_blank"` が除去されるため、資料側から別タブを強制できません。通常クリックは同じタブで遷移します。
 
 ![Network・AVD・追加セッションホストの IaC リソースとデプロイ時の選択肢](resources/images/iac-resource-map.svg)
@@ -79,9 +81,12 @@ Network の成功と3サブネットを確認後、Windows 365 担当者の資�
 | 負荷分散 | `Load Balancer Type` は BreadthFirst／DepthFirst（既定 BreadthFirst）。Pooled は最大5セッション／ホストが既定。Personal は Persistent・自動割り当て・1ユーザー／ホスト |
 | 参加・保護 | Microsoft Entra ID 参加、Intune なし、Trusted Launch／Secure Boot／vTPM |
 | SSO | `enablerdsaadauth:i:1` を常に設定 |
+| RDP 追加既定値（ローカル修正・未公開） | `enablecredsspsupport:i:1`（OS が対応する場合に CredSSP を使用）、`videoplaybackmode:i:1`（可能な場合に RDP 対応マルチメディア ストリーミングを使用） |
 | 接続用 RBAC | 実行ユーザーへ DAG の Desktop Virtualization User と VM の Virtual Machine User Login |
 | 日本語設定等 | `Custom Configuration Script Url` の既定は記事の `JPNOFLNG.ps1`。空欄なら Custom Script Extension を作らずイメージの言語（通常は英語）のまま高速展開。既定スクリプトは Windows Update と自動再起動を含む |
 | 自動停止 | 毎日22:00（`Tokyo Standard Time`）。実行中のセッションも中断される場合があります |
+
+RDP の2項目は [Microsoft のプロパティ仕様](https://learn.microsoft.com/azure/virtual-desktop/rdp-properties)にある既定値 `1` を明示する変更です。未指定時の「構成されていません」は、実際に無効であることを意味するとは限りません。SSO、既存のクリップボード転送 `redirectclipboard:i:1`、音声 `audiomode:i:0` は変更しません。デバイス転送や画面設定は、期待値側のホストプールの［RDP プロパティ］→［詳細］の文字列と比較するまで変更せず、一括で許可しません。Intune／グループ ポリシーなどの制限は別途適用され、今回の実機 GUI 表示・接続は未確認です。ホスト追加テンプレートは既存プールの RDP 設定を変更しません。
 
 Azure portal へサインインして**デプロイしたメンバーユーザー本人で接続**します。`deployer().objectId` で実行者を取得するため Object ID の入力は不要です。サービスプリンシパル・グループ・別ユーザー向けの配布入口ではありません。講師が別アカウントで再実行すると、その講師にも接続権限が追加されます。
 
@@ -166,7 +171,7 @@ Network の編集可能な既定値と AVD の変更しない基礎設定は [in
 
 AVD のモジュールは生成 JSON に埋め込まれ、リモート Bicep や別の ARM テンプレートの配信は不要です。生成後はソースと JSON をセットで管理してください。
 
-現在のボタンは、[配信管理データ](resources/deploy-links.json)に記録した公開コミット `050547368fda298c904d7bcf037caebd26046801` の ARM JSON に固定しています。4つの URL は匿名取得・JSON 解析・同梱 JSON との SHA-256 一致を確認済みです。これはテンプレート配信の確認であり、Azure 実機でのデプロイ・接続成功の確認ではありません。今後テンプレートを更新する場合も、その**テンプレートが含まれる40桁のコミット SHA**でボタンを設定し、匿名取得とハッシュ照合をやり直します。
+現在のボタンは、[配信管理データ](resources/deploy-links.json)に記録した公開コミット `050547368fda298c904d7bcf037caebd26046801` の ARM JSON に固定しています。この公開版4つの URL は匿名取得・JSON 解析・公開時の同梱 JSON との SHA-256 一致を確認済みですが、今回の RDP 2項目を修正したローカル `avd.json` とは異なります。そのため現在の管理データは `rawUrlsVerified: false` としており、RDP 修正を公開する際に**テンプレートが含まれる40桁のコミット SHA**でボタンを切り替え、匿名取得とハッシュ照合をやり直します。テンプレート配信の確認と Azure 実機でのデプロイ・接続成功の確認は別です。
 
 ```powershell
 .\scripts\Set-DeployButtons.ps1 `
