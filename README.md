@@ -32,6 +32,8 @@ Network のどちらか一方を選んでください。2つのボタンはど�
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F6e815486ec7c2fd94ca0c4bfd989736bb09cd04d%2Ftemplates%2Fnetwork.json)
 <!-- deploy-button-network:end -->
 
+**Ctrl＋クリックで、Azure portal を別タブで開けます（macOS は Command＋クリック）。**
+
 使用するテンプレート：[templates/network.json](templates/network.json)。Azure portal でサブスクリプションと手順1で作成した既存の演習用 RG を選び、必要に応じて以下の既定値を変更します。
 
 ### 2.2 検証（NAT なし）
@@ -39,6 +41,8 @@ Network のどちらか一方を選んでください。2つのボタンはど�
 <!-- deploy-button-network-validation:start -->
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F6e815486ec7c2fd94ca0c4bfd989736bb09cd04d%2Ftemplates%2Fnetwork-validation.json)
 <!-- deploy-button-network-validation:end -->
+
+**Ctrl＋クリックで、Azure portal を別タブで開けます（macOS は Command＋クリック）。**
 
 使用するテンプレート：[templates/network-validation.json](templates/network-validation.json)。既定の送信アクセスで検証する場合はこちらを選びます。NAT Gateway と送信用 Public IP は作成しません。
 
@@ -65,6 +69,8 @@ Network の成功と3サブネットを確認後、Windows 365 担当者の資�
 <!-- deploy-button-avd:start -->
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F6e815486ec7c2fd94ca0c4bfd989736bb09cd04d%2Ftemplates%2Favd.json)
 <!-- deploy-button-avd:end -->
+
+**Ctrl＋クリックで、Azure portal を別タブで開けます（macOS は Command＋クリック）。**
 
 使用するテンプレート：[templates/avd.json](templates/avd.json)。パスワード以外は既定値が初期入力され、必要に応じて変更できます。パスワードと既存リソースの名前・配置、イメージ、Workspace 表示名、VM サイズ／ディスク種別、最大セッション数、VM 名プレフィックスに加え、スクリプト URL、台数、ホストプール方式、負荷分散方式を確認してください。
 
@@ -112,6 +118,8 @@ VM 名の既定プレフィックスはデプロイ時刻から作られ、1回�
 <!-- deploy-button-session-host:start -->
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F6e815486ec7c2fd94ca0c4bfd989736bb09cd04d%2Ftemplates%2Fsession-host.json)
 <!-- deploy-button-session-host:end -->
+
+**Ctrl＋クリックで、Azure portal を別タブで開けます（macOS は Command＋クリック）。**
 
 使用するテンプレート：[templates/session-host.json](templates/session-host.json)。このテンプレートは既存の Standard 管理ホストプールへ VM を既定1台、1回につき1～10台追加します。**台数は追加分であり、プール全体の目標台数ではありません。** 既存のホストプール、アプリケーショングループ、Workspace は作成・更新しません。Azure portal で新しい VM の配置先 RG を選びます。VNet が別 RG の場合は、上の配置表と同様に **Network Resource Group Name を VNet 側 RG に変更**してください。プールの RG は登録キーを発行する場所で、VM の配置先 RG と区別します。
 
