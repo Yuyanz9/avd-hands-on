@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.42.1.51946",
-      "templateHash": "21570467000717975"
+      "templateHash": "2420847443271719209"
     }
   },
   "parameters": {
@@ -112,6 +112,14 @@
         "description": "Approved PowerShell script URL. Default runs Japanese configuration; clear this field to skip custom configuration and keep the image language."
       }
     },
+    "intune": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "displayName": "Intune Enrollment",
+        "description": "Request Microsoft Intune enrollment for new Microsoft Entra joined session hosts. Requires tenant MDM auto-enrollment and appropriate licensing; use false for Personal host pools."
+      }
+    },
     "vmNumberOfInstances": {
       "type": "int",
       "defaultValue": 1,
@@ -179,6 +187,9 @@
           },
           "customConfigurationScriptUrl": {
             "value": "[parameters('customConfigurationScriptUrl')]"
+          },
+          "intune": {
+            "value": "[parameters('intune')]"
           }
         },
         "template": {
@@ -188,7 +199,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.42.1.51946",
-              "templateHash": "13877337511420707003"
+              "templateHash": "1673470654123918294"
             }
           },
           "parameters": {
@@ -242,6 +253,9 @@
             },
             "customConfigurationScriptUrl": {
               "type": "string"
+            },
+            "intune": {
+              "type": "bool"
             }
           },
           "variables": {
@@ -390,7 +404,8 @@
                 "publisher": "Microsoft.Azure.ActiveDirectory",
                 "type": "AADLoginForWindows",
                 "typeHandlerVersion": "2.0",
-                "autoUpgradeMinorVersion": true
+                "autoUpgradeMinorVersion": true,
+                "settings": "[if(parameters('intune'), createObject('mdmId', '0000000a-0000-0000-c000-000000000000'), null())]"
               },
               "dependsOn": [
                 "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]"

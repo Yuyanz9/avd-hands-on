@@ -28,6 +28,7 @@ param vmNamePrefix string
 @maxValue(9)
 param vmIndex int
 param customConfigurationScriptUrl string
+param intune bool
 
 var settings = loadJsonContent('../settings.json')
 var vmName = '${vmNamePrefix}-${vmIndex}'
@@ -142,6 +143,9 @@ resource entraIdJoin 'Microsoft.Compute/virtualMachines/extensions@2024-11-01' =
     type: 'AADLoginForWindows'
     typeHandlerVersion: '2.0'
     autoUpgradeMinorVersion: true
+    settings: intune ? {
+      mdmId: '0000000a-0000-0000-c000-000000000000'
+    } : null
   }
 }
 

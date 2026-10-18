@@ -83,6 +83,10 @@ param hostpoolType string = 'Pooled'
 ])
 param loadBalancerType string = 'BreadthFirst'
 
+@metadata({ displayName: 'Intune Enrollment' })
+@description('Request Microsoft Intune enrollment for new Microsoft Entra joined session hosts. Requires tenant MDM auto-enrollment and appropriate licensing; use false for Personal host pools.')
+param intune bool = true
+
 module avd './modules/avd.bicep' = {
   name: 'avd-editable-configuration'
   params: {
@@ -102,6 +106,7 @@ module avd './modules/avd.bicep' = {
     vmNumberOfInstances: vmNumberOfInstances
     hostpoolType: hostpoolType
     loadBalancerType: loadBalancerType
+    intune: intune
   }
 }
 

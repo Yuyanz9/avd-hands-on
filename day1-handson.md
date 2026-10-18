@@ -161,7 +161,7 @@ NAT ありから検証方式へ切り替える場合、増分デプロイでは 
 | DAG／Workspace | `DefaultHostPool-DAG`／`AVD Session Host`、Workspace へ DAG 登録 |
 | VM | 既定1台、1～10台を指定可能。JST の日時プレフィックス＋ `-0`～ `-9`、既定 `Standard_D4as_v6`、128 GiB `StandardSSD_LRS` |
 | OS | 既定 `microsoftwindowsdesktop`／`office-365`／`win11-25h2-avd-m365`／`latest`（Microsoft 365 Apps 入り）。Office なし SKU は `windows-11` Offer |
-| ID・保護 | Entra ID 参加、システム割り当て ID、Intune なし、Trusted Launch／Secure Boot／vTPM |
+| ID・保護 | Entra ID 参加、システム割り当て ID、Intune MDM 自動登録（既定有効）、Trusted Launch／Secure Boot／vTPM |
 | 接続権限 | 実行したユーザーへ DAG の Desktop Virtualization User と VM の Virtual Machine User Login |
 | SSO | ホストプールへ `enablerdsaadauth:i:1` を設定 |
 | RDP 追加既定値 | `enablecredsspsupport:i:1` と `videoplaybackmode:i:1` を明示。SSO・音声設定は維持 |
@@ -169,6 +169,8 @@ NAT ありから検証方式へ切り替える場合、増分デプロイでは 
 | 登録 | Entra ID 参加 → DSC による AVD 登録。登録トークンは2時間、保護設定にのみ格納 |
 | 日本語設定等 | URL がある場合のみ登録後に Custom Script を実行。既定 `JPNOFLNG.ps1` は Windows Update・自動再起動を含む。空欄なら拡張機能を作らない |
 | 自動停止 | 毎日22:00（`Tokyo Standard Time`）。実行中のセッションが中断される場合あり |
+
+Intune 自動登録は初回 AVD 展開と既存プールへのホスト追加の両方で既定で要求されます。Microsoft Entra ID P1 と適切な Intune ライセンス、テナントの自動 MDM 登録範囲、必要な外向き接続が前提です。Windows Enterprise multi-session の Intune 管理は Pooled host pool が前提のため、Personal pool または未準備のテナントでは portal の `Intune Enrollment` を `false` にしてください。前提不足で Entra ログイン拡張機能または登録が失敗する可能性があります。
 
 RDP 2項目は未指定から [Microsoft の仕様上の既定値](https://learn.microsoft.com/azure/virtual-desktop/rdp-properties) `1` を明示する修正で、実際に作成したホストプールの GUI 表示・接続は未確認です。「構成されていません」だけでは機能が無効とは断定できません。残るデバイス／画面設定は期待値側の［詳細］文字列と比較するまで変更せず、Intune／グループ ポリシーの制限も別途確認します。
 

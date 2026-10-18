@@ -61,6 +61,10 @@ param vmNamePrefix string = dateTimeAdd(utcNow(), 'PT9H', 'AVDMMddHHmm')
 @description('Approved PowerShell script URL. Default runs Japanese configuration; clear this field to skip custom configuration and keep the image language.')
 param customConfigurationScriptUrl string = 'https://raw.githubusercontent.com/Yuyanz9/avd-hands-on/7b0923fcc78335ac25bafc418d9d3ab4538292d8/scripts/JPNOFLNG.ps1'
 
+@metadata({ displayName: 'Intune Enrollment' })
+@description('Request Microsoft Intune enrollment for new Microsoft Entra joined session hosts. Requires tenant MDM auto-enrollment and appropriate licensing; use false for Personal host pools.')
+param intune bool = true
+
 @metadata({ displayName: 'Vm Number Of Instances' })
 @description('Number of hosts to add (1-10), not the desired total pool size. More VMs increase cost and require sufficient quota and subnet capacity.')
 @minValue(1)
@@ -84,6 +88,7 @@ module sessionHost './modules/session-host.bicep' = [for index in range(0, vmNum
     vmNamePrefix: vmNamePrefix
     vmIndex: index
     customConfigurationScriptUrl: customConfigurationScriptUrl
+    intune: intune
   }
 }]
 

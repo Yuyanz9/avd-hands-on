@@ -29,6 +29,7 @@
 | R17 | **要決定**・手順案あり | Day 2 セキュアジャンプ VNet の作成方式 | ジャンプ先 VNet を Deploy to Azure（IaC）で作るか、受講者が portal で手動作成するかを決定する。現在の Day 2 手順は手動作成案で未確定。VNet Peering は手動の方針。決定後、手順と所要時間を更新する。別 CIDR、Public IP／NAT Gateway なし、日本語化なし、ダブルホップ、22:00停止を維持し、受信元・ルート・外向き通信は講師承認が必要 |
 | R18 | 手動手順追加・テナント確認待ち | 動的デバイスグループ | AVD セッションホストと Windows 365 Cloud PC 用の動的デバイスグループのルールを追加。グループ作成・ライセンス・実デバイスへのルール適用・ポリシー割り当ては講師が確認。プロビジョニングの必須条件ではない |
 | R19 | CredSSP／ビデオ明示・クリップボード無効を公開済み／全体照合待ち | 標準作成＋Entra SSO と RDP プロパティの整合 | `enablecredsspsupport:i:1`、`videoplaybackmode:i:1`、SSO・音声を維持し、新規プール既定へ合わせ `redirectclipboard:i:0` に修正。後から Portal で変更可能だが Intune／グループ ポリシーと再接続に注意。追加ホストはプール設定を更新しない。残る転送／画面設定は期待値側［詳細］と照合するまで一括許可しない。実際の GUI／接続は未確認 |
+| R20 | Intune 自動登録を既定要求／実機確認待ち | Entra 参加・Intune の前提 | 初回 AVD と追加ホストの `Intune Enrollment` を既定 `true` にし、Entra 参加拡張機能で MDM 登録を要求。ライセンス、テナントの自動 MDM 登録範囲、通信を事前確認。Windows Enterprise multi-session は Pooled が前提。Personal pool または未準備テナントでは `false`。実機での登録成功は未確認 |
 
 ## 確定した設計上の差
 

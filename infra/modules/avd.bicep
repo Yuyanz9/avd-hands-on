@@ -33,6 +33,7 @@ param hostpoolType string
   'DepthFirst'
 ])
 param loadBalancerType string
+param intune bool
 
 param tokenExpirationTime string = dateTimeAdd(utcNow(), 'PT2H')
 
@@ -118,6 +119,7 @@ module sessionHost './session-host.bicep' = [for index in range(0, vmNumberOfIns
     vmNamePrefix: vmNamePrefix
     vmIndex: index
     customConfigurationScriptUrl: customConfigurationScriptUrl
+    intune: intune
   }
 }]
 

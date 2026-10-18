@@ -180,7 +180,7 @@ foreach ($phase in @('network', 'network-validation')) {
 }
 
 $entry = $templates.avd
-Assert-Template ($entry.parameters.Count -eq 15 -and $entry.parameters.ContainsKey('vmAdministratorAccountPassword')) 'AVD must expose the existing inputs plus the four new deployment options.'
+Assert-Template ($entry.parameters.Count -eq 16 -and $entry.parameters.ContainsKey('vmAdministratorAccountPassword')) 'AVD must expose the existing inputs plus the Intune enrollment option.'
 $password = $entry.parameters.vmAdministratorAccountPassword
 Assert-Template ($password.type -eq 'securestring' -and -not $password.ContainsKey('defaultValue')) 'The password must be secure and have no default.'
 Assert-Template ($password.minLength -eq 12 -and $password.maxLength -eq 123) 'The password length must be bounded.'
@@ -199,13 +199,14 @@ $expectedDefaults = @{
     vmNumberOfInstances = 1
     hostpoolType = 'Pooled'
     loadBalancerType = 'BreadthFirst'
+    intune = $true
 }
 foreach ($name in $expectedDefaults.Keys) {
     Assert-Template ($entry.parameters[$name].defaultValue -ceq $expectedDefaults[$name]) "AVD default must be editable and preserve the expected value: $name."
 }
 Assert-Template ($entry.parameters.vmNamePrefix.maxLength -eq 13) 'VM name prefix must leave room for the -0 suffix in a Windows computer name.'
-$expectedOrder = @('vmAdministratorAccountPassword', 'networkResourceGroupName', 'virtualNetworkName', 'subnetName', 'location', 'imageSku', 'workspaceFriendlyName', 'vmSize', 'vmDiskType', 'maxSessionLimit', 'vmNamePrefix', 'customConfigurationScriptUrl', 'vmNumberOfInstances', 'hostpoolType', 'loadBalancerType')
-Assert-Template (($entry.parameters.Keys -join ',') -ceq ($expectedOrder -join ',')) 'Keep the existing portal input order and append the four new fields.'
+$expectedOrder = @('vmAdministratorAccountPassword', 'networkResourceGroupName', 'virtualNetworkName', 'subnetName', 'location', 'imageSku', 'workspaceFriendlyName', 'vmSize', 'vmDiskType', 'maxSessionLimit', 'vmNamePrefix', 'customConfigurationScriptUrl', 'vmNumberOfInstances', 'hostpoolType', 'loadBalancerType', 'intune')
+Assert-Template (($entry.parameters.Keys -join ',') -ceq ($expectedOrder -join ',')) 'Keep the existing portal input order and append Intune enrollment after the deployment options.'
 $imageSkus = @('win11-23h2-avd', 'win11-23h2-avd-m365', 'win11-24h2-avd', 'win11-24h2-avd-m365', 'win11-25h2-avd', 'win11-25h2-avd-m365', 'win11-26h2-avd', 'win11-26h2-avd-m365')
 $labels = @{
     networkResourceGroupName = 'Network Resource Group Name'
@@ -214,6 +215,7 @@ $labels = @{
     vmNumberOfInstances = 'Vm Number Of Instances'
     hostpoolType = 'Hostpool Type'
     loadBalancerType = 'Load Balancer Type'
+    intune = 'Intune Enrollment'
 }
 foreach ($name in $labels.Keys) {
     Assert-Template ($entry.parameters[$name].metadata.displayName -ceq $labels[$name]) "Show the requested portal label: $name."
@@ -235,6 +237,7 @@ Assert-Template ($day1Text -match '12～123文字が必須' -and $day1Text -matc
 Assert-Template ($day1Text.Contains('Virtual Network Resource Group Name') -and $day1Text.Contains('Work Space Name') -and $day1Text.Contains('Max Session Limit')) 'Day 1 guide must describe the editable fields.'
 Assert-Template ($day1Text.Contains('(device.displayName -startsWith "AVD")') -and $day1Text.Contains('(device.deviceModel -startsWith "Cloud PC") -or (device.deviceModel -startsWith "Windows 365")')) 'Day 1 guide must document AVD and Cloud PC dynamic device rules.'
 Assert-Template ($day1Text.Contains('プロビジョニング ポリシー') -and $day1Text.Contains('ユーザー グループ')) 'Day 1 guide must distinguish Windows 365 provisioning policy assignments from device groups.'
+Assert-Template ($readmeText.Contains('既定で `true`') -and $readmeText.Contains('intune=false') -and $day1Text.Contains('Intune Enrollment') -and $day1Text.Contains('Pooled host pool')) 'Document the default Intune enrollment request, opt-out and host-pool prerequisite.'
 Assert-Template ($readmeText.Contains('運用（NAT Gateway あり）') -and $readmeText.Contains('検証（NAT なし）')) 'README must label both Network deployment modes.'
 Assert-Template ($day1Text.Contains('defaultOutboundAccess: false') -and $day1Text.Contains('defaultOutboundAccess: true') -and $day1Text.Contains('NAT Gateway')) 'Day 1 guide must explain both Network outbound modes.'
 Assert-Template ($day2Text.Contains('VNet 作成方式') -and $day2Text.Contains('IaC') -and $day2Text.Contains('未決定') -and $day2Text.Contains('Public IP') -and $day2Text.Contains('NAT Gateway') -and $day2Text.Contains('Peering') -and $day2Text.Contains('22:00')) 'Day 2 guide must mark VNet creation mode as undecided and retain the secure-jump constraints.'
@@ -319,6 +322,8 @@ $dsc = @($extensions | Where-Object { $_.properties.type -eq 'DSC' })
 $custom = @($extensions | Where-Object { $_.properties.type -eq 'CustomScriptExtension' })
 Assert-Template ($extensions.Count -eq 3 -and $join.Count -eq 1 -and $dsc.Count -eq 1 -and $custom.Count -eq 1) 'Expected Entra join, registration and article custom configuration.'
 Assert-Template ($join[0].properties.typeHandlerVersion -eq '2.0') 'Use the SSO-capable Entra join extension.'
+$joinSettings = ConvertTo-Json -InputObject $join[0].properties.settings -Depth 100 -Compress
+Assert-Template ($joinSettings -match "parameters\('intune'\)" -and $joinSettings.Contains('0000000a-0000-0000-c000-000000000000') -and $joinSettings -match 'null\(\)') 'Request Intune MDM enrollment through the Entra join extension only when enabled.'
 Assert-Template ($dsc[0].properties.settings.properties.aadJoin -eq $true -and $dsc[0].properties.settings.properties.UseAgentDownloadEndpoint -eq $true) 'Registration must use Entra join and the agent download endpoint.'
 Assert-Template ($dsc[0].properties.settings.modulesUrl -ceq "[variables('settings').avd.configurationPackageUrl]") 'Use the configured DSC package.'
 Assert-Template ($dsc[0].properties.settings.configurationFunction -ceq 'Configuration.ps1\AddSessionHost') 'Use the supported DSC registration function.'
@@ -334,7 +339,8 @@ foreach ($resource in $sessionHost.resources) {
 }
 
 $sessionEntry = $templates['session-host']
-Assert-Template ($sessionEntry.parameters.Count -eq 13 -and $sessionEntry.parameters.registrationToken.type -eq 'securestring' -and -not $sessionEntry.parameters.registrationToken.ContainsKey('defaultValue')) 'The add-host template must require a secure registration token and expose script/count options.'
+Assert-Template ($sessionEntry.parameters.Count -eq 14 -and $sessionEntry.parameters.registrationToken.type -eq 'securestring' -and -not $sessionEntry.parameters.registrationToken.ContainsKey('defaultValue')) 'The add-host template must require a secure registration token and expose script/count/Intune options.'
+Assert-Template ($sessionEntry.parameters.intune.type -eq 'bool' -and $sessionEntry.parameters.intune.defaultValue -eq $true) 'The add-host template must request Intune enrollment by default.'
 Assert-Template (-not $sessionEntry.parameters.ContainsKey('hostpoolType') -and -not $sessionEntry.parameters.ContainsKey('loadBalancerType')) 'Adding hosts must not offer to change existing pool properties.'
 Assert-Template ($sessionEntry.parameters.vmAdministratorAccountPassword.type -eq 'securestring' -and -not $sessionEntry.parameters.vmAdministratorAccountPassword.ContainsKey('defaultValue')) 'The add-host template must require a secure VM password.'
 Assert-Template ($sessionEntry.resources.Count -eq 1 -and $sessionEntry.resources[0].type -eq 'Microsoft.Resources/deployments') 'The add-host entry must use one embedded module.'
@@ -362,6 +368,7 @@ foreach ($parent in @($avd, $sessionEntry)) {
     Assert-Template ($loop.properties.parameters.vmIndex.value -ceq "[range(0, parameters('vmNumberOfInstances'))[copyIndex()]]") 'Pass a unique zero-based index to every leaf.'
     Assert-Template ($loop.name -match "range\(0, parameters\('vmNumberOfInstances'\)\)\[copyIndex\(\)\]") 'Nested deployment names must be distinct per VM.'
     Assert-Template ($loop.properties.parameters.customConfigurationScriptUrl.value -ceq "[parameters('customConfigurationScriptUrl')]") 'Forward the script choice to every VM.'
+    Assert-Template ($loop.properties.parameters.intune.value -ceq "[parameters('intune')]") 'Forward the Intune enrollment choice to every VM.'
     Assert-Template ($parent.outputs.sessionHostName.type -eq 'string' -and $parent.outputs.sessionHostName.value -match "\[0\]") 'Retain the first-host string output for compatibility.'
     Assert-Template ($parent.outputs.sessionHostNames.type -eq 'array' -and $parent.outputs.sessionHostNames.copy.count -ceq $loop.copy.count) 'Return every created name in the array output.'
 }

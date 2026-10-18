@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.42.1.51946",
-      "templateHash": "17620436812191371521"
+      "templateHash": "6313877628485394969"
     }
   },
   "parameters": {
@@ -149,6 +149,14 @@
         "displayName": "Load Balancer Type",
         "description": "Pooled load balancing algorithm. Personal pools always use Persistent instead of this pooled setting."
       }
+    },
+    "intune": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "displayName": "Intune Enrollment",
+        "description": "Request Microsoft Intune enrollment for new Microsoft Entra joined session hosts. Requires tenant MDM auto-enrollment and appropriate licensing; use false for Personal host pools."
+      }
     }
   },
   "resources": [
@@ -209,6 +217,9 @@
           },
           "loadBalancerType": {
             "value": "[parameters('loadBalancerType')]"
+          },
+          "intune": {
+            "value": "[parameters('intune')]"
           }
         },
         "template": {
@@ -218,7 +229,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.42.1.51946",
-              "templateHash": "11199627856630651087"
+              "templateHash": "15662098056522200938"
             }
           },
           "parameters": {
@@ -283,6 +294,9 @@
                 "BreadthFirst",
                 "DepthFirst"
               ]
+            },
+            "intune": {
+              "type": "bool"
             },
             "tokenExpirationTime": {
               "type": "string",
@@ -446,6 +460,9 @@
                   },
                   "customConfigurationScriptUrl": {
                     "value": "[parameters('customConfigurationScriptUrl')]"
+                  },
+                  "intune": {
+                    "value": "[parameters('intune')]"
                   }
                 },
                 "template": {
@@ -455,7 +472,7 @@
                     "_generator": {
                       "name": "bicep",
                       "version": "0.42.1.51946",
-                      "templateHash": "13877337511420707003"
+                      "templateHash": "1673470654123918294"
                     }
                   },
                   "parameters": {
@@ -509,6 +526,9 @@
                     },
                     "customConfigurationScriptUrl": {
                       "type": "string"
+                    },
+                    "intune": {
+                      "type": "bool"
                     }
                   },
                   "variables": {
@@ -657,7 +677,8 @@
                         "publisher": "Microsoft.Azure.ActiveDirectory",
                         "type": "AADLoginForWindows",
                         "typeHandlerVersion": "2.0",
-                        "autoUpgradeMinorVersion": true
+                        "autoUpgradeMinorVersion": true,
+                        "settings": "[if(parameters('intune'), createObject('mdmId', '0000000a-0000-0000-c000-000000000000'), null())]"
                       },
                       "dependsOn": [
                         "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]"
