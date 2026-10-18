@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.42.1.51946",
-      "templateHash": "8592392999241044023"
+      "templateHash": "13065943698081920208"
     }
   },
   "parameters": {
@@ -43,20 +43,20 @@
         "description": "Cloud PC subnet CIDR. Subnet prefixes must not overlap."
       }
     },
-    "serverSubnetPrefix": {
+    "avdSubnetPrefix": {
       "type": "string",
       "defaultValue": "10.10.2.0/24",
       "metadata": {
-        "displayName": "Server Subnet Address Prefix",
-        "description": "Server subnet CIDR. Subnet prefixes must not overlap."
+        "displayName": "AVD Subnet Address Prefix",
+        "description": "AVD subnet CIDR. Subnet prefixes must not overlap."
       }
     },
-    "avdSubnetPrefix": {
+    "serverSubnetPrefix": {
       "type": "string",
       "defaultValue": "10.10.3.0/24",
       "metadata": {
-        "displayName": "AVD Subnet Address Prefix",
-        "description": "AVD subnet CIDR. Subnet prefixes must not overlap."
+        "displayName": "Server Subnet Address Prefix",
+        "description": "Server subnet CIDR. Subnet prefixes must not overlap."
       }
     }
   },
@@ -83,11 +83,11 @@
           "cloudPcSubnetPrefix": {
             "value": "[parameters('cloudPcSubnetPrefix')]"
           },
-          "serverSubnetPrefix": {
-            "value": "[parameters('serverSubnetPrefix')]"
-          },
           "avdSubnetPrefix": {
             "value": "[parameters('avdSubnetPrefix')]"
+          },
+          "serverSubnetPrefix": {
+            "value": "[parameters('serverSubnetPrefix')]"
           },
           "natGatewayName": {
             "value": "nat-vdi"
@@ -106,7 +106,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.42.1.51946",
-              "templateHash": "138981279322033935"
+              "templateHash": "12418390594403231656"
             }
           },
           "parameters": {
@@ -122,10 +122,10 @@
             "cloudPcSubnetPrefix": {
               "type": "string"
             },
-            "serverSubnetPrefix": {
+            "avdSubnetPrefix": {
               "type": "string"
             },
-            "avdSubnetPrefix": {
+            "serverSubnetPrefix": {
               "type": "string"
             },
             "natGatewayName": {
@@ -145,12 +145,12 @@
                 "addressPrefix": "[parameters('cloudPcSubnetPrefix')]"
               },
               {
-                "name": "snet-server",
-                "addressPrefix": "[parameters('serverSubnetPrefix')]"
-              },
-              {
                 "name": "snet-avd",
                 "addressPrefix": "[parameters('avdSubnetPrefix')]"
+              },
+              {
+                "name": "snet-server",
+                "addressPrefix": "[parameters('serverSubnetPrefix')]"
               }
             ]
           },
@@ -230,13 +230,13 @@
               "type": "string",
               "value": "[format('{0}/subnets/snet-cloudpc', resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')))]"
             },
-            "serverSubnetId": {
-              "type": "string",
-              "value": "[format('{0}/subnets/snet-server', resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')))]"
-            },
             "avdSubnetId": {
               "type": "string",
               "value": "[format('{0}/subnets/snet-avd', resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')))]"
+            },
+            "serverSubnetId": {
+              "type": "string",
+              "value": "[format('{0}/subnets/snet-server', resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')))]"
             }
           }
         }
@@ -256,13 +256,13 @@
       "type": "string",
       "value": "[reference(resourceId('Microsoft.Resources/deployments', 'network'), '2025-04-01').outputs.cloudPcSubnetId.value]"
     },
-    "serverSubnetId": {
-      "type": "string",
-      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'network'), '2025-04-01').outputs.serverSubnetId.value]"
-    },
     "avdSubnetId": {
       "type": "string",
       "value": "[reference(resourceId('Microsoft.Resources/deployments', 'network'), '2025-04-01').outputs.avdSubnetId.value]"
+    },
+    "serverSubnetId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'network'), '2025-04-01').outputs.serverSubnetId.value]"
     }
   }
 }

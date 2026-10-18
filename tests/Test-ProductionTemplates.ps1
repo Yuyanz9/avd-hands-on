@@ -90,7 +90,7 @@ try {
 }
 Assert-Template ($localizationHash -ceq '5C55DB8A3C2394F1AFBE2125F950753ED2DFFE602578C963504F617EAE46FAE4') 'The bundled script must match the verified immutable URL after Git LF normalization; publish a new script commit before changing it.'
 Assert-Template ($settings.network.subnets.Count -eq 3) 'Expected exactly three article subnets.'
-$subnetNames = @('snet-cloudpc', 'snet-server', 'snet-avd')
+$subnetNames = @('snet-cloudpc', 'snet-avd', 'snet-server')
 $subnetPrefixes = @('10.10.1.0/24', '10.10.2.0/24', '10.10.3.0/24')
 for ($index = 0; $index -lt 3; $index++) {
     Assert-Template ($settings.network.subnets[$index].name -ceq $subnetNames[$index]) 'Unexpected subnet name or order.'
@@ -118,13 +118,16 @@ $networkDefaults = @{
     vnetName = 'vnet-vdi'
     vnetAddressPrefix = '10.10.0.0/16'
     cloudPcSubnetPrefix = '10.10.1.0/24'
-    serverSubnetPrefix = '10.10.2.0/24'
-    avdSubnetPrefix = '10.10.3.0/24'
+    avdSubnetPrefix = '10.10.2.0/24'
+    serverSubnetPrefix = '10.10.3.0/24'
 }
 foreach ($phase in @('network', 'network-validation')) {
     $template = $templates[$phase]
     $operational = $phase -eq 'network'
     Assert-Template ($template.parameters.Count -eq $(if ($operational) { 8 } else { 6 })) "$phase must expose only the agreed editable parameters."
+    $networkParameterOrder = @('location', 'vnetName', 'vnetAddressPrefix', 'cloudPcSubnetPrefix', 'avdSubnetPrefix', 'serverSubnetPrefix')
+    if ($operational) { $networkParameterOrder += @('natGatewayName', 'publicIpName') }
+    Assert-Template (($template.parameters.Keys -join ',') -ceq ($networkParameterOrder -join ',')) "$phase must show Cloud PC, AVD, Server inputs in slide order."
     foreach ($name in $networkDefaults.Keys) {
         Assert-Template ($template.parameters[$name].defaultValue -ceq $networkDefaults[$name]) "$phase must preserve the editable network default: $name."
         Assert-Template (-not [string]::IsNullOrWhiteSpace($template.parameters[$name].metadata.displayName)) "$phase must show a friendly portal label for $name."
@@ -152,14 +155,18 @@ foreach ($phase in @('network', 'network-validation')) {
     Assert-Template ($nats[0].condition -ceq "[parameters('useNatGateway')]" -and $publicIps[0].condition -ceq "[parameters('useNatGateway')]") "$phase must conditionally create NAT resources."
     Assert-Template ($nats[0].sku.name -eq 'Standard' -and $nats[0].properties.idleTimeoutInMinutes -eq 4) 'Operational NAT Gateway must use Standard SKU and a four-minute idle timeout.'
     Assert-Template ($publicIps[0].sku.name -eq 'Standard' -and $publicIps[0].properties.publicIPAllocationMethod -eq 'Static' -and $publicIps[0].properties.publicIPAddressVersion -eq 'IPv4') 'Operational NAT must use a static Standard IPv4 public IP.'
-    $expectedSubnetNames = @('snet-cloudpc', 'snet-server', 'snet-avd')
-    $expectedSubnetParameters = @('cloudPcSubnetPrefix', 'serverSubnetPrefix', 'avdSubnetPrefix')
+    $expectedSubnetNames = @('snet-cloudpc', 'snet-avd', 'snet-server')
+    $expectedSubnetParameters = @('cloudPcSubnetPrefix', 'avdSubnetPrefix', 'serverSubnetPrefix')
     $subnetDefinitions = @($networkCore.variables.subnets)
     Assert-Template ($subnetDefinitions.Count -eq 3) "$phase must preserve all three subnet definitions."
     for ($index = 0; $index -lt 3; $index++) {
         Assert-Template ($subnetDefinitions[$index].name -ceq $expectedSubnetNames[$index]) "$phase subnet names must stay fixed and ordered."
         $prefixParameter = $expectedSubnetParameters[$index]
         Assert-Template ($subnetDefinitions[$index].addressPrefix -ceq "[parameters('$prefixParameter')]") "$phase subnet CIDRs must use editable parameters."
+    }
+    foreach ($output in @('cloudPcSubnetId', 'avdSubnetId', 'serverSubnetId')) {
+        $index = [array]::IndexOf(@('cloudPcSubnetId', 'avdSubnetId', 'serverSubnetId'), $output)
+        Assert-Template ($networkCore.outputs[$output].value.Contains("/subnets/$($expectedSubnetNames[$index])")) "$phase must keep each output ID bound to its named subnet."
     }
     Assert-Template ($vnets[0].name -ceq "[parameters('vnetName')]") "$phase VNet name must use its editable input."
     Assert-Template ($vnets[0].properties.addressSpace.addressPrefixes[0] -ceq "[parameters('vnetAddressPrefix')]") "$phase VNet address space must use its editable input."
@@ -216,6 +223,13 @@ Assert-Template (($entry.parameters.loadBalancerType.allowedValues -join ',') -c
 $readmeText = Get-Content -LiteralPath (Join-Path $root 'README.md') -Raw
 $day1Text = Get-Content -LiteralPath (Join-Path $root 'day1-handson.md') -Raw
 $day2Text = Get-Content -LiteralPath (Join-Path $root 'day2-secure-jump.md') -Raw
+[xml]$resourceMap = Get-Content -LiteralPath (Join-Path $root 'resources\images\iac-resource-map.svg') -Raw
+$diagramSubnetNames = @($resourceMap.SelectNodes('//*[local-name()="text" and @y="493"]'))
+$diagramSubnetPrefixes = @($resourceMap.SelectNodes('//*[local-name()="text" and @y="526"]'))
+Assert-Template ($diagramSubnetNames.Count -eq 3 -and $diagramSubnetPrefixes.Count -eq 3) 'The diagram must show the three subnet names and CIDRs.'
+for ($index = 0; $index -lt 3; $index++) {
+    Assert-Template ($diagramSubnetNames[$index].InnerText -ceq $subnetNames[$index] -and $diagramSubnetPrefixes[$index].InnerText -ceq $subnetPrefixes[$index] -and $diagramSubnetNames[$index].GetAttribute('x') -eq $diagramSubnetPrefixes[$index].GetAttribute('x')) 'Diagram cards must match Cloud PC=.1, AVD=.2, Server=.3 in order.'
+}
 Assert-Template ($readmeText -match '12～123文字が必須' -and $readmeText -match 'InvalidTemplate') 'README must explain the minimum password length error.'
 Assert-Template ($day1Text -match '12～123文字が必須' -and $day1Text -match 'InvalidTemplate') 'Day 1 guide must explain the minimum password length error.'
 Assert-Template ($day1Text.Contains('Virtual Network Resource Group Name') -and $day1Text.Contains('Work Space Name') -and $day1Text.Contains('Max Session Limit')) 'Day 1 guide must describe the editable fields.'
@@ -231,6 +245,9 @@ foreach ($text in @($readmeText, $day1Text)) {
     Assert-Template ($text.Contains('enablecredsspsupport:i:1') -and $text.Contains('videoplaybackmode:i:1')) 'Document the two explicitly restored RDP defaults.'
     Assert-Template ($text.Contains($settings.avd.customConfigurationScriptUrl) -and $text.Contains('scripts/JPNOFLNG.ps1')) 'Both guides must show the immutable default and link to the bundled Japanese script.'
     Assert-Template ($text.Contains('OS 日本語化') -and $text.Contains('別途 Intune')) 'Do not imply the OS script also localizes Microsoft 365 Apps.'
+    Assert-Template ($text -match '(?s)`snet-cloudpc`／`10\.10\.1\.0/24`.*?`snet-avd`／`10\.10\.2\.0/24`.*?`snet-server`／`10\.10\.3\.0/24`') 'Guides must use the slide-aligned subnet mappings and order.'
+    Assert-Template ($text.Contains('使用中の旧 VNet') -and $text.Contains('NIC') -and $text.Contains('ANC')) 'Warn against blindly reapplying new CIDRs to an occupied old VNet.'
+    Assert-Template ($text.Contains('redirectclipboard:i:0') -and $text.Contains('再接続') -and $text.Contains('グループ ポリシー')) 'Explain the disabled clipboard default, later changes, reconnect and policy precedence.'
     Assert-Template ($text.Contains('Office 利用ライセンスは付与されません') -and $text.Contains('Custom Configuration Script Url') -and $text.Contains('Vm Number Of Instances')) 'Explain licensing and optional script/count inputs.'
 }
 Assert-Template ($entry.resources.Count -eq 1) 'AVD entry must contain one embedded module.'
@@ -258,7 +275,7 @@ Assert-Template ($hosts[0].properties.hostPoolType -ceq "[parameters('hostpoolTy
 Assert-Template ($hosts[0].properties.loadBalancerType -ceq "[if(equals(parameters('hostpoolType'), 'Personal'), 'Persistent', parameters('loadBalancerType'))]") 'Pooled must use the selected algorithm; Personal must use Persistent.'
 Assert-Template ($hosts[0].properties.personalDesktopAssignmentType -ceq "[if(equals(parameters('hostpoolType'), 'Personal'), 'Automatic', null())]") 'Personal must use automatic desktop assignment; Pooled must not configure it.'
 Assert-Template ($hosts[0].properties.maxSessionLimit -ceq "[if(equals(parameters('hostpoolType'), 'Personal'), 1, parameters('maxSessionLimit'))]") 'Use the editable Pooled session limit and one session for Personal.'
-Assert-Template ($hosts[0].properties.customRdpProperty -ceq 'enablerdsaadauth:i:1;enablecredsspsupport:i:1;videoplaybackmode:i:1;redirectclipboard:i:1;audiomode:i:0;') 'Keep SSO enabled and explicitly restore CredSSP/video defaults without changing other RDP settings.'
+Assert-Template ($hosts[0].properties.customRdpProperty -ceq 'enablerdsaadauth:i:1;enablecredsspsupport:i:1;videoplaybackmode:i:1;redirectclipboard:i:0;audiomode:i:0;') 'Disable clipboard by default while preserving SSO, CredSSP, video playback and audio.'
 Assert-Template ($hosts[0].properties.registrationInfo.expirationTime -ceq "[parameters('tokenExpirationTime')]") 'Host pool must use the relative expiry.'
 Assert-Template ($dags[0].properties.applicationGroupType -eq 'Desktop' -and $dags[0].properties.hostPoolArmPath -match 'hostPools') 'DAG must belong to the host pool.'
 Assert-Template ($workspaces[0].properties.applicationGroupReferences.Count -eq 1 -and $workspaces[0].properties.applicationGroupReferences[0] -match 'applicationGroups') 'DAG must be registered in the workspace.'

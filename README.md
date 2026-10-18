@@ -10,6 +10,8 @@
 
 > **日本語化スクリプトも GitHub へ移行・公開済み（2026-10-18）：** 初回 AVD／ホスト追加の既定 URL は、同梱スクリプトの固定コミット Raw URL です。空欄での省略は維持しています。OS 日本語化と Windows Update 用で、Office の日本語化は別途 Intune で行います。
 
+> **ローカル更新版・未公開（クリップボード／サブネット修正）：** 以下のクリップボード無効と Cloud PC＝`.1`／AVD＝`.2`／Server＝`.3` の変更は、まだ Deploy ボタンへ反映していません。ボタンは前回公開版を参照します。
+
 **元の資料を残して Azure portal を開くには、ボタンを Ctrl＋クリック、マウスの中ボタンクリック、または右クリック →［新しいタブでリンクを開く］で開きます（macOS は Command＋クリック）。** GitHub の README ではリンクの `target="_blank"` が除去されるため、資料側から別タブを強制できません。通常クリックは同じタブで遷移します。
 
 ![Network・AVD・追加セッションホストの IaC リソースとデプロイ時の選択肢](resources/images/iac-resource-map.svg)
@@ -52,13 +54,15 @@ Network のどちらか一方を選んでください。2つのボタンはど�
 | --- | --- |
 | Location／VNet | `japaneast`／`vnet-vdi`／`10.10.0.0/16`。両方式で変更可能 |
 | Cloud PC 用 | `snet-cloudpc`／`10.10.1.0/24`。CIDR は変更可能 |
-| Server 用 | `snet-server`／`10.10.2.0/24`（今回は VM を作らない）。CIDR は変更可能 |
-| AVD 用 | `snet-avd`／`10.10.3.0/24`。CIDR は変更可能 |
+| AVD 用 | `snet-avd`／`10.10.2.0/24`。CIDR は変更可能 |
+| Server 用 | `snet-server`／`10.10.3.0/24`（今回は VM を作らない）。CIDR は変更可能 |
 | 運用方式 | `nat-vdi`／`pip-vdi`（名前は変更可能）、Standard NAT Gateway と静的 Standard IPv4 Public IP |
 | 検証方式 | NAT Gateway／送信用 Public IP なし。Azure の既定の送信アクセスを使用 |
 | サブネット | 運用方式は `defaultOutboundAccess: false` で NAT Gateway を関連付け。検証方式は `true`（プライベート サブネットではない） |
 
 CIDR は VNet の範囲内に収め、サブネット同士が重複しない値を指定してください。記事に合わせ **NSG は未追加**です。受信・東西通信の制御は配布前の検討事項です。既定の送信アクセスは固定・予測可能な送信元 IP を提供しません。VM に Public IP は付けません。Cloud PC 用サブネットだけでは ANC や Cloud PC は作成されません。
+
+**使用中の旧 VNet へ、この修正版の既定値をそのまま再適用しないでください。** 旧版の AVD＝`.3`／Server＝`.2` からの入れ替えは、既存 NIC・VM・Cloud PC／ANC が使うサブネットの自動移行ではありません。変更拒否や通信影響を避けるため、新規の専用 VNet／演習用 RG を使うか、既存 CIDR を入力して維持し、移行が必要なら講師が依存関係と手順を別途承認します。共有 RG／VNet を無断で削除・作り直しません。
 
 **運用版には NAT Gateway と Public IP の継続費用が発生します。** 既存 VNet を NAT ありから検証版へ切り替えると、サブネットの NAT 関連付けは外れますが、増分デプロイでは NAT Gateway／Public IP リソース自体は自動削除されず、料金が続く場合があります。1つの VNet には一方の方式を選び、切り替え時は残存リソースと依存関係を講師が確認してください。
 
@@ -90,11 +94,14 @@ Network の成功と3サブネットを確認後、Windows 365 担当者の資�
 | 参加・保護 | Microsoft Entra ID 参加、Intune なし、Trusted Launch／Secure Boot／vTPM |
 | SSO | `enablerdsaadauth:i:1` を常に設定 |
 | RDP 追加既定値 | `enablecredsspsupport:i:1`（OS が対応する場合に CredSSP を使用）、`videoplaybackmode:i:1`（可能な場合に RDP 対応マルチメディア ストリーミングを使用） |
+| クリップボード転送 | `redirectclipboard:i:0`（新規ホストプールの既定に合わせて無効）。後から RDP プロパティで変更可能 |
 | 接続用 RBAC | 実行ユーザーへ DAG の Desktop Virtualization User と VM の Virtual Machine User Login |
 | 日本語設定等 | `Custom Configuration Script Url` の既定は同梱 [JPNOFLNG.ps1](scripts/JPNOFLNG.ps1) の GitHub 固定コミット URL。空欄なら Custom Script Extension を作らずイメージの言語（通常は英語）のまま高速展開。既定スクリプトは Windows Update と自動再起動を含む |
 | 自動停止 | 毎日22:00（`Tokyo Standard Time`）。実行中のセッションも中断される場合があります |
 
-RDP の2項目は [Microsoft のプロパティ仕様](https://learn.microsoft.com/azure/virtual-desktop/rdp-properties)にある既定値 `1` を明示する変更です。未指定時の「構成されていません」は、実際に無効であることを意味するとは限りません。SSO、既存のクリップボード転送 `redirectclipboard:i:1`、音声 `audiomode:i:0` は変更しません。デバイス転送や画面設定は、期待値側のホストプールの［RDP プロパティ］→［詳細］の文字列と比較するまで変更せず、一括で許可しません。Intune／グループ ポリシーなどの制限は別途適用され、今回の実機 GUI 表示・接続は未確認です。ホスト追加テンプレートは既存プールの RDP 設定を変更しません。
+RDP の2項目は [Microsoft のプロパティ仕様](https://learn.microsoft.com/azure/virtual-desktop/rdp-properties)にある既定値 `1` を明示する変更です。未指定時の「構成されていません」は、実際に無効であることを意味するとは限りません。SSO と音声 `audiomode:i:0` は維持し、クリップボードは[新規ホストプールの既定](https://learn.microsoft.com/azure/virtual-desktop/redirection-configure-clipboard#configure-clipboard-redirection)に合わせて `redirectclipboard:i:0` にしています。デバイス転送や画面設定は、期待値側の［詳細］文字列と比較するまで変更せず、一括で許可しません。今回の実機 GUI 表示・接続は未確認です。ホスト追加テンプレートは既存プールの RDP 設定を変更しません。
+
+後から変更する場合は、Azure portal の［Azure Virtual Desktop］→［ホストプール］→対象プール→［RDP プロパティ］→［デバイスのリダイレクト］でクリップボード転送を有効／無効にして保存し、Windows App のセッションを切断して再接続します。ホストプール全体に適用する設定です。Intune／グループ ポリシー側で禁止している場合は、そちらの変更も必要です。IaC の再適用時はテンプレートの値へ戻るため、継続して有効にするなら管理しているソースも合わせます。
 
 Azure portal へサインインして**デプロイしたメンバーユーザー本人で接続**します。`deployer().objectId` で実行者を取得するため Object ID の入力は不要です。サービスプリンシパル・グループ・別ユーザー向けの配布入口ではありません。講師が別アカウントで再実行すると、その講師にも接続権限が追加されます。
 

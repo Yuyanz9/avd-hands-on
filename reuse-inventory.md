@@ -41,7 +41,7 @@
 
 | 項目 | 今回の本番用一式 | 比較用の既存 Bicep |
 | --- | --- | --- |
-| ネットワーク | `10.10.0.0/16`、Cloud PC・Server・AVD の3サブネット | `10.42.0.0/16`、Session Hosts・Targets の2サブネット |
+| ネットワーク | `10.10.0.0/16`、Cloud PC＝`.1`・AVD＝`.2`・Server＝`.3` の3サブネット | `10.42.0.0/16`、Session Hosts・Targets の2サブネット |
 | NSG | 記事に合わせ未追加 | 用途別 NSG あり |
 | 送信 | 運用版は Standard NAT Gateway／静的 Public IP、`defaultOutboundAccess: false`。検証版は NAT なし、`defaultOutboundAccess: true` | 2サブネットに NAT、暗黙送信なし |
 | 入力 | Network は Location／VNet／3サブネット CIDR を既定値付きで編集可能。運用版のみ NAT／Public IP 名も編集可能。AVD は既定値付き編集可能欄と secure password | 名前・台数・Object ID 等を指定 |

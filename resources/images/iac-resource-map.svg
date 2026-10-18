@@ -72,19 +72,19 @@
   <text x="94" y="607" class="small">サブネットだけ作成</text>
   <text x="94" y="635" class="small">Cloud PC は作らない</text>
 
-  <rect x="310" y="460" width="215" height="232" rx="13" class="blue-card"/>
-  <text x="326" y="493" class="heading">snet-server</text>
+  <rect x="310" y="460" width="215" height="232" rx="13" class="green-card"/>
+  <text x="326" y="493" class="heading">snet-avd</text>
   <text x="326" y="526" class="code">10.10.2.0/24</text>
-  <text x="326" y="570" class="body">Day 2 接続先用</text>
-  <text x="326" y="607" class="small">サブネットだけ作成</text>
-  <text x="326" y="635" class="small">接続先 VM は作らない</text>
+  <text x="326" y="570" class="body">AVD セッション</text>
+  <text x="326" y="599" class="body">ホスト用</text>
+  <text x="326" y="646" class="small">初回／追加 VM が使用</text>
 
-  <rect x="542" y="460" width="235" height="232" rx="13" class="green-card"/>
-  <text x="558" y="493" class="heading">snet-avd</text>
+  <rect x="542" y="460" width="235" height="232" rx="13" class="blue-card"/>
+  <text x="558" y="493" class="heading">snet-server</text>
   <text x="558" y="526" class="code">10.10.3.0/24</text>
-  <text x="558" y="570" class="body">AVD セッション</text>
-  <text x="558" y="599" class="body">ホスト用</text>
-  <text x="558" y="646" class="small">初回 VM と追加 VM が使用</text>
+  <text x="558" y="570" class="body">Server 用（予備）</text>
+  <text x="558" y="607" class="small">サブネットだけ作成</text>
+  <text x="558" y="635" class="small">接続先 VM は別 VNet</text>
 
   <rect x="78" y="715" width="337" height="166" rx="13" class="blue-card"/>
   <text x="96" y="748" class="heading">Network（通常）</text>
@@ -104,8 +104,8 @@
   <path d="M830 360 v18 h915 v-18" fill="#dbeafe"/>
   <text x="857" y="358" class="section">2　AVD テンプレート</text>
 
-  <path d="M777 575 H864" class="ref-line"/>
-  <text x="817" y="557" text-anchor="middle" class="tiny">既存 subnet</text>
+  <path d="M418 460 V451 H817 V575 H854" class="ref-line"/>
+  <text x="660" y="445" text-anchor="middle" class="tiny">既存 subnet</text>
 
   <rect x="857" y="400" width="250" height="88" rx="12" class="blue-card"/>
   <text x="982" y="435" text-anchor="middle" class="heading">Host Pool</text>
@@ -133,7 +133,7 @@
   <text x="1277" y="729" text-anchor="middle" class="small">DSC 拡張＋短期登録トークン</text>
   <rect x="1427" y="666" width="291" height="98" rx="11" class="card"/>
   <text x="1572" y="697" text-anchor="middle" class="heading">構成スクリプト</text>
-  <text x="1572" y="729" text-anchor="middle" class="small">URL 空欄なら省略（英語のまま）</text>
+  <text x="1572" y="729" text-anchor="middle" class="small">GitHub 固定版／空欄なら省略</text>
 
   <rect x="857" y="782" width="408" height="98" rx="11" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
   <text x="878" y="815" class="heading">接続権限：実行ユーザー</text>

@@ -18,13 +18,13 @@ param vnetAddressPrefix string = '10.10.0.0/16'
 @metadata({ displayName: 'Cloud PC Subnet Address Prefix' })
 param cloudPcSubnetPrefix string = '10.10.1.0/24'
 
-@description('Server subnet CIDR. Subnet prefixes must not overlap.')
-@metadata({ displayName: 'Server Subnet Address Prefix' })
-param serverSubnetPrefix string = '10.10.2.0/24'
-
 @description('AVD subnet CIDR. Subnet prefixes must not overlap.')
 @metadata({ displayName: 'AVD Subnet Address Prefix' })
-param avdSubnetPrefix string = '10.10.3.0/24'
+param avdSubnetPrefix string = '10.10.2.0/24'
+
+@description('Server subnet CIDR. Subnet prefixes must not overlap.')
+@metadata({ displayName: 'Server Subnet Address Prefix' })
+param serverSubnetPrefix string = '10.10.3.0/24'
 
 @description('Name of the Standard NAT Gateway.')
 @metadata({ displayName: 'NAT Gateway Name' })
@@ -45,8 +45,8 @@ module network './modules/network-core.bicep' = {
     vnetName: vnetName
     vnetAddressPrefix: vnetAddressPrefix
     cloudPcSubnetPrefix: cloudPcSubnetPrefix
-    serverSubnetPrefix: serverSubnetPrefix
     avdSubnetPrefix: avdSubnetPrefix
+    serverSubnetPrefix: serverSubnetPrefix
     natGatewayName: natGatewayName
     publicIpName: publicIpName
     useNatGateway: true
@@ -56,5 +56,5 @@ module network './modules/network-core.bicep' = {
 output resourceGroupName string = network.outputs.resourceGroupName
 output vnetId string = network.outputs.vnetId
 output cloudPcSubnetId string = network.outputs.cloudPcSubnetId
-output serverSubnetId string = network.outputs.serverSubnetId
 output avdSubnetId string = network.outputs.avdSubnetId
+output serverSubnetId string = network.outputs.serverSubnetId

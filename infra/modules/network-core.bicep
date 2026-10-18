@@ -4,8 +4,8 @@ param location string
 param vnetName string
 param vnetAddressPrefix string
 param cloudPcSubnetPrefix string
-param serverSubnetPrefix string
 param avdSubnetPrefix string
+param serverSubnetPrefix string
 param natGatewayName string
 param publicIpName string
 param useNatGateway bool
@@ -16,12 +16,12 @@ var subnets = [
     addressPrefix: cloudPcSubnetPrefix
   }
   {
-    name: 'snet-server'
-    addressPrefix: serverSubnetPrefix
-  }
-  {
     name: 'snet-avd'
     addressPrefix: avdSubnetPrefix
+  }
+  {
+    name: 'snet-server'
+    addressPrefix: serverSubnetPrefix
   }
 ]
 
@@ -81,5 +81,5 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' = {
 output resourceGroupName string = resourceGroup().name
 output vnetId string = virtualNetwork.id
 output cloudPcSubnetId string = '${virtualNetwork.id}/subnets/snet-cloudpc'
-output serverSubnetId string = '${virtualNetwork.id}/subnets/snet-server'
 output avdSubnetId string = '${virtualNetwork.id}/subnets/snet-avd'
+output serverSubnetId string = '${virtualNetwork.id}/subnets/snet-server'

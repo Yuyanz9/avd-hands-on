@@ -8,6 +8,8 @@
 
 > **日本語化スクリプトも GitHub へ移行・公開済み（2026-10-18）：** 初回 AVD／ホスト追加とも、同梱スクリプトの GitHub 固定コミット Raw URL が既定です。空欄で省略可能。OS 日本語化と Windows Update 用で、Office は別途 Intune の設定が必要です。
 
+> **ローカル更新版・未公開（クリップボード／サブネット修正）：** 以下のクリップボード無効、Cloud PC＝`.1`／AVD＝`.2`／Server＝`.3` は、まだ Deploy ボタンへ反映していません。
+
 ## 今回の進み方
 
 **前提確認・RG 設定【手動】 → Network【Deploy to Azure】 → Windows 365【担当パート】 → AVD・接続権限・SSO【Deploy to Azure】**
@@ -75,14 +77,16 @@ RG 新規作成画面は実機リハーサルで撮影予定です。旧タグ�
 | --- | --- |
 | Location／VNet | `japaneast`／`vnet-vdi`／`10.10.0.0/16`。両方式で変更可能 |
 | Cloud PC 用サブネット | `snet-cloudpc`／`10.10.1.0/24`。CIDR は変更可能 |
-| Server 用サブネット | `snet-server`／`10.10.2.0/24`。CIDR は変更可能 |
-| AVD 用サブネット | `snet-avd`／`10.10.3.0/24`。CIDR は変更可能 |
+| AVD 用サブネット | `snet-avd`／`10.10.2.0/24`。CIDR は変更可能 |
+| Server 用サブネット | `snet-server`／`10.10.3.0/24`。CIDR は変更可能 |
 | 運用方式 | NAT Gateway `nat-vdi`／Public IP `pip-vdi`。名前は変更可能。Standard NAT Gateway と静的 Standard IPv4 Public IP を作成 |
 | 検証方式 | NAT Gateway／送信用 Public IP は作成せず、Azure の既定の送信アクセスを使用 |
 | 送信設定 | 運用方式は `defaultOutboundAccess: false` で NAT を関連付け。検証方式は `defaultOutboundAccess: true`（プライベート サブネットではない） |
 | NSG | 記事同様に作成しない。受信・東西通信の制御は配布前に確認 |
 
 CIDR は VNet の範囲内に収め、サブネット同士が重複しない値を入力します。**運用方式には NAT Gateway と Public IP の継続費用が発生します。** 既定の送信アクセスは固定・予測可能な送信元 IP を提供しません。
+
+**使用中の旧 VNet に修正版の既定値をそのまま再適用しません。** 旧版の AVD＝`.3`／Server＝`.2` を、使用中の NIC・VM・Cloud PC／ANC ごと自動移行する機能ではありません。新規の専用 VNet／演習用 RG を使うか、既存 CIDR を入力して維持します。移行や削除は講師が依存関係を確認し、別途承認した手順で行います。
 
 ### 2.2 公開・リハーサル完了後の操作
 
@@ -160,13 +164,15 @@ NAT ありから検証方式へ切り替える場合、増分デプロイでは 
 | ID・保護 | Entra ID 参加、システム割り当て ID、Intune なし、Trusted Launch／Secure Boot／vTPM |
 | 接続権限 | 実行したユーザーへ DAG の Desktop Virtualization User と VM の Virtual Machine User Login |
 | SSO | ホストプールへ `enablerdsaadauth:i:1` を設定 |
-| RDP 追加既定値 | `enablecredsspsupport:i:1` と `videoplaybackmode:i:1` を明示。SSO・既存クリップボード転送・音声設定は維持 |
+| RDP 追加既定値 | `enablecredsspsupport:i:1` と `videoplaybackmode:i:1` を明示。SSO・音声設定は維持 |
+| クリップボード転送 | `redirectclipboard:i:0` で無効。後からホストプールの RDP プロパティで変更可能 |
 | 登録 | Entra ID 参加 → DSC による AVD 登録。登録トークンは2時間、保護設定にのみ格納 |
 | 日本語設定等 | URL がある場合のみ登録後に Custom Script を実行。既定 `JPNOFLNG.ps1` は Windows Update・自動再起動を含む。空欄なら拡張機能を作らない |
 | 自動停止 | 毎日22:00（`Tokyo Standard Time`）。実行中のセッションが中断される場合あり |
 
 RDP 2項目は未指定から [Microsoft の仕様上の既定値](https://learn.microsoft.com/azure/virtual-desktop/rdp-properties) `1` を明示する修正で、実際に作成したホストプールの GUI 表示・接続は未確認です。「構成されていません」だけでは機能が無効とは断定できません。残るデバイス／画面設定は期待値側の［詳細］文字列と比較するまで変更せず、Intune／グループ ポリシーの制限も別途確認します。
 
+クリップボードは新規ホストプールの既定に合わせて無効です。後から有効にする場合は［ホストプール］→対象プール→［RDP プロパティ］→［デバイスのリダイレクト］で変更・保存し、セッションを切断して再接続します。Intune／グループ ポリシーで禁止されている場合はそちらも変更します。追加ホストのボタンだけでは既存プールの設定は変わらず、初回 AVD テンプレートの再適用時は無効へ戻るため、継続運用ではソースも合わせて管理します。
 1回の展開で指定した台数には同じプレフィックスと異なる連番が付きます。追加・再実行時は既存 VM と重複しないプレフィックスを使います。台数を増やすと費用・クォータ・IP 消費も増えます。SKU の提供地域とサポート期限は事前に確認します。既定スクリプト本体は GitHub 固定コミットですが、イメージの `latest`、依存モジュールと Windows Update の取得内容は変わり得ます。サイズ・イメージの利用可否と、スクリプトの再起動・拡張機能結果は配布前の実機確認が必要です。
 
 スクリプト URL が空欄でも Entra ID 参加、AVD 登録、各 VM の RBAC と22時停止は実行します。英語版の新規 VM を素早く作るための選択であり、既存 VM の日本語化の取り消しや拡張機能の削除ではありません。URL を変更する場合は承認済み HTTPS の PowerShell `.ps1` を指定します。**Microsoft 365 Apps が入っていても Office 利用ライセンスは付与されません。** Office 操作を必須にせず、日本語化のデモ／Intune の説明は利用条件を確認して別途準備します。
