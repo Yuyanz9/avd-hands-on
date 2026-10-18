@@ -1,11 +1,11 @@
 {
-  "status": "published-templates-urls-verified-not-azure-validated",
+  "status": "local-updates-not-published-buttons-reference-previous-release",
   "settingsFile": "infra/settings.json",
   "publication": {
-    "templateCommit": "6e815486ec7c2fd94ca0c4bfd989736bb09cd04d",
+    "repository": "Yuyanz9/avd-hands-on",
     "templatePathPrefix": "",
-    "rawUrlsVerified": true,
-    "repository": "Yuyanz9/avd-hands-on"
+    "templateCommit": "6e815486ec7c2fd94ca0c4bfd989736bb09cd04d",
+    "rawUrlsVerified": false
   },
   "orderedDay1Phases": [
     "manual-prerequisites-and-resource-group",
@@ -37,7 +37,7 @@
       "localTemplate": "templates/avd.json",
       "templateUri": "https://raw.githubusercontent.com/Yuyanz9/avd-hands-on/6e815486ec7c2fd94ca0c4bfd989736bb09cd04d/templates/avd.json",
       "deployToAzureUrl": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F6e815486ec7c2fd94ca0c4bfd989736bb09cd04d%2Ftemplates%2Favd.json",
-      "localTemplateSha256": "9F562CA732168219B055950CF49B38E53AA0C1641A0BE242341E7A8D2AC48CF9",
+      "localTemplateSha256": "A23DFB77371F2BEF583BA70A700A3928D5A0E5A1862F0807A77C1D96760FB91B",
       "productionApproved": false,
       "executionValidatedForThisFlow": false
     },
@@ -46,7 +46,7 @@
       "localTemplate": "templates/session-host.json",
       "templateUri": "https://raw.githubusercontent.com/Yuyanz9/avd-hands-on/6e815486ec7c2fd94ca0c4bfd989736bb09cd04d/templates/session-host.json",
       "deployToAzureUrl": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F6e815486ec7c2fd94ca0c4bfd989736bb09cd04d%2Ftemplates%2Fsession-host.json",
-      "localTemplateSha256": "DD7A6823F14E8851A6AE42FB4B51EC51F3369AAFAE930842289AA96C670913B9",
+      "localTemplateSha256": "EAE3965847681C309AB0EF00D2F98B694B0BEDD1BF96F8215769D3A1426BF259",
       "productionApproved": false,
       "executionValidatedForThisFlow": false
     }

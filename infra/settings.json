@@ -17,7 +17,7 @@
     "imagePublisher": "microsoftwindowsdesktop",
     "imageOffer": "windows-11",
     "imageVersion": "latest",
-    "customConfigurationScriptUrl": "https://nogujapanese.blob.core.windows.net/avd-deploy/JPNOFLNG.ps1",
+    "customConfigurationScriptUrl": "https://raw.githubusercontent.com/Yuyanz9/avd-hands-on/7b0923fcc78335ac25bafc418d9d3ab4538292d8/scripts/JPNOFLNG.ps1",
     "configurationPackageUrl": "https://wvdportalstorageblob.blob.core.windows.net/galleryartifacts/Configuration_1.0.03537.1471.zip"
   }
 }

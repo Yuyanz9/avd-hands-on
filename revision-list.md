@@ -18,7 +18,7 @@
 | R06 | IaC 更新済み・設計確認待ち | 送信・受信制御 | 運用版は Standard NAT Gateway／静的 Standard Public IP と `defaultOutboundAccess: false`、検証版は NAT なし・`defaultOutboundAccess: true`。NSG は未作成。運用版の継続費用と検証版の不定な送信元 IP を案内し、通信・受信・東西制御を配布前に確認 |
 | R07 | ローカル実装済み | Windows 365 後の Network 保護 | AVD は既存ネットワーク参照のみ。VNet・サブネットを再作成しない。NAT ありから検証方式への増分切替で NAT／Public IP が残存し得る点と ANC 等への影響を担当者と R10 で確認 |
 | R08 | 新版公開済み／実機確認待ち | 編集可能な AVD パラメーター | 従来の入力順を維持し、Custom Configuration Script Url、Vm Number Of Instances（既定1、1～10）、Hostpool Type（既定 Pooled）、Load Balancer Type（既定 BreadthFirst）を追加。Personal は Persistent／Automatic／1セッションに連動。パスワードは secure。Object ID は `deployer()` |
-| R09 | 新版公開済み／実機確認待ち | VM・イメージ・外部スクリプト | D4as_v6／Office 入り25H2（`office-365`／`win11-25h2-avd-m365`）を既定にし、Windows 11 23H2～26H2 の Office あり／なしを選択可能。Offer は SKU に連動。スクリプト URL は空欄で省略可能。利用資格・Office ライセンス、地域・サポート期限、`latest` の版固定、外部スクリプトの改変・再起動と時間を確認 |
+| R09 | スクリプト本体を GitHub 公開・既定 URL 切替待ち／実機確認待ち | VM・イメージ・外部スクリプト | D4as_v6／Office 入り25H2を既定にし、Windows 11 23H2～26H2 の Office あり／なしを選択可能。OS 日本語化 PS1 を出典付きで同梱し、GitHub 固定コミットの匿名取得・内容一致を確認。初回／追加ホストの既定 URL の切替は準備中。空欄で省略可能。Office 日本語化は別途 Intune。利用資格、地域・サポート期限、`latest` と依存モジュールの版固定、VM 内ハッシュ／署名検証、自動再起動と時間を確認 |
 | R10 | 一部確認済み・更新版の実機確認待ち | 通しリハーサル | 旧版は利用者報告で Network／AVD を試行し、Windows App 接続と日本語化を確認。今回の Network 2方式、編集可能な AVD 版、追加ホスト版を検証し、Network → Windows 365 → AVD → SSO 接続を通し確認する。SSO、登録キー、22:00 停止、待機・失敗・再実行・Windows 365 への影響も記録 |
 | R11 | 未整備 | 保持・削除 | Day 2 保持、停止後の課金、Windows 365 担当者への確認、RG 削除可否、ANC／Entra デバイス等の残存処理を具体化。旧タグ依存の削除スクリプトは使わない |
 | R12 | ローカル実装済み | 接続用 RBAC | 実行メンバーユーザーへ DAG の Desktop Virtualization User と VM の Virtual Machine User Login を付与。ロール作成権限、反映、別アカウントによる代行時の挙動を実機確認 |

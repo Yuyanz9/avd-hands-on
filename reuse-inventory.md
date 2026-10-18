@@ -14,6 +14,7 @@
 | [運用 Network JSON](templates/network.json)／[検証 Network JSON](templates/network-validation.json)／[AVD JSON](templates/avd.json)／[追加ホスト JSON](templates/session-host.json) | Deploy to Azure 用に生成。モジュールは JSON に埋め込み |
 | [生成スクリプト](scripts/Build-Templates.ps1) | Azure リソースを作らないローカルコンパイル |
 | [ボタン設定スクリプト](scripts/Set-DeployButtons.ps1) | 公開リポジトリとテンプレートを含む固定コミットを指定し、ローカル README／メタデータを更新 |
+| [OS 日本語化スクリプト](scripts/JPNOFLNG.ps1) | carol0226 氏のサンプルを出典付きで同梱し、公開 GitHub の固定コミットで配信。Windows Update・自動再起動を含む。Office 日本語化は別 |
 | [契約テスト](tests/Test-ProductionTemplates.ps1) | 固定値、生成物、接続設定、ボタン生成・失敗時の非更新を確認 |
 
 記事の ARM をコピーしたものではなく、記事の固定設定と既存 Bicep の実装パターンを使って新規に作成しています。外部 ARM の旧ボタンは本番の実行入口から外しました。Day 2 の VNet 作成方式は未決定で、現行の[手動手順案](day2-secure-jump.md)は方式決定後に確定します。VNet Peering は手動で行う方針です。
@@ -34,7 +35,7 @@
 
 画像の出典・加工・許可は [画像一覧](resources/images/README.md)、当初の取り込み元とハッシュは [コピー記録](resources/reuse-manifest.json)を参照します。コピー記録は取り込み時点の資料記録であり、新規に書いた IaC が比較用ファイルと同一であることを示すものではありません。
 
-記事の日本語設定スクリプトと Microsoft の DSC パッケージはローカルへ同梱しません。日本語設定スクリプトの URL は既定値付きで変更可能で、空欄なら Custom Script Extension を省略します。DSC は固定設定の URL から取得します。外部スクリプトの可変性・更新・再起動の課題は [R09](revision-list.md)に残しています。今回の AVD／追加ホスト変更と CredSSP／ビデオ再生の RDP 2項目修正（[R19](revision-list.md)）は2026-10-18に公開し、固定コミットの匿名取得と同梱 JSON のハッシュ一致を確認しています。Azure 実機確認は別途必要です。
+記事の OS 日本語化スクリプトは出典付きで同梱し、GitHub 固定コミットに公開しました。初回 AVD と追加ホストの既定 URL の切替は準備中です。URL は変更可能で、空欄なら Custom Script Extension を省略します。Microsoft の DSC パッケージは同梱せず、固定設定の URL から取得します。依存モジュール・Windows Update と再起動の課題は [R09](revision-list.md)に残しています。AVD／追加ホストの編集可能な入力と CredSSP／ビデオ再生の RDP 2項目修正（[R19](revision-list.md)）は2026-10-18に公開済みです。Azure 実機確認は別途必要です。
 
 ## 混在させない構成
 

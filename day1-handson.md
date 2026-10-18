@@ -6,6 +6,8 @@
 
 > **RDP 2項目も公開済み（2026-10-18）：** CredSSP とビデオ再生の既定値を明示する修正を公開ボタンへ反映しました。デバイス／ディスプレイ全体の照合は [R19](revision-list.md) の残課題です。
 
+> **ローカル更新版・未公開（日本語化 URL の変更）：** スクリプト本体は GitHub 固定コミットへ公開しました。以下の既定 URL の変更はまだ Deploy ボタンへ反映していません。
+
 ## 今回の進み方
 
 **前提確認・RG 設定【手動】 → Network【Deploy to Azure】 → Windows 365【担当パート】 → AVD・接続権限・SSO【Deploy to Azure】**
@@ -137,7 +139,7 @@ NAT ありから検証方式へ切り替える場合、増分デプロイでは 
 | Vm Disk Type | `StandardSSD_LRS` | VM サイズ・リージョンで利用可能な種別 |
 | Max Session Limit | `5` | Pooled の各ホストの最大同時セッション数。Personal は1 |
 | Vm Name Prefix | `dateTimeAdd(utcNow(), 'PT9H', 'AVDMMddHHmm')` | 初期値は JST の分単位。VM 名は `-0`～ `-9` を付加。再実行は新しい値に変更 |
-| Custom Configuration Script Url | `https://nogujapanese.blob.core.windows.net/avd-deploy/JPNOFLNG.ps1` | そのままなら日本語設定、空欄なら省略しイメージの言語（通常は英語）で高速展開 |
+| Custom Configuration Script Url | `https://raw.githubusercontent.com/Yuyanz9/avd-hands-on/7b0923fcc78335ac25bafc418d9d3ab4538292d8/scripts/JPNOFLNG.ps1` | GitHub 固定コミット。既定は日本語設定、空欄なら省略しイメージの言語（通常は英語）で高速展開 |
 | Vm Number Of Instances | `1` | 1回で作る台数。1～10台。費用・vCPU クォータ・IP 容量を確認 |
 | Hostpool Type | `Pooled` | Pooled／Personal を選択。既存プールの方式変更は不可 |
 | Load Balancer Type | `BreadthFirst` | Pooled は BreadthFirst／DepthFirst。Personal はこの入力を使わず Persistent・自動割り当て |
@@ -165,11 +167,11 @@ NAT ありから検証方式へ切り替える場合、増分デプロイでは 
 
 RDP 2項目は未指定から [Microsoft の仕様上の既定値](https://learn.microsoft.com/azure/virtual-desktop/rdp-properties) `1` を明示する修正で、実際に作成したホストプールの GUI 表示・接続は未確認です。「構成されていません」だけでは機能が無効とは断定できません。残るデバイス／画面設定は期待値側の［詳細］文字列と比較するまで変更せず、Intune／グループ ポリシーの制限も別途確認します。
 
-1回の展開で指定した台数には同じプレフィックスと異なる連番が付きます。追加・再実行時は既存 VM と重複しないプレフィックスを使います。台数を増やすと費用・クォータ・IP 消費も増えます。SKU の提供地域とサポート期限は事前に確認します。イメージの `latest` と外部スクリプトは可変で、同じテンプレートでも取得内容が変わる可能性があります。サイズ・イメージの利用可否と、スクリプトの再起動・拡張機能結果は配布前の実機確認が必要です。
+1回の展開で指定した台数には同じプレフィックスと異なる連番が付きます。追加・再実行時は既存 VM と重複しないプレフィックスを使います。台数を増やすと費用・クォータ・IP 消費も増えます。SKU の提供地域とサポート期限は事前に確認します。既定スクリプト本体は GitHub 固定コミットですが、イメージの `latest`、依存モジュールと Windows Update の取得内容は変わり得ます。サイズ・イメージの利用可否と、スクリプトの再起動・拡張機能結果は配布前の実機確認が必要です。
 
 スクリプト URL が空欄でも Entra ID 参加、AVD 登録、各 VM の RBAC と22時停止は実行します。英語版の新規 VM を素早く作るための選択であり、既存 VM の日本語化の取り消しや拡張機能の削除ではありません。URL を変更する場合は承認済み HTTPS の PowerShell `.ps1` を指定します。**Microsoft 365 Apps が入っていても Office 利用ライセンスは付与されません。** Office 操作を必須にせず、日本語化のデモ／Intune の説明は利用条件を確認して別途準備します。
 
-AVD の日本語設定拡張機能は公開 Blob のスクリプトを `ExecutionPolicy Bypass` で実行し、スクリプト内でバージョン未固定の `PSWindowsUpdate` を導入します。Deploy to Azure の固定コミットはこの外部スクリプトを固定しません。**悪意あるコードの追加・スクリプトの不審な差し替え・未承認の変更の配布や実行は禁止です。** 講師が配信元と実行内容を確認できない場合はデプロイせず、詳細は [README のセキュリティ注意](README.md)を確認してください。この注意書き自体はコード改変や供給元の変更を防止しません。
+AVD の日本語設定拡張機能は、同梱 [JPNOFLNG.ps1](scripts/JPNOFLNG.ps1) の GitHub 固定コミットを `ExecutionPolicy Bypass` で実行します。**このスクリプトは OS 日本語化と Windows Update 用です。Microsoft 365 Apps の日本語化は含まず、別途 Intune の設定が必要です。** 本体の匿名取得・照合は確認済みですが、VM 内でのハッシュ／署名検証は未実装で、バージョン未固定の `PSWindowsUpdate` 等の外部依存も残ります。**悪意あるコードの追加・スクリプトの不審な差し替え・未承認の変更の配布や実行は禁止です。** 講師が配信元と実行内容を確認できない場合はデプロイせず、詳細は [README のセキュリティ注意](README.md)を確認してください。この注意書き自体はコード改変や依存先の変更を防止しません。
 
 **本人がデプロイして本人が接続**します。Object ID は `deployer().objectId` で取得し、2種類のロールをリソース単位で付与します。サービスプリンシパル・グループは対象外です。講師が別アカウントで再実行すると、その講師にも権限が追加されるため代行前に確認します。
 

@@ -56,7 +56,7 @@ $expected = @{
     'avd.imagePublisher' = 'microsoftwindowsdesktop'
     'avd.imageOffer' = 'windows-11'
     'avd.imageVersion' = 'latest'
-    'avd.customConfigurationScriptUrl' = 'https://nogujapanese.blob.core.windows.net/avd-deploy/JPNOFLNG.ps1'
+    'avd.customConfigurationScriptUrl' = 'https://raw.githubusercontent.com/Yuyanz9/avd-hands-on/7b0923fcc78335ac25bafc418d9d3ab4538292d8/scripts/JPNOFLNG.ps1'
     'avd.configurationPackageUrl' = 'https://wvdportalstorageblob.blob.core.windows.net/galleryartifacts/Configuration_1.0.03537.1471.zip'
 }
 foreach ($path in $expected.Keys) {
@@ -65,6 +65,30 @@ foreach ($path in $expected.Keys) {
     Assert-Template ($value -ceq $expected[$path]) "Unexpected fixed setting: $path."
 }
 Assert-Template (-not $settings.ContainsKey('resourceGroupName')) 'Resource group must come from the portal deployment scope, not fixed settings.'
+Assert-Template ($settings.avd.customConfigurationScriptUrl -cmatch '^https://raw\.githubusercontent\.com/Yuyanz9/avd-hands-on/[0-9a-f]{40}/scripts/JPNOFLNG\.ps1$') 'The default Japanese script must use an immutable public package URL, not Blob or a mutable branch.'
+$localizationPath = Join-Path $root 'scripts\JPNOFLNG.ps1'
+$localizationText = Get-Content -LiteralPath $localizationPath -Raw
+$localizationTokens = $null
+$localizationErrors = $null
+$localizationAst = [System.Management.Automation.Language.Parser]::ParseFile($localizationPath, [ref]$localizationTokens, [ref]$localizationErrors)
+Assert-Template ($localizationErrors.Count -eq 0) 'The hosted Japanese script must parse without executing any system configuration.'
+$localizationCommands = @($localizationAst.FindAll({
+    param($node)
+    $node -is [System.Management.Automation.Language.CommandAst]
+}, $true) | ForEach-Object { $_.GetCommandName() })
+foreach ($name in @('Set-TimeZone', 'Install-Language', 'Set-WinSystemLocale', 'Set-Culture', 'Set-SystemPreferredUILanguage', 'Set-WinHomeLocation', 'New-WinUserLanguageList', 'Set-WinUserLanguageList', 'Install-PackageProvider', 'Install-Module', 'Get-WindowsUpdate')) {
+    Assert-Template ($name -in $localizationCommands) "Preserve the article's OS localization/Windows Update operation: $name."
+}
+Assert-Template ($localizationText.Contains('Install-Language ja-jp -CopyTosettings') -and $localizationText.Contains('Get-WindowsUpdate -AcceptAll -Install -AutoReboot')) 'Preserve welcome-screen language copying and the documented automatic restart behavior.'
+Assert-Template ($localizationText.Contains('carol0226') -and $localizationText.Contains('https://qiita.com/carol0226/items/f7770369947aaf4962f7')) 'Keep attribution to the author and a public reference, not the limited-share article URL.'
+$localizationHasher = [System.Security.Cryptography.SHA256]::Create()
+try {
+    $canonicalBytes = [System.Text.Encoding]::UTF8.GetBytes($localizationText.Replace("`r`n", "`n"))
+    $localizationHash = [System.BitConverter]::ToString($localizationHasher.ComputeHash($canonicalBytes)).Replace('-', '')
+} finally {
+    $localizationHasher.Dispose()
+}
+Assert-Template ($localizationHash -ceq '5C55DB8A3C2394F1AFBE2125F950753ED2DFFE602578C963504F617EAE46FAE4') 'The bundled script must match the verified immutable URL after Git LF normalization; publish a new script commit before changing it.'
 Assert-Template ($settings.network.subnets.Count -eq 3) 'Expected exactly three article subnets.'
 $subnetNames = @('snet-cloudpc', 'snet-server', 'snet-avd')
 $subnetPrefixes = @('10.10.1.0/24', '10.10.2.0/24', '10.10.3.0/24')
@@ -205,6 +229,8 @@ foreach ($text in @($readmeText, $day1Text)) {
     Assert-Template ($text.Contains('Ctrl＋クリック') -and $text.Contains('新しいタブでリンクを開く') -and $text.Contains('Command＋クリック')) 'Document a reliable new-tab operation instead of promising target=_blank on GitHub.'
     Assert-Template ($text.Contains('空欄') -and $text.Contains('日本語') -and $text.Contains('英語')) 'Explain how an empty script URL skips Japanese configuration for English deployments.'
     Assert-Template ($text.Contains('enablecredsspsupport:i:1') -and $text.Contains('videoplaybackmode:i:1')) 'Document the two explicitly restored RDP defaults.'
+    Assert-Template ($text.Contains($settings.avd.customConfigurationScriptUrl) -and $text.Contains('scripts/JPNOFLNG.ps1')) 'Both guides must show the immutable default and link to the bundled Japanese script.'
+    Assert-Template ($text.Contains('OS 日本語化') -and $text.Contains('別途 Intune')) 'Do not imply the OS script also localizes Microsoft 365 Apps.'
     Assert-Template ($text.Contains('Office 利用ライセンスは付与されません') -and $text.Contains('Custom Configuration Script Url') -and $text.Contains('Vm Number Of Instances')) 'Explain licensing and optional script/count inputs.'
 }
 Assert-Template ($entry.resources.Count -eq 1) 'AVD entry must contain one embedded module.'
@@ -398,6 +424,7 @@ if ($liveManifest.publication.rawUrlsVerified) {
 }
 foreach ($phase in @('network', 'network-validation', 'avd', 'session-host')) {
     $link = @($liveManifest.links | Where-Object { $_.phase -eq $phase })
+    Assert-Template ($liveReadme.Contains("<!-- deploy-button-${phase}:end -->`n`n**Ctrl＋クリック") -or $liveReadme.Contains("<!-- deploy-button-${phase}:end -->`r`n`r`n**Ctrl＋クリック")) 'Keep the new-tab instruction immediately below every deployment button.'
     Assert-Template ($link.Count -eq 1 -and $link[0].localTemplate -eq "templates/$phase.json") 'Metadata must identify each local production template.'
     Assert-Template ($link[0].localTemplateSha256 -eq (Get-FileHash -LiteralPath (Join-Path $root "templates\$phase.json") -Algorithm SHA256).Hash) 'Metadata must record the hash of the current local JSON.'
     if ($liveManifest.publication.repository) {
@@ -464,6 +491,7 @@ try {
         Assert-Template ($link.templateUri -ceq $uri) 'Button template URI must use a fixed commit and prefix.'
         Assert-Template ($link.deployToAzureUrl -ceq ('https://portal.azure.com/#create/Microsoft.Template/uri/' + [uri]::EscapeDataString($uri))) 'Use the official encoded portal URL.'
         Assert-Template ($configuredReadme.Contains("[![Deploy to Azure](https://aka.ms/deploytoazurebutton)]($($link.deployToAzureUrl))")) 'README must contain the matching official button.'
+        Assert-Template ($configuredReadme.Contains("<!-- deploy-button-${phase}:end -->`n`n**Ctrl＋クリック") -or $configuredReadme.Contains("<!-- deploy-button-${phase}:end -->`r`n`r`n**Ctrl＋クリック")) 'Regenerating links must preserve each per-button Ctrl-click instruction.'
         Assert-Template ($link.localTemplateSha256 -eq (Get-FileHash -LiteralPath (Join-Path $fixture "templates\$phase.json")).Hash) 'Record the actual local template hash.'
     }
     $once = $configuredReadme

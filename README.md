@@ -8,6 +8,8 @@
 
 > **RDP 2項目も公開済み（2026-10-18）：** CredSSP とビデオ再生の既定値を明示する修正を公開 Deploy ボタンへ反映しました。デバイス／ディスプレイ全体の照合と実機確認は [R19](revision-list.md) に残しています。
 
+> **ローカル更新版・未公開（日本語化 URL の変更）：** スクリプト本体は GitHub の固定コミットに公開済みです。以下の既定 URL の変更はまだ Deploy ボタンへ反映していません。現在のボタンは前回公開版を参照します。
+
 **元の資料を残して Azure portal を開くには、ボタンを Ctrl＋クリック、マウスの中ボタンクリック、または右クリック →［新しいタブでリンクを開く］で開きます（macOS は Command＋クリック）。** GitHub の README ではリンクの `target="_blank"` が除去されるため、資料側から別タブを強制できません。通常クリックは同じタブで遷移します。
 
 ![Network・AVD・追加セッションホストの IaC リソースとデプロイ時の選択肢](resources/images/iac-resource-map.svg)
@@ -89,7 +91,7 @@ Network の成功と3サブネットを確認後、Windows 365 担当者の資�
 | SSO | `enablerdsaadauth:i:1` を常に設定 |
 | RDP 追加既定値 | `enablecredsspsupport:i:1`（OS が対応する場合に CredSSP を使用）、`videoplaybackmode:i:1`（可能な場合に RDP 対応マルチメディア ストリーミングを使用） |
 | 接続用 RBAC | 実行ユーザーへ DAG の Desktop Virtualization User と VM の Virtual Machine User Login |
-| 日本語設定等 | `Custom Configuration Script Url` の既定は記事の `JPNOFLNG.ps1`。空欄なら Custom Script Extension を作らずイメージの言語（通常は英語）のまま高速展開。既定スクリプトは Windows Update と自動再起動を含む |
+| 日本語設定等 | `Custom Configuration Script Url` の既定は同梱 [JPNOFLNG.ps1](scripts/JPNOFLNG.ps1) の GitHub 固定コミット URL。空欄なら Custom Script Extension を作らずイメージの言語（通常は英語）のまま高速展開。既定スクリプトは Windows Update と自動再起動を含む |
 | 自動停止 | 毎日22:00（`Tokyo Standard Time`）。実行中のセッションも中断される場合があります |
 
 RDP の2項目は [Microsoft のプロパティ仕様](https://learn.microsoft.com/azure/virtual-desktop/rdp-properties)にある既定値 `1` を明示する変更です。未指定時の「構成されていません」は、実際に無効であることを意味するとは限りません。SSO、既存のクリップボード転送 `redirectclipboard:i:1`、音声 `audiomode:i:0` は変更しません。デバイス転送や画面設定は、期待値側のホストプールの［RDP プロパティ］→［詳細］の文字列と比較するまで変更せず、一括で許可しません。Intune／グループ ポリシーなどの制限は別途適用され、今回の実機 GUI 表示・接続は未確認です。ホスト追加テンプレートは既存プールの RDP 設定を変更しません。
@@ -134,7 +136,7 @@ VM 名の既定プレフィックスはデプロイ時刻から作られ、1回�
 | Vm Gallery Image SKU | `win11-25h2-avd-m365` | Office 入り。既存ホストと互換の SKU をリストから選択。Offer は連動 |
 | Vm Size／Vm Disk Type | `Standard_D4as_v6`／`StandardSSD_LRS` | 既存プールに合わせる |
 | Vm Name Prefix | JST の日時 `AVDMMddHHmm` | 実行時刻が近い場合は一意になる値へ変更 |
-| Custom Configuration Script Url | `https://nogujapanese.blob.core.windows.net/avd-deploy/JPNOFLNG.ps1` | 空欄なら日本語設定を省略 |
+| Custom Configuration Script Url | `https://raw.githubusercontent.com/Yuyanz9/avd-hands-on/7b0923fcc78335ac25bafc418d9d3ab4538292d8/scripts/JPNOFLNG.ps1` | GitHub 固定コミット。空欄なら日本語設定を省略 |
 | Vm Number Of Instances | `1` | 追加する台数。1～10台。費用・クォータを確認 |
 | Registration Token／Vm Administrator Account Password | 既定なし | 必須の secure parameter。秘密を保存しない |
 
@@ -158,13 +160,15 @@ Windows 365 のプロビジョニング ポリシーを割り当てる対象は 
 - Network は運用版（NAT Gateway／静的 Public IP、`defaultOutboundAccess: false`）と検証版（NAT なし、`defaultOutboundAccess: true`）から選びます。運用版には継続費用がかかり、検証版の既定送信元 IP は固定されません。
 - 接続権限2種類とホストプール SSO を自動設定します。Windows Cloud Login のテナント側準備は講師担当です。
 
-イメージの `latest`、DSC パッケージ、記事の日本語設定スクリプトは外部依存です。**スクリプトは可変で、自動再起動による拡張機能の失敗・待機時間を含め未実証**です。配布前に通しリハーサルし、版固定・再起動方式の調整要否を判断します。デプロイ成功と SSO 接続成功は別の確認です。
+イメージの `latest`、DSC パッケージ、PowerShell Gallery のモジュールと Windows Update は外部依存です。既定の日本語化スクリプト本体は GitHub 固定コミットで不変化していますが、これらの依存先までは固定しません。**自動再起動による拡張機能の失敗・待機時間を含め未実証**です。配布前に通しリハーサルし、依存先の版固定・再起動方式の調整要否を判断します。デプロイ成功と SSO 接続成功は別の確認です。
 
 ### セキュリティ上の注意：外部スクリプト
 
-AVD テンプレートは公開 Blob Storage の `JPNOFLNG.ps1` を取得し、Custom Script Extension で `ExecutionPolicy Bypass` を指定して VM 上で実行します。スクリプト内では `PSWindowsUpdate` もバージョン指定なしでインストール・実行します。ARM JSON の固定コミットはテンプレートだけを固定し、外部スクリプトや PowerShell Gallery のモジュールを固定・検証するものではありません。外部配信元の変更により実行内容が変わり得るサプライチェーンリスクがあります。
+AVD テンプレートは公開 GitHub の固定コミットから [JPNOFLNG.ps1](scripts/JPNOFLNG.ps1) を取得し、Custom Script Extension で `ExecutionPolicy Bypass` を指定して VM 上で実行します。出典は carol0226 氏の OS 日本語化スクリプトで、[公開の参考記事](https://qiita.com/carol0226/items/f7770369947aaf4962f7)を参照してください。記事掲載の処理を維持し、出典コメントだけを付けています。**このスクリプトは OS 日本語化と Windows Update 用です。Microsoft 365 Apps の日本語化は含まず、別途 Intune の設定・ライセンス確認が必要です。**
 
-**この教材・スクリプトに悪意あるコードを加えること、実行先を不審なスクリプトに差し替えること、未承認の変更を配布・実行することを禁止します。** デプロイ前に講師が配信元とその時点の内容を確認し、承認できない場合は［作成］を進めないでください。この注意書きは技術的な改変防止策ではありません。ハッシュ／署名検証や不変なスクリプト配信は未実装のため、本番利用前に R09 の確認と対策が必要です。
+配信する LF 改行版スクリプトの SHA-256 は `5C55DB8A3C2394F1AFBE2125F950753ED2DFFE602578C963504F617EAE46FAE4` です。公開時に匿名取得と内容一致を照合しました。Windows のチェックアウトで CRLF に変換された場合、ファイルの生バイトのハッシュは異なります。実行時の VM 内ハッシュ／署名検証は未実装です。`PSWindowsUpdate` は引き続きバージョン指定なしで導入・実行するため、依存モジュール等の変更によるサプライチェーンリスクは残ります。URL を別の配信元や可変ブランチへ変更した場合は、既定の不変配信による保証も対象外です。
+
+**この教材・スクリプトに悪意あるコードを加えること、実行先を不審なスクリプトに差し替えること、未承認の変更を配布・実行することを禁止します。** デプロイ前に講師が配信元と内容を確認し、承認できない場合は［作成］を進めないでください。この注意書き自体は技術的な改変防止策ではありません。本番利用前に R09 の確認と残る対策が必要です。
 
 流用スクリーンショットは旧テンプレートの参考で、新版の入力画面ではありません。新しい画面の撮影は実機リハーサル時に行います。費用・保持・削除の注意は [統合手順](day1-handson.md)を参照してください。
 

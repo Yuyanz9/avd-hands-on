@@ -59,7 +59,7 @@ param vmNamePrefix string = dateTimeAdd(utcNow(), 'PT9H', 'AVDMMddHHmm')
 
 @metadata({ displayName: 'Custom Configuration Script Url' })
 @description('Approved PowerShell script URL. Default runs Japanese configuration; clear this field to skip custom configuration and keep the image language.')
-param customConfigurationScriptUrl string = 'https://nogujapanese.blob.core.windows.net/avd-deploy/JPNOFLNG.ps1'
+param customConfigurationScriptUrl string = 'https://raw.githubusercontent.com/Yuyanz9/avd-hands-on/7b0923fcc78335ac25bafc418d9d3ab4538292d8/scripts/JPNOFLNG.ps1'
 
 @metadata({ displayName: 'Vm Number Of Instances' })
 @description('Number of hosts to add (1-10), not the desired total pool size. More VMs increase cost and require sufficient quota and subnet capacity.')
