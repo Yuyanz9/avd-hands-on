@@ -9,14 +9,14 @@
 | [固定設定](infra/settings.json) | 3サブネット、VNet／NAT の既定値、AVD の固定設定部分 |
 | [運用 Network ソース](infra/network.bicep)／[検証 Network ソース](infra/network-validation.bicep)／[共通モジュール](infra/modules/network-core.bicep) | 同じ3サブネットと編集可能な CIDR。運用版は NAT Gateway／Public IP あり、検証版は NAT なし |
 | [AVD 入口](infra/avd.bicep)／[モジュール](infra/modules/avd.bicep) | 既定値付き編集可能パラメーター、secure password、実行者 ID、VM・AVD・RBAC・SSO・22:00停止 |
-| [セッションホスト共通モジュール](infra/modules/session-host.bicep) | Entra 参加、既存プール登録、日本語設定拡張機能、VM Login RBAC、自動停止 |
-| [追加ホスト入口](infra/session-host.bicep) | 既存 Standard 管理プールへ1台を追加。登録キーは secure parameter |
+| [セッションホスト共通モジュール](infra/modules/session-host.bicep) | SKU／Offer の連動、Entra 参加、既存プール登録、任意の日本語設定拡張機能、VM Login RBAC、自動停止 |
+| [追加ホスト入口](infra/session-host.bicep) | 既存 Standard 管理プールへ既定1台、1～10台を追加。登録キーは secure parameter |
 | [運用 Network JSON](templates/network.json)／[検証 Network JSON](templates/network-validation.json)／[AVD JSON](templates/avd.json)／[追加ホスト JSON](templates/session-host.json) | Deploy to Azure 用に生成。モジュールは JSON に埋め込み |
 | [生成スクリプト](scripts/Build-Templates.ps1) | Azure リソースを作らないローカルコンパイル |
 | [ボタン設定スクリプト](scripts/Set-DeployButtons.ps1) | 公開リポジトリとテンプレートを含む固定コミットを指定し、ローカル README／メタデータを更新 |
 | [契約テスト](tests/Test-ProductionTemplates.ps1) | 固定値、生成物、接続設定、ボタン生成・失敗時の非更新を確認 |
 
-記事の ARM をコピーしたものではなく、記事の固定設定と既存 Bicep の実装パターンを使って新規に作成しています。外部 ARM の旧ボタンは本番の実行入口から外しました。Day 2 のセキュアジャンプ環境と Peering は、[手動手順](day2-secure-jump.md)だけで行います。
+記事の ARM をコピーしたものではなく、記事の固定設定と既存 Bicep の実装パターンを使って新規に作成しています。外部 ARM の旧ボタンは本番の実行入口から外しました。Day 2 の VNet 作成方式は未決定で、現行の[手動手順案](day2-secure-jump.md)は方式決定後に確定します。VNet Peering は手動で行う方針です。
 
 ## 取り込んだ参考素材
 
@@ -25,8 +25,8 @@
 | 手動準備・完了条件・安全上の材料 | `docs\portal-deploy-handson.md`、既存参加者・講師ガイド | [統合手順](day1-handson.md)へ再構成。旧 CLI 版の実測・確認済み表示は引き継がない |
 | RG タグのマスク済み画像 | `docs\images\day1\resource-group-tags.png` | [参考画像](resources/images/manual/resource-group-tags.png)。今回はタグ必須なし、主手順では使用しない |
 | Network の記事画像 | `docs\images\portal-deploy\01-network-deploy.png` | [旧画面](resources/images/portal-deploy/01-network-deploy.png)。新版の編集可能な入力欄とは異なる |
-| AVD の記事画像 | `docs\images\portal-deploy\02-avd-deploy.png` | [旧画面](resources/images/portal-deploy/02-avd-deploy.png)。新版は既存 RG・パスワードのみ |
-| 既存ネットワーク欄の拡大 | `docs\images\portal-deploy\03-existing-network-detail.png` | [参考画像](resources/images/portal-deploy/03-existing-network-detail.png)。新版の参照先は固定のため主手順では使用しない |
+| AVD の記事画像 | `docs\images\portal-deploy\02-avd-deploy.png` | [旧画面](resources/images/portal-deploy/02-avd-deploy.png)。新版の編集可能な入力欄・SKU 選択・追加4項目とは異なる |
+| 既存ネットワーク欄の拡大 | `docs\images\portal-deploy\03-existing-network-detail.png` | [参考画像](resources/images/portal-deploy/03-existing-network-detail.png)。新版は VNet RG／名前／サブネットを変更可能なため、旧画面をそのまま使わない |
 | 管理者欄の拡大 | `docs\images\portal-deploy\04-admin-password-detail.png` | [参考画像](resources/images/portal-deploy/04-admin-password-detail.png)。実パスワードはない。新版のユーザー名は固定 |
 | Network／AVD Bicep | `infra\network.bicep`、`infra\avd.bicep` | [Network コピー](reference/iac/network.bicep)／[AVD コピー](reference/iac/avd.bicep)。比較用であり、ボタンからは実行しない |
 | Bicep 設定 | `bicepconfig.json` | [比較用コピー](reference/iac/bicepconfig.json)と [本パッケージの設定](bicepconfig.json) |
@@ -34,7 +34,7 @@
 
 画像の出典・加工・許可は [画像一覧](resources/images/README.md)、当初の取り込み元とハッシュは [コピー記録](resources/reuse-manifest.json)を参照します。コピー記録は取り込み時点の資料記録であり、新規に書いた IaC が比較用ファイルと同一であることを示すものではありません。
 
-記事の日本語設定スクリプトと Microsoft の DSC パッケージはローカルへ同梱せず、固定設定の URL から取得します。外部スクリプトの可変性・更新・再起動の課題は [R09](revision-list.md)に残しています。
+記事の日本語設定スクリプトと Microsoft の DSC パッケージはローカルへ同梱しません。日本語設定スクリプトの URL は既定値付きで変更可能で、空欄なら Custom Script Extension を省略します。DSC は固定設定の URL から取得します。外部スクリプトの可変性・更新・再起動の課題は [R09](revision-list.md)に残しています。今回の AVD／追加ホスト変更はローカルのみで未公開です。
 
 ## 混在させない構成
 
@@ -44,8 +44,8 @@
 | NSG | 記事に合わせ未追加 | 用途別 NSG あり |
 | 送信 | 運用版は Standard NAT Gateway／静的 Public IP、`defaultOutboundAccess: false`。検証版は NAT なし、`defaultOutboundAccess: true` | 2サブネットに NAT、暗黙送信なし |
 | 入力 | Network は Location／VNet／3サブネット CIDR を既定値付きで編集可能。運用版のみ NAT／Public IP 名も編集可能。AVD は既定値付き編集可能欄と secure password | 名前・台数・Object ID 等を指定 |
-| VM／OS | D4as_v6、Microsoft 365 Apps なしの Windows 11 25H2 AVD | D2s_v5、Windows 11 24H2 |
+| VM／OS | 既定 D4as_v6、Microsoft 365 Apps 入りの Windows 11 25H2 AVD。Office あり／なしの SKU 選択、既定1台・1～10台を指定可能 | D2s_v5、Windows 11 24H2 |
 | 接続・SSO | 実行ユーザーへ RBAC、SSO 常時設定、テナント準備は講師 | Object ID の RBAC、SSO オプトイン |
 | 実機確認 | 未実施 | 別ルートの限定確認記録で、本番用一式の実証ではない |
 
-Network＋AVD の一括ルート、旧デプロイ・タグ依存の削除スクリプト、Day 2 の VM／Peering の IaC、Windows 365 の実装は同梱しません。Day 2 の VM と Peering は手動手順に従います。親の資料・内部メモ・PowerPoint・顧客固有情報も対象外です。比較用コピーは自動同期しないため、更新時は差分・ハッシュと本番への影響を確認します。
+Network＋AVD の一括ルート、旧デプロイ・タグ依存の削除スクリプト、Day 2 の VM／Peering の IaC、Windows 365 の実装は同梱しません。Day 2 の VNet 作成方式は未決定で、現在 VNet 用 IaC はありません。VM と Peering は手動で行う方針です。親の資料・内部メモ・PowerPoint・顧客固有情報も対象外です。比較用コピーは自動同期しないため、更新時は差分・ハッシュと本番への影響を確認します。

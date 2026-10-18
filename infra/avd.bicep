@@ -6,7 +6,8 @@ targetScope = 'resourceGroup'
 @maxLength(123)
 param vmAdministratorAccountPassword string
 
-@description('Resource group containing the existing VNet. Defaults to the selected deployment resource group.')
+@metadata({ displayName: 'Network Resource Group Name' })
+@description('Existing VNet resource group, not the new VM resource group. Leave the default only when both are the same; otherwise enter the VNet resource group name.')
 param networkResourceGroupName string = resourceGroup().name
 
 @description('Name of the existing virtual network.')
@@ -22,8 +23,19 @@ param subnetName string = 'snet-avd'
 @description('Location for the AVD resources. It must match the existing VNet location.')
 param location string = 'japaneast'
 
-@description('Windows image SKU. The publisher, offer, and version remain the current training defaults.')
-param imageSku string = 'win11-25h2-avd'
+@metadata({ displayName: 'Vm Gallery Image SKU' })
+@description('Windows 11 multi-session image. M365 SKUs include Microsoft 365 Apps but do not grant an Apps license. The offer is selected automatically.')
+@allowed([
+  'win11-23h2-avd'
+  'win11-23h2-avd-m365'
+  'win11-24h2-avd'
+  'win11-24h2-avd-m365'
+  'win11-25h2-avd'
+  'win11-25h2-avd-m365'
+  'win11-26h2-avd'
+  'win11-26h2-avd-m365'
+])
+param imageSku string = 'win11-25h2-avd-m365'
 
 @description('Workspace display name shown in Windows App.')
 @minLength(1)
@@ -40,10 +52,36 @@ param vmDiskType string = 'StandardSSD_LRS'
 @minValue(1)
 param maxSessionLimit int = 5
 
-@description('Prefix for the Windows computer and Azure VM name. The template appends -0; maximum prefix length is 13.')
+@description('Prefix for the Windows computer and Azure VM names. Appends -0 through -9; maximum prefix length is 13. Use a new prefix for subsequent host additions.')
 @minLength(1)
 @maxLength(13)
 param vmNamePrefix string = dateTimeAdd(utcNow(), 'PT9H', 'AVDMMddHHmm')
+
+@metadata({ displayName: 'Custom Configuration Script Url' })
+@description('Approved PowerShell script URL. Default runs Japanese configuration; clear this field to skip custom configuration and keep the image language.')
+param customConfigurationScriptUrl string = 'https://nogujapanese.blob.core.windows.net/avd-deploy/JPNOFLNG.ps1'
+
+@metadata({ displayName: 'Vm Number Of Instances' })
+@description('Number of session hosts to create (1-10). More VMs increase cost and require sufficient quota and subnet capacity.')
+@minValue(1)
+@maxValue(10)
+param vmNumberOfInstances int = 1
+
+@metadata({ displayName: 'Hostpool Type' })
+@description('New host pool type. Cannot be changed for an existing pool. Personal uses automatic assignment and Persistent balancing.')
+@allowed([
+  'Pooled'
+  'Personal'
+])
+param hostpoolType string = 'Pooled'
+
+@metadata({ displayName: 'Load Balancer Type' })
+@description('Pooled load balancing algorithm. Personal pools always use Persistent instead of this pooled setting.')
+@allowed([
+  'BreadthFirst'
+  'DepthFirst'
+])
+param loadBalancerType string = 'BreadthFirst'
 
 module avd './modules/avd.bicep' = {
   name: 'avd-editable-configuration'
@@ -60,9 +98,14 @@ module avd './modules/avd.bicep' = {
     vmDiskType: vmDiskType
     maxSessionLimit: maxSessionLimit
     vmNamePrefix: vmNamePrefix
+    customConfigurationScriptUrl: customConfigurationScriptUrl
+    vmNumberOfInstances: vmNumberOfInstances
+    hostpoolType: hostpoolType
+    loadBalancerType: loadBalancerType
   }
 }
 
 output hostpoolName string = avd.outputs.hostpoolName
 output workspaceName string = avd.outputs.workspaceName
 output sessionHostName string = avd.outputs.sessionHostName
+output sessionHostNames array = avd.outputs.sessionHostNames

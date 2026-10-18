@@ -24,9 +24,14 @@ param vmDiskType string
 @minLength(1)
 @maxLength(13)
 param vmNamePrefix string
+@minValue(0)
+@maxValue(9)
+param vmIndex int
+param customConfigurationScriptUrl string
 
 var settings = loadJsonContent('../settings.json')
-var vmName = '${vmNamePrefix}-0'
+var vmName = '${vmNamePrefix}-${vmIndex}'
+var imageOffer = endsWith(imageSku, '-m365') ? 'office-365' : settings.avd.imageOffer
 var vmUserLoginRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'fb879df8-f326-4884-b1cf-06f3ad86be52')
 
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' existing = {
@@ -71,7 +76,7 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2024-11-01' = {
     storageProfile: {
       imageReference: {
         publisher: settings.avd.imagePublisher
-        offer: settings.avd.imageOffer
+        offer: imageOffer
         sku: imageSku
         version: settings.avd.imageVersion
       }
@@ -169,7 +174,7 @@ resource avdRegistration 'Microsoft.Compute/virtualMachines/extensions@2024-11-0
   ]
 }
 
-resource customConfiguration 'Microsoft.Compute/virtualMachines/extensions@2024-11-01' = {
+resource customConfiguration 'Microsoft.Compute/virtualMachines/extensions@2024-11-01' = if (!empty(customConfigurationScriptUrl)) {
   parent: virtualMachine
   name: 'Microsoft.Compute.CustomScriptExtension'
   location: location
@@ -180,9 +185,9 @@ resource customConfiguration 'Microsoft.Compute/virtualMachines/extensions@2024-
     autoUpgradeMinorVersion: true
     protectedSettings: {
       fileUris: [
-        settings.avd.customConfigurationScriptUrl
+        customConfigurationScriptUrl
       ]
-      commandToExecute: 'powershell -ExecutionPolicy Bypass -File JPNOFLNG.ps1'
+      commandToExecute: 'powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = \'Stop\'; $scripts = @(Get-ChildItem -LiteralPath . -Filter *.ps1 -File); if ($scripts.Count -ne 1) { throw \'Expected exactly one downloaded PowerShell script.\' }; $LASTEXITCODE = 0; & $scripts[0].FullName; $succeeded = $?; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; if (-not $succeeded) { exit 1 }"'
     }
   }
   dependsOn: [

@@ -28,7 +28,7 @@
 | 利用者・ライセンス | 対象テナントのメンバーアカウント、AVD と Windows 365 の利用資格 |
 | Azure の権限 | RG 作成権限、リソース作成権限、DAG と VM に必要な RBAC を割り当てる権限。Contributor のみでは不足 |
 | プロバイダー | `Microsoft.Network`、`Microsoft.Compute`、`Microsoft.DesktopVirtualization` の登録 |
-| SKU・イメージ | Japan East の `Standard_D4as_v6`、vCPU クォータ、Microsoft 365 Apps なしの Windows 11 25H2 AVD イメージ、Trusted Launch の利用可否 |
+| SKU・イメージ | Japan East の `Standard_D4as_v6`、指定台数分の vCPU クォータ、既定の Microsoft 365 Apps 入り Windows 11 25H2 AVD イメージ（選択変更時はその SKU）、Trusted Launch の利用可否。Apps の利用ライセンスは別途確認 |
 | 通信・制約 | AVD、Entra ID、更新、構成パッケージ等への外向き通信。Azure Policy、Conditional Access／MFA |
 | SSO のテナント設定 | Windows Cloud Login の RDP 認証有効化。以下の講師準備を実施 |
 | 運用 | Windows 365 側の準備、Day 2 保持、停止・削除日、残存費用 |
@@ -109,13 +109,13 @@ NAT ありから検証方式へ切り替える場合、増分デプロイでは 
 
 ### 4.1 AVD ボタンと入力
 
-[README の AVD ボタン欄](README.md#4-avd-を-deploy-to-azure)を使用します。使用するのは同梱 [avd.json](templates/avd.json) の固定コミット版で、旧記事の汎用テンプレートとは異なります。公開 raw URL から匿名取得した JSON と同梱ファイルの SHA-256 が一致することを確認済みですが、Azure デプロイ・SSO 接続は未リハーサルです。
+[README の AVD ボタン欄](README.md#4-avd-を-deploy-to-azure)を使用します。**今回の Office 入り既定値・SKU 選択・追加4項目はローカル更新版で、ボタンはまだ前回公開版です。新版公開・ボタン更新・ハッシュ照合後に演習を実施してください。** 同梱 [avd.json](templates/avd.json) は旧記事の汎用テンプレートとは異なり、Azure デプロイ・SSO 接続は未リハーサルです。資料を残すにはボタンを **Ctrl＋クリック／中ボタンクリック／右クリック →［新しいタブでリンクを開く］**で開きます（macOS は Command＋クリック）。GitHub README 側から別タブは強制できません。
 
 ![記事の旧 AVD 入力画面。新版では標準値を初期入力し一部を変更可能](resources/images/portal-deploy/02-avd-deploy.png)
 
 *旧画像の［新規作成］は使用せず、AVD リソースを作成する RG を選びます。画像は旧版の参考で、新版の入力欄・初期値を示しません。*
 
-標準値が事前入力されます。既定の VNet RG は選択したデプロイ先 RG ですが、既存 VNet が別 RG にある場合は同じサブスクリプション内の RG を指定できます。VNet／サブネット名とリージョンが実在・一致することを講師が確認してください。AVD は Network・Cloud PC・ANC を作成・再適用しません。
+標準値が事前入力されます。**VNet と同じ RG に VM を置く場合は、上部で VNet のある既存 RG を選び、Network Resource Group Name は既定のままにします。別 RG に置く場合は VM 用 RG を先に手動作成して上部で選び、Network Resource Group Name を VNet 側 RG の名前へ変更します。** 例：上部で `rg-avd` を選び、VNet が `rg-network` にある場合は入力欄に `rg-network` と指定します。`[resourceGroup().name]` のままだと VM 用 RG を参照し、VNet が見つからず失敗します。同じサブスクリプション内に限定し、参照・サブネット参加権限、VNet／サブネット名とリージョンを講師が確認してください。AVD は Network・Cloud PC・ANC を作成・再適用しません。
 
 ![旧テンプレートの管理者入力欄の拡大。新版のパスワード入力の参考](resources/images/portal-deploy/04-admin-password-detail.png)
 
@@ -123,16 +123,20 @@ NAT ありから検証方式へ切り替える場合、増分デプロイでは 
 
 | 入力項目 | 既定値 | 用途・注意 |
 | --- | --- | --- |
-| Virtual Network Resource Group Name | 選択したデプロイ先 RG | 既存 VNet の RG。同じサブスクリプション |
+| Network Resource Group Name（旧案内：Virtual Network Resource Group Name） | 選択したデプロイ先 RG | 既存 VNet の RG。同じ RG なら既定のまま、別 RG なら VNet 側 RG に変更 |
 | Existing Vnet Name | `vnet-vdi` | 既存の VNet |
 | Existing Subnet Name | `snet-avd` | セッションホスト用サブネット |
 | Location | `japaneast` | VNet のリージョンと一致させる |
-| Vm Gallery Image SKU | `win11-25h2-avd` | Microsoft 365 Apps なし。Publisher／Offer／Version は固定 |
+| Vm Gallery Image SKU | `win11-25h2-avd-m365` | Office 入りが既定。Windows 11 23H2～26H2 の Office あり／なしを選択。Offer は自動連動 |
 | Work Space Name | `AVD Session Host` | Windows App に表示する Workspace 名 |
 | Vm Size | `Standard_D4as_v6` | クォータ・リージョン対応を確認 |
 | Vm Disk Type | `StandardSSD_LRS` | VM サイズ・リージョンで利用可能な種別 |
-| Max Session Limit | `5` | ホストプールの最大同時セッション数 |
-| Vm Name Prefix | `dateTimeAdd(utcNow(), 'PT9H', 'AVDMMddHHmm')` | 初期値は JST の分単位。VM 名は `-0` を付加。重複時は変更 |
+| Max Session Limit | `5` | Pooled の各ホストの最大同時セッション数。Personal は1 |
+| Vm Name Prefix | `dateTimeAdd(utcNow(), 'PT9H', 'AVDMMddHHmm')` | 初期値は JST の分単位。VM 名は `-0`～ `-9` を付加。再実行は新しい値に変更 |
+| Custom Configuration Script Url | `https://nogujapanese.blob.core.windows.net/avd-deploy/JPNOFLNG.ps1` | そのままなら日本語設定、空欄なら省略しイメージの言語（通常は英語）で高速展開 |
+| Vm Number Of Instances | `1` | 1回で作る台数。1～10台。費用・vCPU クォータ・IP 容量を確認 |
+| Hostpool Type | `Pooled` | Pooled／Personal を選択。既存プールの方式変更は不可 |
+| Load Balancer Type | `BreadthFirst` | Pooled は BreadthFirst／DepthFirst。Personal はこの入力を使わず Persistent・自動割り当て |
 | Vm Administrator Account Password | なし | ローカル管理者 `vmadmin` の secure password |
 
 > **入力前に必ず確認：12～123文字が必須です。** 11文字以下では `InvalidTemplate`（パラメーターの長さ不足）となり、デプロイを開始できません。入力ミス防止のため14文字以上を推奨します。英大文字・英小文字・数字・記号のうち3種類以上を使い、Azure VM のパスワード要件を満たしてください。
@@ -143,18 +147,20 @@ NAT ありから検証方式へ切り替える場合、増分デプロイでは 
 
 | 対象 | 既定値・自動処理 |
 | --- | --- |
-| ホストプール | `DefaultHostPool`、Pooled／Standard／BreadthFirst、最大5セッション |
+| ホストプール | `DefaultHostPool`、既定 Pooled／Standard／BreadthFirst、各ホスト最大5セッション。Personal は Persistent／Automatic／1セッション |
 | DAG／Workspace | `DefaultHostPool-DAG`／`AVD Session Host`、Workspace へ DAG 登録 |
-| VM | 1台、JST の日時プレフィックス＋ `-0`、既定 `Standard_D4as_v6`、128 GiB `StandardSSD_LRS` |
-| OS | `microsoftwindowsdesktop`／`windows-11`／`win11-25h2-avd`／`latest`（Microsoft 365 Apps なし） |
+| VM | 既定1台、1～10台を指定可能。JST の日時プレフィックス＋ `-0`～ `-9`、既定 `Standard_D4as_v6`、128 GiB `StandardSSD_LRS` |
+| OS | 既定 `microsoftwindowsdesktop`／`office-365`／`win11-25h2-avd-m365`／`latest`（Microsoft 365 Apps 入り）。Office なし SKU は `windows-11` Offer |
 | ID・保護 | Entra ID 参加、システム割り当て ID、Intune なし、Trusted Launch／Secure Boot／vTPM |
 | 接続権限 | 実行したユーザーへ DAG の Desktop Virtualization User と VM の Virtual Machine User Login |
 | SSO | ホストプールへ `enablerdsaadauth:i:1` を設定 |
 | 登録 | Entra ID 参加 → DSC による AVD 登録。登録トークンは2時間、保護設定にのみ格納 |
-| 日本語設定等 | 登録後に記事の `JPNOFLNG.ps1` を実行。Windows Update・自動再起動を含む |
+| 日本語設定等 | URL がある場合のみ登録後に Custom Script を実行。既定 `JPNOFLNG.ps1` は Windows Update・自動再起動を含む。空欄なら拡張機能を作らない |
 | 自動停止 | 毎日22:00（`Tokyo Standard Time`）。実行中のセッションが中断される場合あり |
 
-VM 名プレフィックスの初期値はデプロイ時刻から作られ、VM 名には `-0` が追加されます。同じ分に複数のホストを追加する場合は、一意になるようプレフィックスを変更します。イメージの `latest` と外部スクリプトは可変で、同じテンプレートでも取得内容が変わる可能性があります。サイズ・イメージの利用可否と、スクリプトの再起動・拡張機能結果は配布前の実機確認が必要です。
+1回の展開で指定した台数には同じプレフィックスと異なる連番が付きます。追加・再実行時は既存 VM と重複しないプレフィックスを使います。台数を増やすと費用・クォータ・IP 消費も増えます。SKU の提供地域とサポート期限は事前に確認します。イメージの `latest` と外部スクリプトは可変で、同じテンプレートでも取得内容が変わる可能性があります。サイズ・イメージの利用可否と、スクリプトの再起動・拡張機能結果は配布前の実機確認が必要です。
+
+スクリプト URL が空欄でも Entra ID 参加、AVD 登録、各 VM の RBAC と22時停止は実行します。英語版の新規 VM を素早く作るための選択であり、既存 VM の日本語化の取り消しや拡張機能の削除ではありません。URL を変更する場合は承認済み HTTPS の PowerShell `.ps1` を指定します。**Microsoft 365 Apps が入っていても Office 利用ライセンスは付与されません。** Office 操作を必須にせず、日本語化のデモ／Intune の説明は利用条件を確認して別途準備します。
 
 AVD の日本語設定拡張機能は公開 Blob のスクリプトを `ExecutionPolicy Bypass` で実行し、スクリプト内でバージョン未固定の `PSWindowsUpdate` を導入します。Deploy to Azure の固定コミットはこの外部スクリプトを固定しません。**悪意あるコードの追加・スクリプトの不審な差し替え・未承認の変更の配布や実行は禁止です。** 講師が配信元と実行内容を確認できない場合はデプロイせず、詳細は [README のセキュリティ注意](README.md)を確認してください。この注意書き自体はコード改変や供給元の変更を防止しません。
 
@@ -162,11 +168,11 @@ AVD の日本語設定拡張機能は公開 Blob のスクリプトを `Executio
 
 ### 4.3 検証・作成・状態確認
 
-1. 同じアカウントとサブスクリプションで、AVD リソースを作成する RG を選びます。各既定値を確認し、必要な場合だけ変更してパスワードを入力します。別 RG の VNet を使うときは `Virtual Network Resource Group Name` を変更します。
+1. 同じアカウントとサブスクリプションで、AVD リソースを作成する RG を選びます。各既定値を確認し、必要な場合だけ変更してパスワードを入力します。別 RG の VNet を使うときは `Network Resource Group Name` を VNet 側 RG の名前に変更します。
 2. ［確認および作成］で検証結果を確認します。エラー時は実行せず、講師と原因を確認します。受講者判断でリージョン・サイズ・ネットワークを変更しません。
 3. ［作成］後、RG の［デプロイ］で結果を確認します。失敗を成功と扱わず、デプロイ名・失敗リソース・エラーを講師に共有します。秘密を共有しません。
-4. VM の［拡張機能とアプリケーション］で Entra ID 参加・DSC・Custom Script の成功を確認します。自動再起動の途中では接続確認に進みません。
-5. ホストプールの［セッション ホスト］で日時プレフィックスの VM 名が登録され `Available` であることを確認します。NIC に Public IP がないことを確認します。
+4. 各 VM の［拡張機能とアプリケーション］で Entra ID 参加・DSC の成功を確認します。URL を指定した場合だけ Custom Script の成功も確認し、空欄の場合は新規 VM に Custom Script がないことを確認します。自動再起動の途中では接続確認に進みません。
+5. ホストプールの［セッション ホスト］で指定台数の VM 名が登録され `Available` であることを確認します。各 NIC に Public IP がないことを確認します。
 6. DAG の［割り当て］と［アクセス制御（IAM）］で自分の Desktop Virtualization User、VM の［アクセス制御（IAM）］で Virtual Machine User Login を確認します。
 7. ホストプールの［RDP プロパティ］で SSO 設定を確認します。テナント側の Windows Cloud Login 準備は講師に確認します。
 8. VM の［自動シャットダウン］で毎日22:00（日本時間）のスケジュールが有効であることを確認します。作業中のセッションも停止時刻に中断され得ることを確認します。
@@ -184,9 +190,9 @@ AVD の日本語設定拡張機能は公開 Blob のスクリプトを `Executio
 
 ### 4.5 既存ホストプールに VM を追加
 
-[README のセッションホスト追加ボタン](README.md#5-既存プールへセッションホストを追加)を使います。既存の Standard 管理ホストプールがある RG をデプロイ先に選び、VM 名プレフィックスが既存ホストと重複しないよう確認します。既存プールに互換なイメージ SKU、サイズ、リージョン、ネットワークを指定します。
+[README のセッションホスト追加ボタン](README.md#5-既存プールへセッションホストを追加)を使います（新版はまだ未公開）。**新しい VM を置く RG を上部で選択**し、VNet が別 RG なら **Network Resource Group Name を VNet 側 RG の名前へ変更**します。登録キーは対象の既存 Standard 管理プールで発行します。VM 名プレフィックスが既存ホストと重複しないよう確認し、既存プールに互換なイメージ SKU、サイズ、リージョン、ネットワークを指定します。
 
-デプロイ前に Azure portal で対象プールの登録キーを作成し、期限内のキーを Secure registration token 欄へ入力します。トークンはスクリーンショットやチャットに貼らず、失効・期限切れ時は講師が新しいキーを用意します。このテンプレートは既存ホストプール、DAG、Workspace を変更せず、VM を1台追加します。新しいホストも毎日22:00（日本時間）に自動停止します。
+デプロイ前に Azure portal で対象プールの登録キーを作成し、期限内のキーを Secure registration token 欄へ入力します。トークンはスクリーンショットやチャットに貼らず、失効・期限切れ時は講師が新しいキーを用意します。`Vm Number Of Instances` は既定1、1～10台の**追加台数**です。SKU 選択とスクリプト URL も新規作成と共通です。既存ホストプール、DAG、Workspace の設定は変更せず、各 VM に Entra 参加、AVD 登録、VM Login RBAC、毎日22:00（日本時間）の自動停止を設定します。
 
 ### 4.6 動的デバイスグループ（任意・手動）
 
@@ -207,8 +213,8 @@ Windows 365 のプロビジョニング ポリシーは **ユーザー グルー
 
 削除を指示された場合は対象テナント・サブスクリプション・演習用 RG の全リソースと Windows 365／ANC への影響を講師・担当者が確認します。**Windows 365 の担当者の了承なく RG 全体を削除しません。** Entra デバイス、ANC 等の残存処理を含む本番の削除手順は配布前の残作業です。旧 Bicep 版の削除スクリプトは名前・タグが異なるため流用しません。
 
-## Day 2：セキュアジャンプ【手動】
+## Day 2：セキュアジャンプ【VNet 作成方式は要決定】
 
-セキュアジャンプ用 VNet／VM、VNet Peering は IaC を使わずに手動で構築します。別の重複しないネットワークを使い、Public IP と NAT Gateway を作らず、日本語化もしません。Peering とダブルホップ接続、毎日22:00（日本時間）の停止を、[Day 2 セキュアジャンプ手順](day2-secure-jump.md)に沿って実施します。
+セキュアジャンプ先 VNet を Deploy to Azure（IaC）で用意するか、受講者が Azure portal から手動作成するハンズオンにするかは未決定です。[Day 2 セキュアジャンプ手順](day2-secure-jump.md)は手動作成案であり、方式を決めてから確定します。VNet Peering は手動で行う方針です。別の重複しないネットワークを使い、Public IP と NAT Gateway を作らず、日本語化もしません。ダブルホップ接続、毎日22:00（日本時間）の停止も行います。
 
 **Public IP と NAT Gateway がないことだけでは安全性を保証しません。** RDP の受信元、ルート、認証、必要な外向き通信を講師が事前に設計・承認します。

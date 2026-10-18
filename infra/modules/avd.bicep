@@ -19,6 +19,20 @@ param vmSize string
 param vmDiskType string
 param maxSessionLimit int
 param vmNamePrefix string
+param customConfigurationScriptUrl string
+@minValue(1)
+@maxValue(10)
+param vmNumberOfInstances int
+@allowed([
+  'Pooled'
+  'Personal'
+])
+param hostpoolType string
+@allowed([
+  'BreadthFirst'
+  'DepthFirst'
+])
+param loadBalancerType string
 
 param tokenExpirationTime string = dateTimeAdd(utcNow(), 'PT2H')
 
@@ -39,10 +53,11 @@ resource hostPool 'Microsoft.DesktopVirtualization/hostPools@2025-10-10' = {
   name: settings.avd.hostpoolName
   location: location
   properties: {
-    hostPoolType: 'Pooled'
+    hostPoolType: hostpoolType
     managementType: 'Standard'
-    loadBalancerType: 'BreadthFirst'
-    maxSessionLimit: maxSessionLimit
+    loadBalancerType: hostpoolType == 'Personal' ? 'Persistent' : loadBalancerType
+    maxSessionLimit: hostpoolType == 'Personal' ? 1 : maxSessionLimit
+    personalDesktopAssignmentType: hostpoolType == 'Personal' ? 'Automatic' : null
     preferredAppGroupType: 'Desktop'
     validationEnvironment: false
     startVMOnConnect: false
@@ -86,8 +101,8 @@ resource desktopAccess 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   }
 }
 
-module sessionHost './session-host.bicep' = {
-  name: 'avd-session-host'
+module sessionHost './session-host.bicep' = [for index in range(0, vmNumberOfInstances): {
+  name: 'avd-session-host-${index}'
   params: {
     vmAdministratorAccountPassword: vmAdministratorAccountPassword
     registrationToken: hostPool.listRegistrationTokens().value[0].token
@@ -101,9 +116,12 @@ module sessionHost './session-host.bicep' = {
     vmSize: vmSize
     vmDiskType: vmDiskType
     vmNamePrefix: vmNamePrefix
+    vmIndex: index
+    customConfigurationScriptUrl: customConfigurationScriptUrl
   }
-}
+}]
 
 output hostpoolName string = hostPool.name
 output workspaceName string = workspace.name
-output sessionHostName string = sessionHost.outputs.sessionHostName
+output sessionHostName string = sessionHost[0].outputs.sessionHostName
+output sessionHostNames array = [for index in range(0, vmNumberOfInstances): sessionHost[index].outputs.sessionHostName]

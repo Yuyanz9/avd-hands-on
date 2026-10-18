@@ -33,7 +33,7 @@
   <text x="60" y="62" class="title">IaC で作成する予定のリソース</text>
   <text x="60" y="101" class="subtitle">AVD ハンズオン production ／ Network → AVD →（任意）セッションホスト追加</text>
   <rect x="1450" y="36" width="290" height="42" rx="21" fill="#fff7ed" stroke="#fb923c" stroke-width="1.5"/>
-  <text x="1595" y="63" text-anchor="middle" class="small" style="font-weight:700;fill:#9a3412">Bicep: PASS ／ Tests: 273 PASS</text>
+  <text x="1595" y="63" text-anchor="middle" class="small" style="font-weight:700;fill:#9a3412">ローカル更新版 ／ 未公開</text>
 
   <rect x="60" y="125" width="1680" height="98" rx="16" class="orange-card"/>
   <text x="86" y="161" class="heading" style="fill:#9a3412">Azure Portal で選ぶ共通項目</text>
@@ -121,9 +121,9 @@
 
   <rect x="857" y="510" width="861" height="137" rx="14" class="green-card"/>
   <text x="880" y="545" class="heading">初回セッションホスト VM ＋ NIC ＋ OS ディスク</text>
-  <text x="880" y="579" class="body">1台　｜　Windows 11 25H2 AVD（Microsoft 365 Apps なし）</text>
+  <text x="880" y="579" class="body">既定1台（1～10台）｜ Windows 11 25H2 AVD（Microsoft 365 Apps 入り）</text>
   <text x="880" y="610" class="code">Standard_D4as_v6　｜　128 GiB StandardSSD_LRS　｜　Public IP なし</text>
-  <text x="880" y="635" class="small">VM 名：JST の日時プレフィックス＋「-0」　｜　接続先は既存 snet-avd</text>
+  <text x="880" y="635" class="small">VM 名：JST の日時プレフィックス＋「-0」～「-9」｜ 既存 VNet の RG を指定可能</text>
 
   <rect x="857" y="666" width="270" height="98" rx="11" class="card"/>
   <text x="992" y="697" text-anchor="middle" class="heading">Entra ID 参加</text>
@@ -133,7 +133,7 @@
   <text x="1277" y="729" text-anchor="middle" class="small">DSC 拡張＋短期登録トークン</text>
   <rect x="1427" y="666" width="291" height="98" rx="11" class="card"/>
   <text x="1572" y="697" text-anchor="middle" class="heading">構成スクリプト</text>
-  <text x="1572" y="729" text-anchor="middle" class="small">Custom Script 拡張</text>
+  <text x="1572" y="729" text-anchor="middle" class="small">URL 空欄なら省略（英語のまま）</text>
 
   <rect x="857" y="782" width="408" height="98" rx="11" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
   <text x="878" y="815" class="heading">接続権限：実行ユーザー</text>
@@ -148,16 +148,16 @@
   <rect x="55" y="948" width="820" height="58" rx="18" fill="#dcfce7"/>
   <path d="M55 988 v18 h820 v-18" fill="#dcfce7"/>
   <text x="82" y="986" class="section">3　追加セッションホスト（任意）</text>
-  <text x="82" y="1043" class="body" style="font-weight:700">既存 Host Pool と既存 snet-avd を使い、VM を1台追加</text>
+  <text x="82" y="1043" class="body" style="font-weight:700">既存 Host Pool と既存 subnet を使い、既定1台（1～10台）追加</text>
   <text x="82" y="1080" class="body">作成：VM／NIC／OS ディスク／VM Login 権限</text>
-  <text x="82" y="1115" class="body">設定：Entra ID 参加／AVD 登録／日本語設定拡張</text>
+  <text x="82" y="1115" class="body">設定：Entra ID 参加／AVD 登録／任意の日本語設定拡張</text>
   <text x="82" y="1150" class="body">追加 VM にも毎日22:00（日本時間）の自動停止を設定</text>
   <text x="82" y="1193" class="small">既存 Host Pool・Workspace・VNet は作り直さない。登録トークンで既存プールへ接続</text>
 
   <rect x="900" y="948" width="845" height="285" rx="18" class="gray-card"/>
   <text x="928" y="986" class="section">IaC の対象外（別途・手動）</text>
   <text x="928" y="1035" class="body">• Windows 365 Cloud PC と ANC（snet-cloudpc のみ作成）</text>
-  <text x="928" y="1073" class="body">• Day 2 の接続先 VM（snet-server のみ作成）</text>
+  <text x="928" y="1073" class="body">• Day 2 の接続先 VM／別 VNet（VNet 作成方式は要決定）</text>
   <text x="928" y="1111" class="body">• Entra 動的デバイスグループ／Windows Cloud Login 設定</text>
   <text x="928" y="1149" class="body">• リソースグループ作成、NSG・ファイアウォールの通信制御</text>
   <text x="928" y="1197" class="small">手動作成の Entra グループは、ここに描いた Azure リソースには含まれません</text>
@@ -172,23 +172,24 @@
   <text x="100" y="1478" class="small">Network-Validation（NATなし）</text>
   <text x="80" y="1515" class="small">• 変更可：リージョン、VNet 名、CIDR 4種、</text>
   <text x="100" y="1545" class="small">NAT／Public IP 名（通常版のみ）</text>
-  <text x="80" y="1578" class="tiny">RG は先に手動作成し、同じ RG を AVD でも選ぶ</text>
+  <text x="80" y="1578" class="tiny">RG は先に手動作成。別 RG なら AVD 側に VNet の RG を指定</text>
 
   <rect x="610" y="1330" width="535" height="270" rx="16" class="orange-card"/>
   <text x="635" y="1372" class="heading" style="fill:#9a3412">AVD（初回作成）</text>
   <text x="635" y="1412" class="body">• 必須：VM 管理者パスワード（Secure）</text>
   <text x="635" y="1448" class="small">• 変更可：VNet RG／VNet／サブネット／リージョン</text>
-  <text x="635" y="1480" class="small">  イメージ SKU／Workspace 表示名／VM サイズ</text>
+  <text x="635" y="1480" class="small">  イメージ SKU（既定 M365）／Workspace 名／VM サイズ</text>
   <text x="635" y="1512" class="small">  ディスク種別／最大セッション数／VM 名プレフィックス</text>
-  <text x="635" y="1557" class="small">既定：snet-avd、D4as_v6、win11-25h2-avd、5 sessions</text>
+  <text x="635" y="1544" class="small">  スクリプト URL（空欄で省略）／台数（1～10）</text>
+  <text x="635" y="1576" class="small">  Hostpool Type／Load Balancer Type（Pooled／BreadthFirst）</text>
 
   <rect x="1165" y="1330" width="580" height="270" rx="16" class="orange-card"/>
   <text x="1190" y="1372" class="heading" style="fill:#9a3412">セッションホスト追加</text>
   <text x="1190" y="1412" class="body">• 必須：VM 管理者パスワード＋登録トークン</text>
   <text x="1190" y="1448" class="small">• 選択可：既存 Host Pool、VNet の RG／名前／サブネット</text>
   <text x="1190" y="1480" class="small">  リージョン／イメージ SKU／VM サイズ／ディスク種別</text>
-  <text x="1190" y="1512" class="small">  VM 名プレフィックス</text>
-  <text x="1190" y="1557" class="small">既定：DefaultHostPool、snet-avd、D4as_v6、日時名</text>
+  <text x="1190" y="1512" class="small">  VM 名プレフィックス／スクリプト URL（空欄で省略）</text>
+  <text x="1190" y="1557" class="small">追加台数：既定1台（1～10台）。既存プールの設定は変更しない</text>
 
-  <text x="60" y="1632" class="tiny">※ 現在の作業ツリーの IaC 定義を整理した図です。Bicep build と 273 件のテンプレート自動テストは成功。Azure への実デプロイは未確認です。</text>
+  <text x="60" y="1632" class="tiny">※ 現在の作業ツリーの IaC 定義を整理した図です。確認は Bicep build とローカル契約テストのみ。新版は未公開、Azure への実デプロイは未確認です。</text>
 </svg>

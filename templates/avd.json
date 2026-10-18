@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.42.1.51946",
-      "templateHash": "17481690461198191294"
+      "templateHash": "8628923202488420758"
     }
   },
   "parameters": {
@@ -21,7 +21,8 @@
       "type": "string",
       "defaultValue": "[resourceGroup().name]",
       "metadata": {
-        "description": "Resource group containing the existing VNet. Defaults to the selected deployment resource group."
+        "displayName": "Network Resource Group Name",
+        "description": "Existing VNet resource group, not the new VM resource group. Leave the default only when both are the same; otherwise enter the VNet resource group name."
       }
     },
     "virtualNetworkName": {
@@ -51,9 +52,20 @@
     },
     "imageSku": {
       "type": "string",
-      "defaultValue": "win11-25h2-avd",
+      "defaultValue": "win11-25h2-avd-m365",
+      "allowedValues": [
+        "win11-23h2-avd",
+        "win11-23h2-avd-m365",
+        "win11-24h2-avd",
+        "win11-24h2-avd-m365",
+        "win11-25h2-avd",
+        "win11-25h2-avd-m365",
+        "win11-26h2-avd",
+        "win11-26h2-avd-m365"
+      ],
       "metadata": {
-        "description": "Windows image SKU. The publisher, offer, and version remain the current training defaults."
+        "displayName": "Vm Gallery Image SKU",
+        "description": "Windows 11 multi-session image. M365 SKUs include Microsoft 365 Apps but do not grant an Apps license. The offer is selected automatically."
       }
     },
     "workspaceFriendlyName": {
@@ -93,7 +105,49 @@
       "minLength": 1,
       "maxLength": 13,
       "metadata": {
-        "description": "Prefix for the Windows computer and Azure VM name. The template appends -0; maximum prefix length is 13."
+        "description": "Prefix for the Windows computer and Azure VM names. Appends -0 through -9; maximum prefix length is 13. Use a new prefix for subsequent host additions."
+      }
+    },
+    "customConfigurationScriptUrl": {
+      "type": "string",
+      "defaultValue": "https://nogujapanese.blob.core.windows.net/avd-deploy/JPNOFLNG.ps1",
+      "metadata": {
+        "displayName": "Custom Configuration Script Url",
+        "description": "Approved PowerShell script URL. Default runs Japanese configuration; clear this field to skip custom configuration and keep the image language."
+      }
+    },
+    "vmNumberOfInstances": {
+      "type": "int",
+      "defaultValue": 1,
+      "metadata": {
+        "displayName": "Vm Number Of Instances",
+        "description": "Number of session hosts to create (1-10). More VMs increase cost and require sufficient quota and subnet capacity."
+      },
+      "minValue": 1,
+      "maxValue": 10
+    },
+    "hostpoolType": {
+      "type": "string",
+      "defaultValue": "Pooled",
+      "allowedValues": [
+        "Pooled",
+        "Personal"
+      ],
+      "metadata": {
+        "displayName": "Hostpool Type",
+        "description": "New host pool type. Cannot be changed for an existing pool. Personal uses automatic assignment and Persistent balancing."
+      }
+    },
+    "loadBalancerType": {
+      "type": "string",
+      "defaultValue": "BreadthFirst",
+      "allowedValues": [
+        "BreadthFirst",
+        "DepthFirst"
+      ],
+      "metadata": {
+        "displayName": "Load Balancer Type",
+        "description": "Pooled load balancing algorithm. Personal pools always use Persistent instead of this pooled setting."
       }
     }
   },
@@ -143,6 +197,18 @@
           },
           "vmNamePrefix": {
             "value": "[parameters('vmNamePrefix')]"
+          },
+          "customConfigurationScriptUrl": {
+            "value": "[parameters('customConfigurationScriptUrl')]"
+          },
+          "vmNumberOfInstances": {
+            "value": "[parameters('vmNumberOfInstances')]"
+          },
+          "hostpoolType": {
+            "value": "[parameters('hostpoolType')]"
+          },
+          "loadBalancerType": {
+            "value": "[parameters('loadBalancerType')]"
           }
         },
         "template": {
@@ -152,7 +218,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.42.1.51946",
-              "templateHash": "6290871188240324927"
+              "templateHash": "14724769197528512489"
             }
           },
           "parameters": {
@@ -195,6 +261,28 @@
             },
             "vmNamePrefix": {
               "type": "string"
+            },
+            "customConfigurationScriptUrl": {
+              "type": "string"
+            },
+            "vmNumberOfInstances": {
+              "type": "int",
+              "minValue": 1,
+              "maxValue": 10
+            },
+            "hostpoolType": {
+              "type": "string",
+              "allowedValues": [
+                "Pooled",
+                "Personal"
+              ]
+            },
+            "loadBalancerType": {
+              "type": "string",
+              "allowedValues": [
+                "BreadthFirst",
+                "DepthFirst"
+              ]
             },
             "tokenExpirationTime": {
               "type": "string",
@@ -244,10 +332,11 @@
               "name": "[variables('settings').avd.hostpoolName]",
               "location": "[parameters('location')]",
               "properties": {
-                "hostPoolType": "Pooled",
+                "hostPoolType": "[parameters('hostpoolType')]",
                 "managementType": "Standard",
-                "loadBalancerType": "BreadthFirst",
-                "maxSessionLimit": "[parameters('maxSessionLimit')]",
+                "loadBalancerType": "[if(equals(parameters('hostpoolType'), 'Personal'), 'Persistent', parameters('loadBalancerType'))]",
+                "maxSessionLimit": "[if(equals(parameters('hostpoolType'), 'Personal'), 1, parameters('maxSessionLimit'))]",
+                "personalDesktopAssignmentType": "[if(equals(parameters('hostpoolType'), 'Personal'), 'Automatic', null())]",
                 "preferredAppGroupType": "Desktop",
                 "validationEnvironment": false,
                 "startVMOnConnect": false,
@@ -303,9 +392,13 @@
               ]
             },
             {
+              "copy": {
+                "name": "sessionHost",
+                "count": "[length(range(0, parameters('vmNumberOfInstances')))]"
+              },
               "type": "Microsoft.Resources/deployments",
               "apiVersion": "2025-04-01",
-              "name": "avd-session-host",
+              "name": "[format('avd-session-host-{0}', range(0, parameters('vmNumberOfInstances'))[copyIndex()])]",
               "properties": {
                 "expressionEvaluationOptions": {
                   "scope": "inner"
@@ -347,6 +440,12 @@
                   },
                   "vmNamePrefix": {
                     "value": "[parameters('vmNamePrefix')]"
+                  },
+                  "vmIndex": {
+                    "value": "[range(0, parameters('vmNumberOfInstances'))[copyIndex()]]"
+                  },
+                  "customConfigurationScriptUrl": {
+                    "value": "[parameters('customConfigurationScriptUrl')]"
                   }
                 },
                 "template": {
@@ -356,7 +455,7 @@
                     "_generator": {
                       "name": "bicep",
                       "version": "0.42.1.51946",
-                      "templateHash": "7469161223850602089"
+                      "templateHash": "6705445578960705360"
                     }
                   },
                   "parameters": {
@@ -402,6 +501,14 @@
                       "type": "string",
                       "minLength": 1,
                       "maxLength": 13
+                    },
+                    "vmIndex": {
+                      "type": "int",
+                      "minValue": 0,
+                      "maxValue": 9
+                    },
+                    "customConfigurationScriptUrl": {
+                      "type": "string"
                     }
                   },
                   "variables": {
@@ -438,7 +545,8 @@
                       }
                     },
                     "settings": "[variables('$fxv#0')]",
-                    "vmName": "[format('{0}-0', parameters('vmNamePrefix'))]",
+                    "vmName": "[format('{0}-{1}', parameters('vmNamePrefix'), parameters('vmIndex'))]",
+                    "imageOffer": "[if(endsWith(parameters('imageSku'), '-m365'), 'office-365', variables('settings').avd.imageOffer)]",
                     "vmUserLoginRoleId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'fb879df8-f326-4884-b1cf-06f3ad86be52')]"
                   },
                   "resources": [
@@ -477,7 +585,7 @@
                         "storageProfile": {
                           "imageReference": {
                             "publisher": "[variables('settings').avd.imagePublisher]",
-                            "offer": "[variables('settings').avd.imageOffer]",
+                            "offer": "[variables('imageOffer')]",
                             "sku": "[parameters('imageSku')]",
                             "version": "[variables('settings').avd.imageVersion]"
                           },
@@ -586,6 +694,7 @@
                       ]
                     },
                     {
+                      "condition": "[not(empty(parameters('customConfigurationScriptUrl')))]",
                       "type": "Microsoft.Compute/virtualMachines/extensions",
                       "apiVersion": "2024-11-01",
                       "name": "[format('{0}/{1}', variables('vmName'), 'Microsoft.Compute.CustomScriptExtension')]",
@@ -597,9 +706,9 @@
                         "autoUpgradeMinorVersion": true,
                         "protectedSettings": {
                           "fileUris": [
-                            "[variables('settings').avd.customConfigurationScriptUrl]"
+                            "[parameters('customConfigurationScriptUrl')]"
                           ],
-                          "commandToExecute": "powershell -ExecutionPolicy Bypass -File JPNOFLNG.ps1"
+                          "commandToExecute": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$ErrorActionPreference = 'Stop'; $scripts = @(Get-ChildItem -LiteralPath . -Filter *.ps1 -File); if ($scripts.Count -ne 1) { throw 'Expected exactly one downloaded PowerShell script.' }; $LASTEXITCODE = 0; & $scripts[0].FullName; $succeeded = $?; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; if (-not $succeeded) { exit 1 }\""
                         }
                       },
                       "dependsOn": [
@@ -656,7 +765,14 @@
             },
             "sessionHostName": {
               "type": "string",
-              "value": "[reference(resourceId('Microsoft.Resources/deployments', 'avd-session-host'), '2025-04-01').outputs.sessionHostName.value]"
+              "value": "[reference(resourceId('Microsoft.Resources/deployments', format('avd-session-host-{0}', range(0, parameters('vmNumberOfInstances'))[0])), '2025-04-01').outputs.sessionHostName.value]"
+            },
+            "sessionHostNames": {
+              "type": "array",
+              "copy": {
+                "count": "[length(range(0, parameters('vmNumberOfInstances')))]",
+                "input": "[reference(resourceId('Microsoft.Resources/deployments', format('avd-session-host-{0}', range(0, parameters('vmNumberOfInstances'))[range(0, parameters('vmNumberOfInstances'))[copyIndex()]])), '2025-04-01').outputs.sessionHostName.value]"
+              }
             }
           }
         }
@@ -675,6 +791,10 @@
     "sessionHostName": {
       "type": "string",
       "value": "[reference(resourceId('Microsoft.Resources/deployments', 'avd-editable-configuration'), '2025-04-01').outputs.sessionHostName.value]"
+    },
+    "sessionHostNames": {
+      "type": "array",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'avd-editable-configuration'), '2025-04-01').outputs.sessionHostNames.value]"
     }
   }
 }

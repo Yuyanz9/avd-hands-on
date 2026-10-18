@@ -149,7 +149,7 @@ foreach ($phase in @('network', 'network-validation')) {
 }
 
 $entry = $templates.avd
-Assert-Template ($entry.parameters.Count -eq 11 -and $entry.parameters.ContainsKey('vmAdministratorAccountPassword')) 'AVD must expose the editable configuration parameters and password.'
+Assert-Template ($entry.parameters.Count -eq 15 -and $entry.parameters.ContainsKey('vmAdministratorAccountPassword')) 'AVD must expose the existing inputs plus the four new deployment options.'
 $password = $entry.parameters.vmAdministratorAccountPassword
 Assert-Template ($password.type -eq 'securestring' -and -not $password.ContainsKey('defaultValue')) 'The password must be secure and have no default.'
 Assert-Template ($password.minLength -eq 12 -and $password.maxLength -eq 123) 'The password length must be bounded.'
@@ -158,17 +158,37 @@ $expectedDefaults = @{
     virtualNetworkName = 'vnet-vdi'
     subnetName = 'snet-avd'
     location = 'japaneast'
-    imageSku = 'win11-25h2-avd'
+    imageSku = 'win11-25h2-avd-m365'
     workspaceFriendlyName = 'AVD Session Host'
     vmSize = 'Standard_D4as_v6'
     vmDiskType = 'StandardSSD_LRS'
     maxSessionLimit = 5
     vmNamePrefix = "[dateTimeAdd(utcNow(), 'PT9H', 'AVDMMddHHmm')]"
+    customConfigurationScriptUrl = $settings.avd.customConfigurationScriptUrl
+    vmNumberOfInstances = 1
+    hostpoolType = 'Pooled'
+    loadBalancerType = 'BreadthFirst'
 }
 foreach ($name in $expectedDefaults.Keys) {
     Assert-Template ($entry.parameters[$name].defaultValue -ceq $expectedDefaults[$name]) "AVD default must be editable and preserve the expected value: $name."
 }
 Assert-Template ($entry.parameters.vmNamePrefix.maxLength -eq 13) 'VM name prefix must leave room for the -0 suffix in a Windows computer name.'
+$expectedOrder = @('vmAdministratorAccountPassword', 'networkResourceGroupName', 'virtualNetworkName', 'subnetName', 'location', 'imageSku', 'workspaceFriendlyName', 'vmSize', 'vmDiskType', 'maxSessionLimit', 'vmNamePrefix', 'customConfigurationScriptUrl', 'vmNumberOfInstances', 'hostpoolType', 'loadBalancerType')
+Assert-Template (($entry.parameters.Keys -join ',') -ceq ($expectedOrder -join ',')) 'Keep the existing portal input order and append the four new fields.'
+$imageSkus = @('win11-23h2-avd', 'win11-23h2-avd-m365', 'win11-24h2-avd', 'win11-24h2-avd-m365', 'win11-25h2-avd', 'win11-25h2-avd-m365', 'win11-26h2-avd', 'win11-26h2-avd-m365')
+$labels = @{
+    networkResourceGroupName = 'Network Resource Group Name'
+    imageSku = 'Vm Gallery Image SKU'
+    customConfigurationScriptUrl = 'Custom Configuration Script Url'
+    vmNumberOfInstances = 'Vm Number Of Instances'
+    hostpoolType = 'Hostpool Type'
+    loadBalancerType = 'Load Balancer Type'
+}
+foreach ($name in $labels.Keys) {
+    Assert-Template ($entry.parameters[$name].metadata.displayName -ceq $labels[$name]) "Show the requested portal label: $name."
+}
+Assert-Template (($entry.parameters.hostpoolType.allowedValues -join ',') -ceq 'Pooled,Personal') 'Host pool type must be a Pooled/Personal selection.'
+Assert-Template (($entry.parameters.loadBalancerType.allowedValues -join ',') -ceq 'BreadthFirst,DepthFirst') 'Expose only the supported pooled load balancing algorithms.'
 $readmeText = Get-Content -LiteralPath (Join-Path $root 'README.md') -Raw
 $day1Text = Get-Content -LiteralPath (Join-Path $root 'day1-handson.md') -Raw
 $day2Text = Get-Content -LiteralPath (Join-Path $root 'day2-secure-jump.md') -Raw
@@ -179,7 +199,13 @@ Assert-Template ($day1Text.Contains('(device.displayName -startsWith "AVD")') -a
 Assert-Template ($day1Text.Contains('プロビジョニング ポリシー') -and $day1Text.Contains('ユーザー グループ')) 'Day 1 guide must distinguish Windows 365 provisioning policy assignments from device groups.'
 Assert-Template ($readmeText.Contains('運用（NAT Gateway あり）') -and $readmeText.Contains('検証（NAT なし）')) 'README must label both Network deployment modes.'
 Assert-Template ($day1Text.Contains('defaultOutboundAccess: false') -and $day1Text.Contains('defaultOutboundAccess: true') -and $day1Text.Contains('NAT Gateway')) 'Day 1 guide must explain both Network outbound modes.'
-Assert-Template ($day2Text.Contains('Public IP') -and $day2Text.Contains('NAT Gateway') -and $day2Text.Contains('Peering') -and $day2Text.Contains('22:00')) 'Day 2 guide must cover the manual secure-jump requirements.'
+Assert-Template ($day2Text.Contains('VNet 作成方式') -and $day2Text.Contains('IaC') -and $day2Text.Contains('未決定') -and $day2Text.Contains('Public IP') -and $day2Text.Contains('NAT Gateway') -and $day2Text.Contains('Peering') -and $day2Text.Contains('22:00')) 'Day 2 guide must mark VNet creation mode as undecided and retain the secure-jump constraints.'
+foreach ($text in @($readmeText, $day1Text)) {
+    Assert-Template ($text.Contains('Network Resource Group Name') -and $text.Contains('rg-avd') -and $text.Contains('rg-network')) 'Explain the VM deployment RG and existing VNet RG with distinct examples.'
+    Assert-Template ($text.Contains('Ctrl＋クリック') -and $text.Contains('新しいタブでリンクを開く') -and $text.Contains('Command＋クリック')) 'Document a reliable new-tab operation instead of promising target=_blank on GitHub.'
+    Assert-Template ($text.Contains('空欄') -and $text.Contains('日本語') -and $text.Contains('英語')) 'Explain how an empty script URL skips Japanese configuration for English deployments.'
+    Assert-Template ($text.Contains('Office 利用ライセンスは付与されません') -and $text.Contains('Custom Configuration Script Url') -and $text.Contains('Vm Number Of Instances')) 'Explain licensing and optional script/count inputs.'
+}
 Assert-Template ($entry.resources.Count -eq 1) 'AVD entry must contain one embedded module.'
 $deployment = $entry.resources[0]
 Assert-Template ($deployment.type -eq 'Microsoft.Resources/deployments' -and -not $deployment.properties.ContainsKey('templateLink')) 'AVD must use an embedded template, not a remote dependency.'
@@ -201,8 +227,10 @@ $hosts = Find-Resources $avd 'Microsoft.DesktopVirtualization/hostPools'
 $dags = Find-Resources $avd 'Microsoft.DesktopVirtualization/applicationGroups'
 $workspaces = Find-Resources $avd 'Microsoft.DesktopVirtualization/workspaces'
 Assert-Template ($hosts.Count -eq 1 -and $dags.Count -eq 1 -and $workspaces.Count -eq 1) 'Expected one host pool, DAG and workspace.'
-Assert-Template ($hosts[0].properties.hostPoolType -eq 'Pooled' -and $hosts[0].properties.managementType -eq 'Standard' -and $hosts[0].properties.loadBalancerType -eq 'BreadthFirst') 'Expected article host pool configuration.'
-Assert-Template ($hosts[0].properties.maxSessionLimit -ceq "[parameters('maxSessionLimit')]") 'Max session limit must use the editable parameter.'
+Assert-Template ($hosts[0].properties.hostPoolType -ceq "[parameters('hostpoolType')]" -and $hosts[0].properties.managementType -eq 'Standard') 'Pool type must be editable while management stays Standard.'
+Assert-Template ($hosts[0].properties.loadBalancerType -ceq "[if(equals(parameters('hostpoolType'), 'Personal'), 'Persistent', parameters('loadBalancerType'))]") 'Pooled must use the selected algorithm; Personal must use Persistent.'
+Assert-Template ($hosts[0].properties.personalDesktopAssignmentType -ceq "[if(equals(parameters('hostpoolType'), 'Personal'), 'Automatic', null())]") 'Personal must use automatic desktop assignment; Pooled must not configure it.'
+Assert-Template ($hosts[0].properties.maxSessionLimit -ceq "[if(equals(parameters('hostpoolType'), 'Personal'), 1, parameters('maxSessionLimit'))]") 'Use the editable Pooled session limit and one session for Personal.'
 Assert-Template ($hosts[0].properties.customRdpProperty -ceq 'enablerdsaadauth:i:1;redirectclipboard:i:1;audiomode:i:0;') 'SSO must always be enabled, not opt-in.'
 Assert-Template ($hosts[0].properties.registrationInfo.expirationTime -ceq "[parameters('tokenExpirationTime')]") 'Host pool must use the relative expiry.'
 Assert-Template ($dags[0].properties.applicationGroupType -eq 'Desktop' -and $dags[0].properties.hostPoolArmPath -match 'hostPools') 'DAG must belong to the host pool.'
@@ -217,11 +245,12 @@ Assert-Template ($sessionHost.parameters.registrationToken.type -eq 'securestrin
 $vms = Find-Resources $sessionHost 'Microsoft.Compute/virtualMachines'
 $nics = Find-Resources $sessionHost 'Microsoft.Network/networkInterfaces'
 Assert-Template ($vms.Count -eq 1 -and $nics.Count -eq 1 -and -not $vms[0].ContainsKey('copy')) 'Deploy exactly one session host and NIC.'
-Assert-Template ($sessionHost.variables.vmName -ceq "[format('{0}-0', parameters('vmNamePrefix'))]") 'Append -0 to the editable VM name prefix.'
+Assert-Template ($sessionHost.variables.vmName -ceq "[format('{0}-{1}', parameters('vmNamePrefix'), parameters('vmIndex'))]") 'Append the per-instance index to the editable VM name prefix.'
 $vm = $vms[0]
 Assert-Template ($vm.identity.type -eq 'SystemAssigned' -and $vm.properties.licenseType -eq 'Windows_Client') 'Expected system identity and Windows client licensing.'
 Assert-Template ($vm.properties.hardwareProfile.vmSize -ceq "[parameters('vmSize')]") 'VM size must use the editable parameter.'
-Assert-Template ($vm.properties.storageProfile.imageReference.publisher -ceq "[variables('settings').avd.imagePublisher]" -and $vm.properties.storageProfile.imageReference.offer -ceq "[variables('settings').avd.imageOffer]") 'Image publisher and offer must remain fixed.'
+Assert-Template ($vm.properties.storageProfile.imageReference.publisher -ceq "[variables('settings').avd.imagePublisher]" -and $vm.properties.storageProfile.imageReference.offer -ceq "[variables('imageOffer')]") 'Image publisher stays fixed and offer must use the SKU mapping.'
+Assert-Template ($sessionHost.variables.imageOffer -ceq "[if(endsWith(parameters('imageSku'), '-m365'), 'office-365', variables('settings').avd.imageOffer)]") 'M365 images must use office-365, not windows-11.'
 Assert-Template ($vm.properties.storageProfile.imageReference.sku -ceq "[parameters('imageSku')]" -and $vm.properties.storageProfile.imageReference.version -ceq "[variables('settings').avd.imageVersion]") 'Image SKU must be editable while version stays fixed.'
 Assert-Template ($vm.properties.storageProfile.osDisk.diskSizeGB -ceq "[variables('settings').avd.vmDiskSizeGB]" -and $vm.properties.storageProfile.osDisk.managedDisk.storageAccountType -ceq "[parameters('vmDiskType')]") 'Disk size must remain fixed and type must be editable.'
 Assert-Template ($vm.properties.osProfile.adminUsername -ceq "[variables('settings').avd.vmAdminUsername]" -and $vm.properties.osProfile.adminPassword -ceq "[parameters('vmAdministratorAccountPassword')]") 'Use the fixed username and secure password.'
@@ -252,10 +281,17 @@ Assert-Template ($dsc[0].properties.settings.configurationFunction -ceq 'Configu
 Assert-Template (($dsc[0].properties.settings | ConvertTo-Json -Depth 100) -notmatch 'registrationInfoToken') 'Registration tokens must not be in public settings.'
 Assert-Template ($dsc[0].properties.protectedSettings.properties.registrationInfoToken -ceq "[parameters('registrationToken')]") 'Only pass the registration token through protected settings.'
 Assert-Template (($dsc[0].dependsOn -join ' ') -match 'AADLoginForWindows' -and ($custom[0].dependsOn -join ' ') -match 'MicrosoftPowershellDSC') 'Enforce Entra join, then registration, then custom configuration.'
-Assert-Template ($custom[0].properties.protectedSettings.fileUris[0] -ceq "[variables('settings').avd.customConfigurationScriptUrl]" -and $custom[0].properties.protectedSettings.commandToExecute -ceq 'powershell -ExecutionPolicy Bypass -File JPNOFLNG.ps1') 'Wire the article script without storing credentials.'
+Assert-Template ($custom[0].condition -ceq "[not(empty(parameters('customConfigurationScriptUrl')))]") 'An empty URL must skip Custom Script Extension, not identity or registration.'
+Assert-Template ($custom[0].properties.protectedSettings.fileUris.Count -eq 1 -and $custom[0].properties.protectedSettings.fileUris[0] -ceq "[parameters('customConfigurationScriptUrl')]") 'Use the selected script URL only in protected settings.'
+foreach ($resource in $sessionHost.resources) {
+    if ($resource -ne $custom[0]) {
+        Assert-Template (-not $resource.ContainsKey('condition')) 'Script omission must not skip VM, NIC, login, registration, RBAC, or shutdown.'
+    }
+}
 
 $sessionEntry = $templates['session-host']
-Assert-Template ($sessionEntry.parameters.Count -eq 11 -and $sessionEntry.parameters.registrationToken.type -eq 'securestring' -and -not $sessionEntry.parameters.registrationToken.ContainsKey('defaultValue')) 'The add-host template must require a secure registration token.'
+Assert-Template ($sessionEntry.parameters.Count -eq 13 -and $sessionEntry.parameters.registrationToken.type -eq 'securestring' -and -not $sessionEntry.parameters.registrationToken.ContainsKey('defaultValue')) 'The add-host template must require a secure registration token and expose script/count options.'
+Assert-Template (-not $sessionEntry.parameters.ContainsKey('hostpoolType') -and -not $sessionEntry.parameters.ContainsKey('loadBalancerType')) 'Adding hosts must not offer to change existing pool properties.'
 Assert-Template ($sessionEntry.parameters.vmAdministratorAccountPassword.type -eq 'securestring' -and -not $sessionEntry.parameters.vmAdministratorAccountPassword.ContainsKey('defaultValue')) 'The add-host template must require a secure VM password.'
 Assert-Template ($sessionEntry.resources.Count -eq 1 -and $sessionEntry.resources[0].type -eq 'Microsoft.Resources/deployments') 'The add-host entry must use one embedded module.'
 $addHostDeployment = $sessionEntry.resources[0]
@@ -267,6 +303,68 @@ Assert-Template ($addHostLeaf.parameters.registrationToken.type -eq 'securestrin
 Assert-Template (@($addHostLeaf.resources | Where-Object { $_.type -match 'Microsoft.DesktopVirtualization/(hostPools|applicationGroups|workspaces)' }).Count -eq 0) 'Adding a host must not create or update the host pool, DAG or workspace.'
 $addHostDsc = @($addHostLeaf.resources | Where-Object { $_.type -eq 'Microsoft.Compute/virtualMachines/extensions' -and $_.properties.type -eq 'DSC' })
 Assert-Template ($addHostLeaf.parameters.hostPoolName.type -eq 'string' -and $addHostDsc.Count -eq 1 -and $addHostDsc[0].properties.settings.properties.hostPoolName -ceq "[parameters('hostPoolName')]") 'The add-host template must register with the selected existing pool.'
+Assert-Template ((Convert-CompactJson $sessionHost) -ceq (Convert-CompactJson $addHostLeaf)) 'Initial and added hosts must embed the identical shared leaf implementation.'
+
+foreach ($template in @($entry, $sessionEntry)) {
+    Assert-Template (($template.parameters.imageSku.allowedValues -join ',') -ceq ($imageSkus -join ',')) 'Both entry points must expose the same eight SKU selections.'
+    Assert-Template ($template.parameters.imageSku.defaultValue -ceq 'win11-25h2-avd-m365') 'Both entry points must default to the Office-equipped 25H2 image.'
+    Assert-Template ($template.parameters.customConfigurationScriptUrl.defaultValue -ceq $settings.avd.customConfigurationScriptUrl -and -not $template.parameters.customConfigurationScriptUrl.ContainsKey('minLength')) 'Preserve Japanese script by default and allow an empty URL.'
+    Assert-Template ($template.parameters.vmNumberOfInstances.defaultValue -eq 1 -and $template.parameters.vmNumberOfInstances.minValue -eq 1 -and $template.parameters.vmNumberOfInstances.maxValue -eq 10) 'Allow 1-10 instances with default 1.'
+    Assert-Template ($template.parameters.networkResourceGroupName.defaultValue -ceq '[resourceGroup().name]' -and $template.parameters.networkResourceGroupName.metadata.displayName -ceq 'Network Resource Group Name') 'Preserve the same-RG default while labeling the VNet RG field clearly.'
+}
+foreach ($parent in @($avd, $sessionEntry)) {
+    $loop = @(Find-Resources $parent 'Microsoft.Resources/deployments')[0]
+    Assert-Template ($loop.copy.count -ceq "[length(range(0, parameters('vmNumberOfInstances')))]") 'Instantiate the shared VM/NIC/extensions/RBAC/shutdown module exactly once per requested VM.'
+    Assert-Template ($loop.properties.parameters.vmIndex.value -ceq "[range(0, parameters('vmNumberOfInstances'))[copyIndex()]]") 'Pass a unique zero-based index to every leaf.'
+    Assert-Template ($loop.name -match "range\(0, parameters\('vmNumberOfInstances'\)\)\[copyIndex\(\)\]") 'Nested deployment names must be distinct per VM.'
+    Assert-Template ($loop.properties.parameters.customConfigurationScriptUrl.value -ceq "[parameters('customConfigurationScriptUrl')]") 'Forward the script choice to every VM.'
+    Assert-Template ($parent.outputs.sessionHostName.type -eq 'string' -and $parent.outputs.sessionHostName.value -match "\[0\]") 'Retain the first-host string output for compatibility.'
+    Assert-Template ($parent.outputs.sessionHostNames.type -eq 'array' -and $parent.outputs.sessionHostNames.copy.count -ceq $loop.copy.count) 'Return every created name in the array output.'
+}
+Assert-Template ($entry.outputs.sessionHostNames.type -eq 'array' -and $entry.outputs.sessionHostNames.value -match '\.outputs\.sessionHostNames\.value') 'Expose the complete name array from the initial AVD entry.'
+Assert-Template ($sessionHost.parameters.vmIndex.minValue -eq 0 -and $sessionHost.parameters.vmIndex.maxValue -eq 9) 'Limit leaf indexes so a 13-character prefix fits a Windows computer name.'
+foreach ($count in @(1, 2, 10)) {
+    Assert-Template ($sessionHost.variables.vmName -match "^\[format\('([^']+)', parameters\('vmNamePrefix'\), parameters\('vmIndex'\)\)\]$") 'The compiled VM naming expression must use exactly the prefix and loop index.'
+    $nameFormat = $Matches[1]
+    $names = @(0..($count - 1) | ForEach-Object { $nameFormat -f 'AVD1015214700', $_ })
+    Assert-Template ($names.Count -eq $count -and @($names | Select-Object -Unique).Count -eq $count -and @($names | Where-Object Length -gt 15).Count -eq 0) "The compiled prefix/index contract must produce $count unique names within 15 characters."
+}
+Assert-Template ($vm.name -ceq "[variables('vmName')]" -and $nics[0].name -ceq "[format('{0}-nic', variables('vmName'))]") 'Every loop iteration must name its VM and NIC from the indexed VM name.'
+Assert-Template ($loginRoles[0].scope -ceq "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]") 'Per-host login access must target the indexed VM, not the first host.'
+foreach ($extension in $extensions) {
+    Assert-Template ($extension.name -match "^\[format\('\{0\}/\{1\}', variables\('vmName'\), '") 'Each extension must be parented to its indexed VM.'
+}
+
+$scriptCommand = $custom[0].properties.protectedSettings.commandToExecute
+Assert-Template ($scriptCommand -match '^powershell -NoProfile -ExecutionPolicy Bypass -Command "(.+)"$') 'Execute the downloaded script using a single explicit PowerShell command.'
+$scriptBody = $Matches[1]
+Assert-Template ($scriptBody -notmatch 'JPNOFLNG|Invoke-Expression|DownloadString') 'Do not hard-code a filename or evaluate a URL as code.'
+$scriptFixture = Join-Path ([System.IO.Path]::GetTempPath()) ('avd-custom-script-' + [guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Path $scriptFixture | Out-Null
+Push-Location $scriptFixture
+try {
+    $file = Join-Path $scriptFixture 'Different Configuration.ps1'
+    $marker = Join-Path $scriptFixture 'script-ran.txt'
+    Set-Content -LiteralPath $file -Value "Set-Content -LiteralPath '.\script-ran.txt' -Value 'ran alternate script'"
+    $result = & powershell -NoProfile -ExecutionPolicy Bypass -Command $scriptBody 2>&1
+    Assert-Template ($LASTEXITCODE -eq 0 -and (Get-Content -LiteralPath $marker -Raw).Trim() -ceq 'ran alternate script') 'An alternate .ps1 filename with spaces must actually run.'
+    Set-Content -LiteralPath $file -Value "throw 'intentional fixture failure'"
+    $result = & powershell -NoProfile -ExecutionPolicy Bypass -Command $scriptBody 2>&1
+    Assert-Template ($LASTEXITCODE -ne 0 -and ($result -join ' ') -match 'intentional fixture failure') 'A script failure must return a failing process exit code.'
+    Set-Content -LiteralPath $file -Value 'exit 7'
+    $result = & powershell -NoProfile -ExecutionPolicy Bypass -Command $scriptBody 2>&1
+    Assert-Template ($LASTEXITCODE -eq 7) 'An explicit script exit code must propagate to Custom Script Extension.'
+    Remove-Item -LiteralPath $file
+    $result = & powershell -NoProfile -ExecutionPolicy Bypass -Command $scriptBody 2>&1
+    Assert-Template ($LASTEXITCODE -ne 0 -and ($result -join ' ') -match 'Expected exactly one') 'A missing downloaded script must fail explicitly.'
+    Set-Content -LiteralPath $file -Value "'unused'"
+    Set-Content -LiteralPath (Join-Path $scriptFixture 'Unexpected.ps1') -Value "'unused'"
+    $result = & powershell -NoProfile -ExecutionPolicy Bypass -Command $scriptBody 2>&1
+    Assert-Template ($LASTEXITCODE -ne 0 -and ($result -join ' ') -match 'Expected exactly one') 'Ambiguous downloaded scripts must fail rather than run an arbitrary file.'
+} finally {
+    Pop-Location
+    Remove-Item -LiteralPath $scriptFixture -Recurse -Force
+}
 
 foreach ($template in @($sessionHost, $addHostLeaf)) {
     $schedules = Find-Resources $template 'Microsoft.DevTestLab/schedules'
@@ -274,6 +372,7 @@ foreach ($template in @($sessionHost, $addHostLeaf)) {
     Assert-Template ($schedules[0].properties.dailyRecurrence.time -eq '2200' -and $schedules[0].properties.timeZoneId -eq 'Tokyo Standard Time') 'Stop each VM daily at 22:00 Japan time.'
     Assert-Template ($schedules[0].properties.taskType -eq 'ComputeVmShutdownTask' -and $schedules[0].properties.status -eq 'Enabled') 'Enable the VM shutdown task.'
     Assert-Template ($schedules[0].properties.targetResourceId -match 'virtualMachines') 'Target the created VM with the shutdown schedule.'
+    Assert-Template ($schedules[0].name -ceq "[format('shutdown-computevm-{0}', variables('vmName'))]" -and $schedules[0].properties.targetResourceId -ceq "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]") 'Shutdown must be distinct for every indexed VM and target that same VM.'
 }
 
 foreach ($phase in @('network', 'network-validation')) {
@@ -287,9 +386,27 @@ $liveReadme = Get-Content -LiteralPath (Join-Path $root 'README.md') -Raw
 $liveManifest = Read-Json (Join-Path $root 'resources\deploy-links.json')
 Assert-Template (($liveManifest.orderedDay1Phases -join ',') -ceq 'manual-prerequisites-and-resource-group,network-deploy-to-azure,windows365-owner-part,avd-deploy-to-azure') 'Preserve the Day 1 phase order.'
 Assert-Template ($liveManifest.publication.rawUrlsVerified -eq $false -or $liveManifest.publication.repository) 'Verified publication must identify its repository.'
+if ($liveManifest.publication.repository) {
+    Assert-Template ($liveManifest.publication.templateCommit -cmatch '^[0-9a-f]{40}$') 'Published buttons must pin an immutable template commit.'
+}
+if ($liveManifest.publication.rawUrlsVerified) {
+    Assert-Template ($liveManifest.status -ceq 'published-templates-urls-verified-not-azure-validated') 'Distinguish verified template publication from Azure runtime validation.'
+    foreach ($text in @($readmeText, $day1Text)) {
+        Assert-Template ($text.Contains('新版公開済み') -and -not $text.Contains('ローカル更新版・未公開')) 'Published guides must describe the available updated inputs.'
+    }
+}
 foreach ($phase in @('network', 'network-validation', 'avd', 'session-host')) {
     $link = @($liveManifest.links | Where-Object { $_.phase -eq $phase })
     Assert-Template ($link.Count -eq 1 -and $link[0].localTemplate -eq "templates/$phase.json") 'Metadata must identify each local production template.'
+    Assert-Template ($link[0].localTemplateSha256 -eq (Get-FileHash -LiteralPath (Join-Path $root "templates\$phase.json") -Algorithm SHA256).Hash) 'Metadata must record the hash of the current local JSON.'
+    if ($liveManifest.publication.repository) {
+        $prefix = $liveManifest.publication.templatePathPrefix.Trim('/')
+        if ($prefix) { $prefix += '/' }
+        $uri = "https://raw.githubusercontent.com/$($liveManifest.publication.repository)/$($liveManifest.publication.templateCommit)/${prefix}templates/$phase.json"
+        Assert-Template ($link[0].templateUri -ceq $uri) 'Each template URL must match the publication repository, commit, and path.'
+        Assert-Template ($link[0].deployToAzureUrl -ceq ('https://portal.azure.com/#create/Microsoft.Template/uri/' + [uri]::EscapeDataString($uri))) 'Each button must encode its immutable template URL.'
+        Assert-Template ($liveReadme.Contains("[![Deploy to Azure](https://aka.ms/deploytoazurebutton)]($($link[0].deployToAzureUrl))")) 'README buttons must match the publication metadata.'
+    }
     if (-not $liveManifest.publication.repository) {
         Assert-Template ($null -eq $link[0].templateUri -and $null -eq $link[0].deployToAzureUrl) 'Unpublished templates must not have active deployment URLs.'
         $pattern = "<!-- deploy-button-${phase}:start -->(.*?)<!-- deploy-button-${phase}:end -->"
@@ -297,6 +414,9 @@ foreach ($phase in @('network', 'network-validation', 'avd', 'session-host')) {
         Assert-Template ($regions.Count -eq 1) 'Each phase must have one managed README button region.'
         $region = $regions[0].Groups[1].Value
         Assert-Template ($region.Contains('![Deploy to Azure](https://aka.ms/deploytoazurebutton)') -and $region -notmatch '\[!\[Deploy to Azure\]') 'Unpublished badges must be official images without deployment links.'
+    }
+    if ($liveManifest.status -eq 'local-updates-not-published-buttons-reference-previous-release') {
+        Assert-Template ($liveManifest.publication.rawUrlsVerified -eq $false -and $liveReadme.Contains('ローカル更新版・未公開')) 'Do not claim the published URLs match unpublished local templates.'
     }
 }
 

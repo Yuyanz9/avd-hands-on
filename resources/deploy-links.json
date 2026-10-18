@@ -1,11 +1,11 @@
 {
-  "status": "fixed-templates-with-raw-urls-verified-not-live-validated",
+  "status": "local-updates-not-published-buttons-reference-previous-release",
   "settingsFile": "infra/settings.json",
   "publication": {
-    "templateCommit": "501ca0597ed19a945e82a8734f4d70e8a6174120",
-    "rawUrlsVerified": true,
+    "templatePathPrefix": "",
+    "rawUrlsVerified": false,
     "repository": "Yuyanz9/avd-hands-on",
-    "templatePathPrefix": ""
+    "templateCommit": "501ca0597ed19a945e82a8734f4d70e8a6174120"
   },
   "orderedDay1Phases": [
     "manual-prerequisites-and-resource-group",
@@ -37,7 +37,7 @@
       "localTemplate": "templates/avd.json",
       "templateUri": "https://raw.githubusercontent.com/Yuyanz9/avd-hands-on/501ca0597ed19a945e82a8734f4d70e8a6174120/templates/avd.json",
       "deployToAzureUrl": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F501ca0597ed19a945e82a8734f4d70e8a6174120%2Ftemplates%2Favd.json",
-      "localTemplateSha256": "503E5FFDF87A26DF955014172EA3EECAD12370257C0B1F0627F13B22D5C1BCAF",
+      "localTemplateSha256": "4CDB8845151FEBE61807CAD7BBF049D861D66E52B26EED317D6E7CF9602750B1",
       "productionApproved": false,
       "executionValidatedForThisFlow": false
     },
@@ -46,7 +46,7 @@
       "localTemplate": "templates/session-host.json",
       "templateUri": "https://raw.githubusercontent.com/Yuyanz9/avd-hands-on/501ca0597ed19a945e82a8734f4d70e8a6174120/templates/session-host.json",
       "deployToAzureUrl": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F501ca0597ed19a945e82a8734f4d70e8a6174120%2Ftemplates%2Fsession-host.json",
-      "localTemplateSha256": "9810376C0E4F1CC792FECD41F902612DD04B67B680E090147C11D8C232602EB8",
+      "localTemplateSha256": "DD7A6823F14E8851A6AE42FB4B51EC51F3369AAFAE930842289AA96C670913B9",
       "productionApproved": false,
       "executionValidatedForThisFlow": false
     }
