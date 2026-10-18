@@ -33,7 +33,7 @@ Network のどちらか一方を選んでください。2つのボタンはど�
 ### 2.1 運用（NAT Gateway あり）
 
 <!-- deploy-button-network:start -->
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2Fdeb290ee113a8e30ab73b07f4a1bf5b1ffdc5090%2Ftemplates%2Fnetwork.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F3166a1f68663049c779ad0ff7c91b4fec08dcbc0%2Ftemplates%2Fnetwork.json)
 <!-- deploy-button-network:end -->
 
 **Ctrl＋クリックで、Azure portal を別タブで開けます（macOS は Command＋クリック）。**
@@ -43,7 +43,7 @@ Network のどちらか一方を選んでください。2つのボタンはど�
 ### 2.2 検証（NAT なし）
 
 <!-- deploy-button-network-validation:start -->
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2Fdeb290ee113a8e30ab73b07f4a1bf5b1ffdc5090%2Ftemplates%2Fnetwork-validation.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F3166a1f68663049c779ad0ff7c91b4fec08dcbc0%2Ftemplates%2Fnetwork-validation.json)
 <!-- deploy-button-network-validation:end -->
 
 **Ctrl＋クリックで、Azure portal を別タブで開けます（macOS は Command＋クリック）。**
@@ -73,7 +73,7 @@ Network の成功と3サブネットを確認後、Windows 365 担当者の資�
 ## 4. AVD を Deploy to Azure
 
 <!-- deploy-button-avd:start -->
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2Fdeb290ee113a8e30ab73b07f4a1bf5b1ffdc5090%2Ftemplates%2Favd.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F3166a1f68663049c779ad0ff7c91b4fec08dcbc0%2Ftemplates%2Favd.json)
 <!-- deploy-button-avd:end -->
 
 **Ctrl＋クリックで、Azure portal を別タブで開けます（macOS は Command＋クリック）。**
@@ -127,7 +127,7 @@ VM 名の既定プレフィックスはデプロイ時刻から作られ、1回�
 ## 5. 既存プールへセッションホストを追加
 
 <!-- deploy-button-session-host:start -->
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2Fdeb290ee113a8e30ab73b07f4a1bf5b1ffdc5090%2Ftemplates%2Fsession-host.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F3166a1f68663049c779ad0ff7c91b4fec08dcbc0%2Ftemplates%2Fsession-host.json)
 <!-- deploy-button-session-host:end -->
 
 **Ctrl＋クリックで、Azure portal を別タブで開けます（macOS は Command＋クリック）。**
