@@ -1,8 +1,8 @@
 {
-  "status": "fixed-templates-with-configured-urls-not-live-validated",
+  "status": "published-templates-urls-verified-not-azure-validated",
   "settingsFile": "infra/settings.json",
   "publication": {
-    "rawUrlsVerified": false,
+    "rawUrlsVerified": true,
     "templatePathPrefix": "",
     "repository": "Yuyanz9/avd-hands-on",
     "templateCommit": "3166a1f68663049c779ad0ff7c91b4fec08dcbc0"
