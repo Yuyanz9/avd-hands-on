@@ -180,10 +180,13 @@ foreach ($phase in @('network', 'network-validation')) {
 }
 
 $entry = $templates.avd
-Assert-Template ($entry.parameters.Count -eq 19 -and $entry.parameters.ContainsKey('vmAdministratorAccountPassword')) 'AVD must expose the existing inputs plus Intune and automatic shutdown options.'
+Assert-Template ($entry.parameters.Count -eq 20 -and $entry.parameters.ContainsKey('vmAdministratorAccountPassword')) 'AVD must expose the existing inputs, required AVD Users group ID, Intune, and automatic shutdown options.'
 $password = $entry.parameters.vmAdministratorAccountPassword
 Assert-Template ($password.type -eq 'securestring' -and -not $password.ContainsKey('defaultValue')) 'The password must be secure and have no default.'
 Assert-Template ($password.minLength -eq 12 -and $password.maxLength -eq 123) 'The password length must be bounded.'
+$groupObjectId = $entry.parameters.avdUsersGroupObjectId
+Assert-Template ($groupObjectId.type -eq 'string' -and $groupObjectId.minLength -eq 36 -and $groupObjectId.maxLength -eq 36 -and -not $groupObjectId.ContainsKey('defaultValue')) 'AVD deployment must require the existing AVD Users group Object ID.'
+Assert-Template ($groupObjectId.metadata.displayName -ceq 'AVD Users Group Object Id') 'Show a clear label for the AVD Users group Object ID.'
 $expectedDefaults = @{
     networkResourceGroupName = '[resourceGroup().name]'
     virtualNetworkName = 'vnet-vdi'
@@ -208,10 +211,11 @@ foreach ($name in $expectedDefaults.Keys) {
     Assert-Template ($entry.parameters[$name].defaultValue -ceq $expectedDefaults[$name]) "AVD default must be editable and preserve the expected value: $name."
 }
 Assert-Template ($entry.parameters.vmNamePrefix.maxLength -eq 13) 'VM name prefix must leave room for the -0 suffix in a Windows computer name.'
-$expectedOrder = @('vmAdministratorAccountPassword', 'networkResourceGroupName', 'virtualNetworkName', 'subnetName', 'location', 'imageSku', 'workspaceFriendlyName', 'vmSize', 'vmDiskType', 'maxSessionLimit', 'vmNamePrefix', 'customConfigurationScriptUrl', 'vmNumberOfInstances', 'hostpoolType', 'loadBalancerType', 'intune', 'autoShutdownEnabled', 'autoShutdownHour', 'autoShutdownMinute')
-Assert-Template (($entry.parameters.Keys -join ',') -ceq ($expectedOrder -join ',')) 'Keep the existing portal input order and append Intune and shutdown options.'
+$expectedOrder = @('vmAdministratorAccountPassword', 'avdUsersGroupObjectId', 'networkResourceGroupName', 'virtualNetworkName', 'subnetName', 'location', 'imageSku', 'workspaceFriendlyName', 'vmSize', 'vmDiskType', 'maxSessionLimit', 'vmNamePrefix', 'customConfigurationScriptUrl', 'vmNumberOfInstances', 'hostpoolType', 'loadBalancerType', 'intune', 'autoShutdownEnabled', 'autoShutdownHour', 'autoShutdownMinute')
+Assert-Template (($entry.parameters.Keys -join ',') -ceq ($expectedOrder -join ',')) 'Keep the existing portal input order, require the AVD Users group ID, and append shutdown controls after the deployment options.'
 $imageSkus = @('win11-23h2-avd', 'win11-23h2-avd-m365', 'win11-24h2-avd', 'win11-24h2-avd-m365', 'win11-25h2-avd', 'win11-25h2-avd-m365', 'win11-26h2-avd', 'win11-26h2-avd-m365')
 $labels = @{
+    avdUsersGroupObjectId = 'AVD Users Group Object Id'
     networkResourceGroupName = 'Network Resource Group Name'
     imageSku = 'Vm Gallery Image SKU'
     customConfigurationScriptUrl = 'Custom Configuration Script Url'
@@ -245,6 +249,7 @@ Assert-Template ($day1Text -match '12～123文字が必須' -and $day1Text -matc
 Assert-Template ($day1Text.Contains('Virtual Network Resource Group Name') -and $day1Text.Contains('Work Space Name') -and $day1Text.Contains('Max Session Limit')) 'Day 1 guide must describe the editable fields.'
 Assert-Template ($day1Text.Contains('(device.displayName -startsWith "AVD")') -and $day1Text.Contains('(device.deviceModel -startsWith "Cloud PC") -or (device.deviceModel -startsWith "Windows 365")')) 'Day 1 guide must document AVD and Cloud PC dynamic device rules.'
 Assert-Template ($day1Text.Contains('プロビジョニング ポリシー') -and $day1Text.Contains('ユーザー グループ')) 'Day 1 guide must distinguish Windows 365 provisioning policy assignments from device groups.'
+Assert-Template ($readmeText.Contains('AVD Users') -and $readmeText.Contains('Object ID') -and $readmeText.Contains('増分デプロイ') -and $day1Text.Contains('AVD Users') -and $day1Text.Contains('Object ID') -and $day1Text.Contains('増分デプロイ')) 'Both guides must explain the manually created AVD Users group, its required Object ID, and incremental cleanup of old user assignments.'
 Assert-Template ($readmeText.Contains('既定で `true`') -and $readmeText.Contains('intune=false') -and $day1Text.Contains('Intune Enrollment') -and $day1Text.Contains('Pooled host pool')) 'Document the default Intune enrollment request, opt-out and host-pool prerequisite.'
 Assert-Template ($readmeText.Contains('運用（NAT Gateway あり）') -and $readmeText.Contains('検証（NAT なし）')) 'README must label both Network deployment modes.'
 Assert-Template ($day1Text.Contains('defaultOutboundAccess: false') -and $day1Text.Contains('defaultOutboundAccess: true') -and $day1Text.Contains('NAT Gateway')) 'Day 1 guide must explain both Network outbound modes.'
@@ -265,7 +270,7 @@ Assert-Template ($entry.resources.Count -eq 1) 'AVD entry must contain one embed
 $deployment = $entry.resources[0]
 Assert-Template ($deployment.type -eq 'Microsoft.Resources/deployments' -and -not $deployment.properties.ContainsKey('templateLink')) 'AVD must use an embedded template, not a remote dependency.'
 Assert-Template ($deployment.properties.mode -eq 'Incremental') 'AVD module must not delete unrelated resources.'
-Assert-Template ($deployment.properties.parameters.connectionUserObjectId.value -ceq '[deployer().objectId]') 'Assign access to the deploying user without attendee Object ID input.'
+Assert-Template ($deployment.properties.parameters.avdUsersGroupObjectId.value -ceq "[parameters('avdUsersGroupObjectId')]") 'Forward the required AVD Users group Object ID.'
 Assert-Template ($deployment.properties.parameters.vmAdministratorAccountPassword.value -ceq "[parameters('vmAdministratorAccountPassword')]") 'Forward the secure password directly.'
 foreach ($name in $expectedDefaults.Keys) {
     Assert-Template ($deployment.properties.parameters[$name].value -ceq "[parameters('$name')]") "Forward the editable parameter to the AVD module: $name."
@@ -319,8 +324,8 @@ $loginRoles = Find-Resources $sessionHost 'Microsoft.Authorization/roleAssignmen
 Assert-Template ($desktopRoles.Count -eq 1 -and $loginRoles.Count -eq 1) 'Expected one desktop access and one VM login assignment.'
 Assert-Template ($avd.variables.desktopUserRoleId -match '1d18fff3-a72a-46b5-b4a9-0b38a3cd7e63' -and $sessionHost.variables.vmUserLoginRoleId -match 'fb879df8-f326-4884-b1cf-06f3ad86be52') 'Use the correct built-in roles.'
 foreach ($role in @($desktopRoles) + @($loginRoles)) {
-    Assert-Template ($role.properties.principalId -ceq "[parameters('connectionUserObjectId')]" -and $role.properties.principalType -eq 'User') 'Both roles must target the deploying member user.'
-    Assert-Template ($role.name -match "guid\(.*parameters\('connectionUserObjectId'\)") 'Role names must be deterministic for each principal and scope.'
+    Assert-Template ($role.properties.principalId -ceq "[parameters('avdUsersGroupObjectId')]" -and $role.properties.principalType -eq 'Group') 'Both roles must target the existing AVD Users security group.'
+    Assert-Template ($role.name -match "guid\(.*parameters\('avdUsersGroupObjectId'\)") 'Role names must be deterministic for each group and scope.'
 }
 Assert-Template ($desktopRoles[0].scope -match 'applicationGroups' -and $loginRoles[0].scope -match 'virtualMachines') 'Assign desktop and VM login roles at their respective resource scopes.'
 
@@ -347,7 +352,9 @@ foreach ($resource in $sessionHost.resources) {
 }
 
 $sessionEntry = $templates['session-host']
-Assert-Template ($sessionEntry.parameters.Count -eq 17 -and $sessionEntry.parameters.registrationToken.type -eq 'securestring' -and -not $sessionEntry.parameters.registrationToken.ContainsKey('defaultValue')) 'The add-host template must require a secure registration token and expose script/count/Intune/shutdown options.'
+Assert-Template ($sessionEntry.parameters.Count -eq 18 -and $sessionEntry.parameters.registrationToken.type -eq 'securestring' -and -not $sessionEntry.parameters.registrationToken.ContainsKey('defaultValue')) 'The add-host template must require a secure registration token and AVD Users group ID and expose script/count/Intune/shutdown options.'
+Assert-Template ($sessionEntry.parameters.avdUsersGroupObjectId.type -eq 'string' -and $sessionEntry.parameters.avdUsersGroupObjectId.minLength -eq 36 -and $sessionEntry.parameters.avdUsersGroupObjectId.maxLength -eq 36 -and -not $sessionEntry.parameters.avdUsersGroupObjectId.ContainsKey('defaultValue')) 'The add-host template must require the existing AVD Users group Object ID.'
+Assert-Template ($sessionEntry.parameters.avdUsersGroupObjectId.metadata.displayName -ceq 'AVD Users Group Object Id') 'The add-host template must clearly label the AVD Users group Object ID.'
 Assert-Template ($sessionEntry.parameters.intune.type -eq 'bool' -and $sessionEntry.parameters.intune.defaultValue -eq $true) 'The add-host template must request Intune enrollment by default.'
 Assert-Template ($sessionEntry.parameters.autoShutdownEnabled.type -eq 'bool' -and $sessionEntry.parameters.autoShutdownEnabled.defaultValue -eq $true -and $sessionEntry.parameters.autoShutdownHour.defaultValue -eq 19 -and $sessionEntry.parameters.autoShutdownMinute.defaultValue -eq 0) 'The add-host template must enable shutdown at 19:00 Japan time by default.'
 Assert-Template ($sessionEntry.parameters.autoShutdownHour.minValue -eq 0 -and $sessionEntry.parameters.autoShutdownHour.maxValue -eq 23 -and $sessionEntry.parameters.autoShutdownMinute.minValue -eq 0 -and $sessionEntry.parameters.autoShutdownMinute.maxValue -eq 59) 'The add-host template must bound shutdown hour and minute.'
@@ -356,7 +363,7 @@ Assert-Template ($sessionEntry.parameters.vmAdministratorAccountPassword.type -e
 Assert-Template ($sessionEntry.resources.Count -eq 1 -and $sessionEntry.resources[0].type -eq 'Microsoft.Resources/deployments') 'The add-host entry must use one embedded module.'
 $addHostDeployment = $sessionEntry.resources[0]
 Assert-Template (-not $addHostDeployment.properties.ContainsKey('templateLink') -and $addHostDeployment.properties.mode -eq 'Incremental') 'The add-host template must be embedded and incremental.'
-Assert-Template ($addHostDeployment.properties.parameters.connectionUserObjectId.value -ceq '[deployer().objectId]') 'The add-host VM login role must target the deploying user.'
+Assert-Template ($addHostDeployment.properties.parameters.avdUsersGroupObjectId.value -ceq "[parameters('avdUsersGroupObjectId')]") 'The add-host VM login role must target the supplied AVD Users group.'
 Assert-Template ($addHostDeployment.properties.parameters.registrationToken.value -ceq "[parameters('registrationToken')]") 'Forward the secure registration token directly.'
 $addHostLeaf = $addHostDeployment.properties.template
 Assert-Template ($addHostLeaf.parameters.registrationToken.type -eq 'securestring' -and $addHostLeaf.parameters.vmAdministratorAccountPassword.type -eq 'securestring') 'Add-host nested secrets must remain secure parameters.'

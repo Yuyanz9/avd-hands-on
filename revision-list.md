@@ -13,15 +13,15 @@
 | R01 | 順序・既定 CIDR を修正して公開済み／実機確認待ち | 共通ネットワークの統一 | `vnet-vdi`／`10.10.0.0/16`、Cloud PC＝`10.10.1.0/24`・AVD＝`10.10.2.0/24`・Server＝`10.10.3.0/24` の順にスライドへ整合。両方式の入力順・共通モジュール・図・テストも修正。CIDR は編集可能。使用中の旧 VNet へ既定値をそのまま再適用せず、既存 NIC／Cloud PC／ANC の移行は別途計画。実作成・送信設定確認は R10 |
 | R02 | 担当確認待ち | Windows 365 の受け渡し | `snet-cloudpc` を用意。担当者と ANC／Microsoft ホスト型の方式、VNet 利用、通信・権限、待機・復帰条件を照合。Windows 365 実装は担当側 |
 | R03 | RDP 修正版も公開・配信確認済み | 4つの ARM JSON | 運用 Network、検証 Network、AVD、session-host の公開 JSON は匿名取得・JSON 解析・同梱ファイルとの SHA-256 一致を確認。AVD JSON は RDP 2項目修正を含む。Azure 実行は R10 |
-| R04 | 新版の固定リンクへ切替済み | 配信・版固定 | Deploy ボタンは公開コミット `deb290ee113a8e30ab73b07f4a1bf5b1ffdc5090` を参照。`resources/deploy-links.json` の URL・ハッシュを更新し、匿名取得照合済み。GitHub は別タブを強制できないため Ctrl＋クリック等を案内 |
+| R04 | 新版の固定リンクへ切替済み | 配信・版固定 | Deploy ボタンは公開コミット `763bbd163217e82c7970228f41687d0e9ea14f5b` を参照。`resources/deploy-links.json` の URL・ハッシュを更新し、匿名取得照合済み。GitHub は別タブを強制できないため Ctrl＋クリック等を案内 |
 | R05 | 任意名に対応・画像待ち | 手動 RG と権限 | Japan East、必須タグなし。Network と AVD は同一 RG が既定。AVD の VNet RG 入力で同じサブスクリプション内の別 VNet RG も指定可能。作成・IAM 画面の撮影と権限リハーサルは未実施 |
 | R06 | IaC 更新済み・設計確認待ち | 送信・受信制御 | 運用版は Standard NAT Gateway／静的 Standard Public IP と `defaultOutboundAccess: false`、検証版は NAT なし・`defaultOutboundAccess: true`。NSG は未作成。運用版の継続費用と検証版の不定な送信元 IP を案内し、通信・受信・東西制御を配布前に確認 |
 | R07 | ローカル実装済み | Windows 365 後の Network 保護 | AVD は既存ネットワーク参照のみ。VNet・サブネットを再作成しない。NAT ありから検証方式への増分切替で NAT／Public IP が残存し得る点と ANC 等への影響を担当者と R10 で確認 |
-| R08 | 新版公開済み／実機確認待ち | 編集可能な AVD パラメーター | 従来の入力順を維持し、Custom Configuration Script Url、Vm Number Of Instances（既定1、1～10）、Hostpool Type（既定 Pooled）、Load Balancer Type（既定 BreadthFirst）を追加。Personal は Persistent／Automatic／1セッションに連動。パスワードは secure。Object ID は `deployer()` |
+| R08 | 新版公開済み／実機確認待ち | 編集可能な AVD パラメーター | 従来の入力順を維持し、Custom Configuration Script Url、Vm Number Of Instances（既定1、1～10）、Hostpool Type（既定 Pooled）、Load Balancer Type（既定 BreadthFirst）を追加。Personal は Persistent／Automatic／1セッションに連動。パスワードは secure。AVD Users グループ Object ID を必須入力 |
 | R09 | GitHub 固定版を既定にして公開済み／実機確認待ち | VM・イメージ・外部スクリプト | D4as_v6／Office 入り25H2を既定にし、Windows 11 23H2～26H2 の Office あり／なしを選択可能。OS 日本語化 PS1 を出典付きで同梱し、GitHub 固定コミットの匿名取得・内容一致を確認。初回／追加ホストの既定 URL も切替済み。空欄で省略可能。Office 日本語化は別途 Intune。利用資格、地域・サポート期限、`latest` と依存モジュールの版固定、VM 内ハッシュ／署名検証、自動再起動と時間を確認 |
 | R10 | 一部確認済み・更新版の実機確認待ち | 通しリハーサル | 旧版は利用者報告で Network／AVD を試行し、Windows App 接続と日本語化を確認。今回の Network 2方式、編集可能な AVD 版、追加ホスト版を検証し、Network → Windows 365 → AVD → SSO 接続を通し確認する。SSO、登録キー、停止設定、待機・失敗・再実行・Windows 365 への影響も記録 |
 | R11 | 未整備 | 保持・削除 | Day 2 保持、停止後の課金、Windows 365 担当者への確認、RG 削除可否、ANC／Entra デバイス等の残存処理を具体化。旧タグ依存の削除スクリプトは使わない |
-| R12 | ローカル実装済み | 接続用 RBAC | 実行メンバーユーザーへ DAG の Desktop Virtualization User と VM の Virtual Machine User Login を付与。ロール作成権限、反映、別アカウントによる代行時の挙動を実機確認 |
+| R12 | グループ割り当て実装済み／実機確認待ち | 接続用 RBAC | 手動作成した `AVD Users` グループへ DAG の Desktop Virtualization User と各 VM の Virtual Machine User Login を付与。Incremental デプロイでは旧ユーザー割り当てを削除しないため、グループ経由のアクセス確認後に不要な割り当てを手動削除。ロール作成権限と反映を実機確認 |
 | R13 | IaC 実装済み・講師準備／接続待ち | SSO | ホストプールの `enablerdsaadauth:i:1` は常時設定。Windows Cloud Login のテナント準備は講師担当。Windows App、クライアント要件、Conditional Access／MFA と実接続を確認 |
 | R14 | 撮り直し待ち | スクリーンショット | 旧画像は出典付き参考として保持。新版の入力値と既定値、権限・ホスト登録・SSO・停止設定・接続成功を機密マスクして撮影 |
 | R15 | 新版公開済み／実機確認待ち | 既存プールへのホスト追加 | `session-host.json` は指定した追加台数（既定1、1～10）の VM／NIC／拡張機能／VM Login RBAC／自動停止を作成。SKU 選択・任意スクリプト URL は初回と共通。ホストプール・DAG・Workspace は変更しない。登録キーは secure。別 RG の VNet 指定、名前衝突、イメージ等の互換性と実接続を確認 |

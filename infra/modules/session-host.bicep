@@ -11,7 +11,7 @@ param registrationToken string
 
 @minLength(36)
 @maxLength(36)
-param connectionUserObjectId string
+param avdUsersGroupObjectId string
 
 param hostPoolName string
 param networkResourceGroupName string
@@ -132,11 +132,11 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2024-11-01' = {
 }
 
 resource vmLoginAccess 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(virtualMachine.id, connectionUserObjectId, vmUserLoginRoleId)
+  name: guid(virtualMachine.id, avdUsersGroupObjectId, vmUserLoginRoleId)
   scope: virtualMachine
   properties: {
-    principalId: connectionUserObjectId
-    principalType: 'User'
+    principalId: avdUsersGroupObjectId
+    principalType: 'Group'
     roleDefinitionId: vmUserLoginRoleId
   }
 }

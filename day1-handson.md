@@ -35,6 +35,7 @@
 | 演習の分離 | VNet 等の名前が既定値のままでは同一 RG に複数環境を作れない。受講者ごとに専用 RG を用意し、名前を変更する場合は講師が事前確認 |
 | 利用者・ライセンス | 対象テナントのメンバーアカウント、AVD と Windows 365 の利用資格 |
 | Azure の権限 | RG 作成権限、リソース作成権限、DAG と VM に必要な RBAC を割り当てる権限。Contributor のみでは不足 |
+| AVD 接続グループ | Entra セキュリティ グループ `AVD Users` を講師・管理者が手動作成し、Object ID を受講者へ安全に共有。テンプレートはグループを作成しない |
 | プロバイダー | `Microsoft.Network`、`Microsoft.Compute`、`Microsoft.DesktopVirtualization` の登録 |
 | SKU・イメージ | Japan East の `Standard_D4as_v6`、指定台数分の vCPU クォータ、既定の Microsoft 365 Apps 入り Windows 11 25H2 AVD イメージ（選択変更時はその SKU）、Trusted Launch の利用可否。Apps の利用ライセンスは別途確認 |
 | 通信・制約 | AVD、Entra ID、更新、構成パッケージ等への外向き通信。Azure Policy、Conditional Access／MFA |
@@ -125,7 +126,7 @@ NAT ありから検証方式へ切り替える場合、増分デプロイでは 
 
 *旧画像の［新規作成］は使用せず、AVD リソースを作成する RG を選びます。画像は旧版の参考で、新版の入力欄・初期値を示しません。*
 
-標準値が事前入力されます。**VNet と同じ RG に VM を置く場合は、上部で VNet のある既存 RG を選び、Network Resource Group Name は既定のままにします。別 RG に置く場合は VM 用 RG を先に手動作成して上部で選び、Network Resource Group Name を VNet 側 RG の名前へ変更します。** 例：上部で `rg-avd` を選び、VNet が `rg-network` にある場合は入力欄に `rg-network` と指定します。`[resourceGroup().name]` のままだと VM 用 RG を参照し、VNet が見つからず失敗します。同じサブスクリプション内に限定し、参照・サブネット参加権限、VNet／サブネット名とリージョンを講師が確認してください。AVD は Network・Cloud PC・ANC を作成・再適用しません。
+標準値が事前入力されます。**VNet と同じ RG に VM を置く場合は、上部で VNet のある既存 RG を選び、Network Resource Group Name は既定のままにします。別 RG に置く場合は VM 用 RG を先に手動作成して上部で選び、Network Resource Group Name を VNet 側 RG の名前へ変更します。** 例：上部で `rg-avd` を選び、VNet が `rg-network` にある場合は入力欄に `rg-network` と指定します。`[resourceGroup().name]` のままだと VM 用 RG を参照し、VNet が見つからず失敗します。同じサブスクリプション内に限定し、参照・サブネット参加権限、VNet／サブネット名とリージョンを講師が確認してください。AVD は Network・Cloud PC・ANC を作成・再適用しません。事前に講師が手動作成した `AVD Users` セキュリティ グループの Object ID を確認し、入力欄へ指定します。
 
 ![旧テンプレートの管理者入力欄の拡大。新版のパスワード入力の参考](resources/images/portal-deploy/04-admin-password-detail.png)
 
@@ -133,6 +134,7 @@ NAT ありから検証方式へ切り替える場合、増分デプロイでは 
 
 | 入力項目 | 既定値 | 用途・注意 |
 | --- | --- | --- |
+| AVD Users Group Object Id | 既定値なし | 手動作成済みの `AVD Users` セキュリティ グループの Object ID。必須 |
 | Network Resource Group Name（旧案内：Virtual Network Resource Group Name） | 選択したデプロイ先 RG | 既存 VNet の RG。同じ RG なら既定のまま、別 RG なら VNet 側 RG に変更 |
 | Existing Vnet Name | `vnet-vdi` | 既存の VNet |
 | Existing Subnet Name | `snet-avd` | セッションホスト用サブネット |
@@ -163,7 +165,7 @@ NAT ありから検証方式へ切り替える場合、増分デプロイでは 
 | VM | 既定1台、1～10台を指定可能。JST の日時プレフィックス＋ `-0`～ `-9`、既定 `Standard_D4as_v6`、128 GiB `StandardSSD_LRS` |
 | OS | 既定 `microsoftwindowsdesktop`／`office-365`／`win11-25h2-avd-m365`／`latest`（Microsoft 365 Apps 入り）。Office なし SKU は `windows-11` Offer |
 | ID・保護 | Entra ID 参加、システム割り当て ID、Intune MDM 自動登録（既定有効）、Trusted Launch／Secure Boot／vTPM |
-| 接続権限 | 実行したユーザーへ DAG の Desktop Virtualization User と VM の Virtual Machine User Login |
+| 接続権限 | `AVD Users` グループへ DAG の Desktop Virtualization User と各 VM の Virtual Machine User Login |
 | SSO | ホストプールへ `enablerdsaadauth:i:1` を設定 |
 | RDP 追加既定値 | `enablecredsspsupport:i:1` と `videoplaybackmode:i:1` を明示。SSO・音声設定は維持 |
 | クリップボード転送 | `redirectclipboard:i:0` で無効。後からホストプールの RDP プロパティで変更可能 |
@@ -182,7 +184,9 @@ RDP 2項目は未指定から [Microsoft の仕様上の既定値](https://learn
 
 AVD の日本語設定拡張機能は、同梱 [JPNOFLNG.ps1](scripts/JPNOFLNG.ps1) の GitHub 固定コミットを `ExecutionPolicy Bypass` で実行します。**このスクリプトは OS 日本語化と Windows Update 用です。Microsoft 365 Apps の日本語化は含まず、別途 Intune の設定が必要です。** 本体の匿名取得・照合は確認済みですが、VM 内でのハッシュ／署名検証は未実装で、バージョン未固定の `PSWindowsUpdate` 等の外部依存も残ります。**悪意あるコードの追加・スクリプトの不審な差し替え・未承認の変更の配布や実行は禁止です。** 講師が配信元と実行内容を確認できない場合はデプロイせず、詳細は [README のセキュリティ注意](README.md)を確認してください。この注意書き自体はコード改変や依存先の変更を防止しません。
 
-**本人がデプロイして本人が接続**します。Object ID は `deployer().objectId` で取得し、2種類のロールをリソース単位で付与します。サービスプリンシパル・グループは対象外です。講師が別アカウントで再実行すると、その講師にも権限が追加されるため代行前に確認します。
+接続するメンバーを事前に `AVD Users` グループへ追加します。AVD とホスト追加の各テンプレートで同グループの Object ID を必須入力し、初回構築では DAG に Desktop Virtualization User、各 VM に Virtual Machine User Login を割り当てます。ホスト追加では新しい各 VM に Virtual Machine User Login を割り当てます。グループの作成・メンバー管理はテンプレート対象外です。
+
+テンプレートは Incremental（増分）デプロイのため、以前に個別ユーザーへ付与した割り当ては削除されません。グループ経由のアクセスを確認してから、不要な既存ユーザー割り当てを DAG と各 VM で手動確認・削除します。
 
 ### 4.3 検証・作成・状態確認
 
@@ -191,7 +195,7 @@ AVD の日本語設定拡張機能は、同梱 [JPNOFLNG.ps1](scripts/JPNOFLNG.p
 3. ［作成］後、RG の［デプロイ］で結果を確認します。失敗を成功と扱わず、デプロイ名・失敗リソース・エラーを講師に共有します。秘密を共有しません。
 4. 各 VM の［拡張機能とアプリケーション］で Entra ID 参加・DSC の成功を確認します。URL を指定した場合だけ Custom Script の成功も確認し、空欄の場合は新規 VM に Custom Script がないことを確認します。自動再起動の途中では接続確認に進みません。
 5. ホストプールの［セッション ホスト］で指定台数の VM 名が登録され `Available` であることを確認します。各 NIC に Public IP がないことを確認します。
-6. DAG の［割り当て］と［アクセス制御（IAM）］で自分の Desktop Virtualization User、VM の［アクセス制御（IAM）］で Virtual Machine User Login を確認します。
+6. DAG の［割り当て］と［アクセス制御（IAM）］で `AVD Users` の Desktop Virtualization User、各 VM の［アクセス制御（IAM）］で同グループの Virtual Machine User Login を確認します。
 7. ホストプールの［RDP プロパティ］で SSO 設定を確認します。テナント側の Windows Cloud Login 準備は講師に確認します。
 8. VM の［自動シャットダウン］で、入力した日本時間のスケジュールが有効または無効の意図どおりになっていることを確認します。既定は毎日19:00です。作業中のセッションも停止時刻に中断され得ることを確認します。
 

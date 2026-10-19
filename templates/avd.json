@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.42.1.51946",
-      "templateHash": "16225849998769163588"
+      "templateHash": "2415388175345213763"
     }
   },
   "parameters": {
@@ -16,6 +16,15 @@
       "metadata": {
         "description": "Local VM administrator password. Do not use or store the tenant account password."
       }
+    },
+    "avdUsersGroupObjectId": {
+      "type": "string",
+      "metadata": {
+        "displayName": "AVD Users Group Object Id",
+        "description": "Object ID of the existing Entra security group named AVD Users. Create the group manually before deployment."
+      },
+      "minLength": 36,
+      "maxLength": 36
     },
     "networkResourceGroupName": {
       "type": "string",
@@ -201,8 +210,8 @@
           "vmAdministratorAccountPassword": {
             "value": "[parameters('vmAdministratorAccountPassword')]"
           },
-          "connectionUserObjectId": {
-            "value": "[deployer().objectId]"
+          "avdUsersGroupObjectId": {
+            "value": "[parameters('avdUsersGroupObjectId')]"
           },
           "networkResourceGroupName": {
             "value": "[parameters('networkResourceGroupName')]"
@@ -266,7 +275,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.42.1.51946",
-              "templateHash": "14739475929682164208"
+              "templateHash": "128343244152931090"
             }
           },
           "parameters": {
@@ -275,7 +284,7 @@
               "minLength": 12,
               "maxLength": 123
             },
-            "connectionUserObjectId": {
+            "avdUsersGroupObjectId": {
               "type": "string",
               "minLength": 36,
               "maxLength": 36
@@ -445,10 +454,10 @@
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
               "scope": "[resourceId('Microsoft.DesktopVirtualization/applicationGroups', format('{0}-DAG', variables('settings').avd.hostpoolName))]",
-              "name": "[guid(resourceId('Microsoft.DesktopVirtualization/applicationGroups', format('{0}-DAG', variables('settings').avd.hostpoolName)), parameters('connectionUserObjectId'), variables('desktopUserRoleId'))]",
+              "name": "[guid(resourceId('Microsoft.DesktopVirtualization/applicationGroups', format('{0}-DAG', variables('settings').avd.hostpoolName)), parameters('avdUsersGroupObjectId'), variables('desktopUserRoleId'))]",
               "properties": {
-                "principalId": "[parameters('connectionUserObjectId')]",
-                "principalType": "User",
+                "principalId": "[parameters('avdUsersGroupObjectId')]",
+                "principalType": "Group",
                 "roleDefinitionId": "[variables('desktopUserRoleId')]"
               },
               "dependsOn": [
@@ -475,8 +484,8 @@
                   "registrationToken": {
                     "value": "[listRegistrationTokens(resourceId('Microsoft.DesktopVirtualization/hostPools', variables('settings').avd.hostpoolName), '2025-10-10').value[0].token]"
                   },
-                  "connectionUserObjectId": {
-                    "value": "[parameters('connectionUserObjectId')]"
+                  "avdUsersGroupObjectId": {
+                    "value": "[parameters('avdUsersGroupObjectId')]"
                   },
                   "hostPoolName": {
                     "value": "[variables('settings').avd.hostpoolName]"
@@ -531,7 +540,7 @@
                     "_generator": {
                       "name": "bicep",
                       "version": "0.42.1.51946",
-                      "templateHash": "15949330815246755852"
+                      "templateHash": "12280213404273575645"
                     }
                   },
                   "parameters": {
@@ -544,7 +553,7 @@
                       "type": "securestring",
                       "minLength": 1
                     },
-                    "connectionUserObjectId": {
+                    "avdUsersGroupObjectId": {
                       "type": "string",
                       "minLength": 36,
                       "maxLength": 36
@@ -730,10 +739,10 @@
                       "type": "Microsoft.Authorization/roleAssignments",
                       "apiVersion": "2022-04-01",
                       "scope": "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]",
-                      "name": "[guid(resourceId('Microsoft.Compute/virtualMachines', variables('vmName')), parameters('connectionUserObjectId'), variables('vmUserLoginRoleId'))]",
+                      "name": "[guid(resourceId('Microsoft.Compute/virtualMachines', variables('vmName')), parameters('avdUsersGroupObjectId'), variables('vmUserLoginRoleId'))]",
                       "properties": {
-                        "principalId": "[parameters('connectionUserObjectId')]",
-                        "principalType": "User",
+                        "principalId": "[parameters('avdUsersGroupObjectId')]",
+                        "principalType": "Group",
                         "roleDefinitionId": "[variables('vmUserLoginRoleId')]"
                       },
                       "dependsOn": [
