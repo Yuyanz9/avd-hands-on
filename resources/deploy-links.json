@@ -7,12 +7,6 @@
     "repository": "Yuyanz9/avd-hands-on",
     "templateCommit": "9ef84dc969b7ef730306bc451959e6afee907b17"
   },
-  "orderedDay1Phases": [
-    "manual-prerequisites-and-resource-group",
-    "network-deploy-to-azure",
-    "windows365-owner-part",
-    "avd-deploy-to-azure"
-  ],
   "links": [
     {
       "phase": "network",
