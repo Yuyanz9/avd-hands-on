@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.42.1.51946",
-      "templateHash": "2420847443271719209"
+      "templateHash": "14048490293305683337"
     }
   },
   "parameters": {
@@ -20,6 +20,15 @@
       "metadata": {
         "description": "Active registration token created for the existing host pool."
       }
+    },
+    "avdUsersGroupObjectId": {
+      "type": "string",
+      "metadata": {
+        "displayName": "AVD Users Group Object Id",
+        "description": "Object ID of the existing Entra security group named AVD Users. Create the group manually before deployment."
+      },
+      "minLength": 36,
+      "maxLength": 36
     },
     "hostPoolName": {
       "type": "string",
@@ -152,8 +161,8 @@
           "registrationToken": {
             "value": "[parameters('registrationToken')]"
           },
-          "connectionUserObjectId": {
-            "value": "[deployer().objectId]"
+          "avdUsersGroupObjectId": {
+            "value": "[parameters('avdUsersGroupObjectId')]"
           },
           "hostPoolName": {
             "value": "[parameters('hostPoolName')]"
@@ -199,7 +208,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.42.1.51946",
-              "templateHash": "1673470654123918294"
+              "templateHash": "13990691664176466948"
             }
           },
           "parameters": {
@@ -212,7 +221,7 @@
               "type": "securestring",
               "minLength": 1
             },
-            "connectionUserObjectId": {
+            "avdUsersGroupObjectId": {
               "type": "string",
               "minLength": 36,
               "maxLength": 36
@@ -385,10 +394,10 @@
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
               "scope": "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]",
-              "name": "[guid(resourceId('Microsoft.Compute/virtualMachines', variables('vmName')), parameters('connectionUserObjectId'), variables('vmUserLoginRoleId'))]",
+              "name": "[guid(resourceId('Microsoft.Compute/virtualMachines', variables('vmName')), parameters('avdUsersGroupObjectId'), variables('vmUserLoginRoleId'))]",
               "properties": {
-                "principalId": "[parameters('connectionUserObjectId')]",
-                "principalType": "User",
+                "principalId": "[parameters('avdUsersGroupObjectId')]",
+                "principalType": "Group",
                 "roleDefinitionId": "[variables('vmUserLoginRoleId')]"
               },
               "dependsOn": [

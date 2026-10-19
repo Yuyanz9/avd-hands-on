@@ -6,6 +6,12 @@ targetScope = 'resourceGroup'
 @maxLength(123)
 param vmAdministratorAccountPassword string
 
+@metadata({ displayName: 'AVD Users Group Object Id' })
+@description('Object ID of the existing Entra security group named AVD Users. Create the group manually before deployment.')
+@minLength(36)
+@maxLength(36)
+param avdUsersGroupObjectId string
+
 @metadata({ displayName: 'Network Resource Group Name' })
 @description('Existing VNet resource group, not the new VM resource group. Leave the default only when both are the same; otherwise enter the VNet resource group name.')
 param networkResourceGroupName string = resourceGroup().name
@@ -91,7 +97,7 @@ module avd './modules/avd.bicep' = {
   name: 'avd-editable-configuration'
   params: {
     vmAdministratorAccountPassword: vmAdministratorAccountPassword
-    connectionUserObjectId: deployer().objectId
+    avdUsersGroupObjectId: avdUsersGroupObjectId
     networkResourceGroupName: networkResourceGroupName
     virtualNetworkName: virtualNetworkName
     subnetName: subnetName

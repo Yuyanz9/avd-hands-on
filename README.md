@@ -33,7 +33,7 @@ Network のどちらか一方を選んでください。2つのボタンはど�
 ### 2.1 運用（NAT Gateway あり）
 
 <!-- deploy-button-network:start -->
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F3166a1f68663049c779ad0ff7c91b4fec08dcbc0%2Ftemplates%2Fnetwork.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F763bbd163217e82c7970228f41687d0e9ea14f5b%2Ftemplates%2Fnetwork.json)
 <!-- deploy-button-network:end -->
 
 **Ctrl＋クリックで、Azure portal を別タブで開けます（macOS は Command＋クリック）。**
@@ -43,7 +43,7 @@ Network のどちらか一方を選んでください。2つのボタンはど�
 ### 2.2 検証（NAT なし）
 
 <!-- deploy-button-network-validation:start -->
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F3166a1f68663049c779ad0ff7c91b4fec08dcbc0%2Ftemplates%2Fnetwork-validation.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F763bbd163217e82c7970228f41687d0e9ea14f5b%2Ftemplates%2Fnetwork-validation.json)
 <!-- deploy-button-network-validation:end -->
 
 **Ctrl＋クリックで、Azure portal を別タブで開けます（macOS は Command＋クリック）。**
@@ -73,12 +73,14 @@ Network の成功と3サブネットを確認後、Windows 365 担当者の資�
 ## 4. AVD を Deploy to Azure
 
 <!-- deploy-button-avd:start -->
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F3166a1f68663049c779ad0ff7c91b4fec08dcbc0%2Ftemplates%2Favd.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F763bbd163217e82c7970228f41687d0e9ea14f5b%2Ftemplates%2Favd.json)
 <!-- deploy-button-avd:end -->
 
 **Ctrl＋クリックで、Azure portal を別タブで開けます（macOS は Command＋クリック）。**
 
 使用するテンプレート：[templates/avd.json](templates/avd.json)。パスワード以外は既定値が初期入力され、必要に応じて変更できます。パスワードと既存リソースの名前・配置、イメージ、Workspace 表示名、VM サイズ／ディスク種別、最大セッション数、VM 名プレフィックスに加え、スクリプト URL、台数、ホストプール方式、負荷分散方式を確認してください。
+
+`AVD Users Group Object Id` は既定値のない必須入力です。講師・管理者が Entra セキュリティ グループ `AVD Users` を事前に手動作成し、その Object ID を受講者へ安全に共有してください。
 
 > **入力前に確認：12～123文字が必須です。** 11文字以下だと Azure portal で `InvalidTemplate`（パラメーターの長さ不足）になり、デプロイを開始できません。入力ミスを避けるため14文字以上を推奨します。Windows のパスワード要件として英大文字・英小文字・数字・記号のうち3種類以上を含めてください。これは VM のローカル管理者パスワードで、Entra ID のサインイン用パスワードとは別です。
 
@@ -95,7 +97,7 @@ Network の成功と3サブネットを確認後、Windows 365 担当者の資�
 | SSO | `enablerdsaadauth:i:1` を常に設定 |
 | RDP 追加既定値 | `enablecredsspsupport:i:1`（OS が対応する場合に CredSSP を使用）、`videoplaybackmode:i:1`（可能な場合に RDP 対応マルチメディア ストリーミングを使用） |
 | クリップボード転送 | `redirectclipboard:i:0`（新規ホストプールの既定に合わせて無効）。後から RDP プロパティで変更可能 |
-| 接続用 RBAC | 実行ユーザーへ DAG の Desktop Virtualization User と VM の Virtual Machine User Login |
+| 接続用 RBAC | 手動作成済みの `AVD Users` セキュリティ グループへ DAG の Desktop Virtualization User と各 VM の Virtual Machine User Login |
 | 日本語設定等 | `Custom Configuration Script Url` の既定は同梱 [JPNOFLNG.ps1](scripts/JPNOFLNG.ps1) の GitHub 固定コミット URL。空欄なら Custom Script Extension を作らずイメージの言語（通常は英語）のまま高速展開。既定スクリプトは Windows Update と自動再起動を含む |
 | 自動停止 | 毎日22:00（`Tokyo Standard Time`）。実行中のセッションも中断される場合があります |
 
@@ -105,7 +107,9 @@ RDP の2項目は [Microsoft のプロパティ仕様](https://learn.microsoft.c
 
 後から変更する場合は、Azure portal の［Azure Virtual Desktop］→［ホストプール］→対象プール→［RDP プロパティ］→［デバイスのリダイレクト］でクリップボード転送を有効／無効にして保存し、Windows App のセッションを切断して再接続します。ホストプール全体に適用する設定です。Intune／グループ ポリシー側で禁止している場合は、そちらの変更も必要です。IaC の再適用時はテンプレートの値へ戻るため、継続して有効にするなら管理しているソースも合わせます。
 
-Azure portal へサインインして**デプロイしたメンバーユーザー本人で接続**します。`deployer().objectId` で実行者を取得するため Object ID の入力は不要です。サービスプリンシパル・グループ・別ユーザー向けの配布入口ではありません。講師が別アカウントで再実行すると、その講師にも接続権限が追加されます。
+デプロイ前に、講師・管理者が Microsoft Entra 管理センターでセキュリティ グループ `AVD Users` を手動作成し、その Object ID を確認します。テンプレートはグループを作成しません。AVD／ホスト追加の入力欄 `AVD Users Group Object Id` に同じ Object ID を指定すると、初回 AVD では DAG に Desktop Virtualization User、各セッションホスト VM に Virtual Machine User Login を割り当てます。既存プールへのホスト追加では各新規 VM に同じ VM ロールを割り当てます。接続するメンバーをこのグループへ追加してから Windows App で接続します。
+
+テンプレートは Incremental（増分）デプロイです。以前に個別ユーザーへ付与したロール割り当ては自動削除されません。グループ経由のアクセスが確認できた後、不要な既存ユーザー割り当てを DAG／各 VM から手動で確認・削除してください。
 
 AVD は、入力した VNet の RG／名前／サブネットを参照するだけで、Network は再適用しません。**Network Resource Group Name（`networkResourceGroupName`、旧案内の Virtual Network Resource Group Name）は VNet が存在する RG です。** 既定の `[resourceGroup().name]` は portal 上部で選択したデプロイ先 RG を指します。
 
@@ -127,7 +131,7 @@ VM 名の既定プレフィックスはデプロイ時刻から作られ、1回�
 ## 5. 既存プールへセッションホストを追加
 
 <!-- deploy-button-session-host:start -->
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F3166a1f68663049c779ad0ff7c91b4fec08dcbc0%2Ftemplates%2Fsession-host.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F763bbd163217e82c7970228f41687d0e9ea14f5b%2Ftemplates%2Fsession-host.json)
 <!-- deploy-button-session-host:end -->
 
 **Ctrl＋クリックで、Azure portal を別タブで開けます（macOS は Command＋クリック）。**
@@ -138,6 +142,7 @@ VM 名の既定プレフィックスはデプロイ時刻から作られ、1回�
 
 | 入力項目 | 既定値 | 用途・注意 |
 | --- | --- | --- |
+| AVD Users Group Object Id | 既定値なし | 手動作成済みの `AVD Users` セキュリティ グループの Object ID。必須 |
 | Existing Host Pool Name | `DefaultHostPool` | 登録キーを作成した対象の Standard 管理プール |
 | Network Resource Group Name | 選択したデプロイ先 RG | 同じ RG なら既定のまま。別 RG なら **VNet 側 RG の名前**に変更 |
 | Existing Vnet Name／Existing Subnet Name | `vnet-vdi`／`snet-avd` | 対象プールで利用する既存ネットワーク |
@@ -192,7 +197,7 @@ Network の編集可能な既定値と AVD の変更しない基礎設定は [in
 
 AVD のモジュールは生成 JSON に埋め込まれ、リモート Bicep や別の ARM テンプレートの配信は不要です。生成後はソースと JSON をセットで管理してください。
 
-現在のボタンは、[配信管理データ](resources/deploy-links.json)に記録した公開コミット `deb290ee113a8e30ab73b07f4a1bf5b1ffdc5090` の ARM JSON に固定しています。4つの URL は匿名取得・JSON 解析・同梱 JSON との SHA-256 一致を確認済みです。日本語化スクリプトの GitHub 固定 URL、クリップボード無効、スライドに合わせたサブネット順と CIDR を反映し、CredSSP／ビデオ再生の明示も維持します。今後更新する際も、**テンプレートが含まれる40桁のコミット SHA**でボタンを設定し、匿名取得とハッシュ照合をやり直します。テンプレート配信・Portal 入力画面の確認と、Azure リソース作成・実接続の確認は別です。
+現在のボタンは、[配信管理データ](resources/deploy-links.json)に記録した公開コミット `763bbd163217e82c7970228f41687d0e9ea14f5b` の ARM JSON に固定しています。4つの URL は匿名取得・JSON 解析・同梱 JSON との SHA-256 一致を確認済みです。日本語化スクリプトの GitHub 固定 URL、クリップボード無効、スライドに合わせたサブネット順と CIDR を反映し、CredSSP／ビデオ再生の明示も維持します。接続用 RBAC は手動作成した `AVD Users` グループへ割り当てます。今後更新する際も、**テンプレートが含まれる40桁のコミット SHA**でボタンを設定し、匿名取得とハッシュ照合をやり直します。テンプレート配信・Portal 入力画面の確認と、Azure リソース作成・実接続の確認は別です。
 
 ```powershell
 .\scripts\Set-DeployButtons.ps1 `
