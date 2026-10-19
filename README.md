@@ -33,7 +33,7 @@ Network のどちらか一方を選んでください。2つのボタンはど�
 ### 2.1 運用（NAT Gateway あり）
 
 <!-- deploy-button-network:start -->
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F3166a1f68663049c779ad0ff7c91b4fec08dcbc0%2Ftemplates%2Fnetwork.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F763bbd163217e82c7970228f41687d0e9ea14f5b%2Ftemplates%2Fnetwork.json)
 <!-- deploy-button-network:end -->
 
 **Ctrl＋クリックで、Azure portal を別タブで開けます（macOS は Command＋クリック）。**
@@ -43,7 +43,7 @@ Network のどちらか一方を選んでください。2つのボタンはど�
 ### 2.2 検証（NAT なし）
 
 <!-- deploy-button-network-validation:start -->
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F3166a1f68663049c779ad0ff7c91b4fec08dcbc0%2Ftemplates%2Fnetwork-validation.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F763bbd163217e82c7970228f41687d0e9ea14f5b%2Ftemplates%2Fnetwork-validation.json)
 <!-- deploy-button-network-validation:end -->
 
 **Ctrl＋クリックで、Azure portal を別タブで開けます（macOS は Command＋クリック）。**
@@ -73,7 +73,7 @@ Network の成功と3サブネットを確認後、Windows 365 担当者の資�
 ## 4. AVD を Deploy to Azure
 
 <!-- deploy-button-avd:start -->
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F3166a1f68663049c779ad0ff7c91b4fec08dcbc0%2Ftemplates%2Favd.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F763bbd163217e82c7970228f41687d0e9ea14f5b%2Ftemplates%2Favd.json)
 <!-- deploy-button-avd:end -->
 
 **Ctrl＋クリックで、Azure portal を別タブで開けます（macOS は Command＋クリック）。**
@@ -131,7 +131,7 @@ VM 名の既定プレフィックスはデプロイ時刻から作られ、1回�
 ## 5. 既存プールへセッションホストを追加
 
 <!-- deploy-button-session-host:start -->
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F3166a1f68663049c779ad0ff7c91b4fec08dcbc0%2Ftemplates%2Fsession-host.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F763bbd163217e82c7970228f41687d0e9ea14f5b%2Ftemplates%2Fsession-host.json)
 <!-- deploy-button-session-host:end -->
 
 **Ctrl＋クリックで、Azure portal を別タブで開けます（macOS は Command＋クリック）。**
@@ -197,7 +197,7 @@ Network の編集可能な既定値と AVD の変更しない基礎設定は [in
 
 AVD のモジュールは生成 JSON に埋め込まれ、リモート Bicep や別の ARM テンプレートの配信は不要です。生成後はソースと JSON をセットで管理してください。
 
-現在のボタンは、[配信管理データ](resources/deploy-links.json)に記録した公開コミット `deb290ee113a8e30ab73b07f4a1bf5b1ffdc5090` の ARM JSON に固定しています。4つの URL は匿名取得・JSON 解析・同梱 JSON との SHA-256 一致を確認済みです。日本語化スクリプトの GitHub 固定 URL、クリップボード無効、スライドに合わせたサブネット順と CIDR を反映し、CredSSP／ビデオ再生の明示も維持します。今後更新する際も、**テンプレートが含まれる40桁のコミット SHA**でボタンを設定し、匿名取得とハッシュ照合をやり直します。テンプレート配信・Portal 入力画面の確認と、Azure リソース作成・実接続の確認は別です。
+現在のボタンは、[配信管理データ](resources/deploy-links.json)に記録した公開コミット `763bbd163217e82c7970228f41687d0e9ea14f5b` の ARM JSON に固定しています。4つの URL は匿名取得・JSON 解析・同梱 JSON との SHA-256 一致を確認済みです。日本語化スクリプトの GitHub 固定 URL、クリップボード無効、スライドに合わせたサブネット順と CIDR を反映し、CredSSP／ビデオ再生の明示も維持します。接続用 RBAC は手動作成した `AVD Users` グループへ割り当てます。今後更新する際も、**テンプレートが含まれる40桁のコミット SHA**でボタンを設定し、匿名取得とハッシュ照合をやり直します。テンプレート配信・Portal 入力画面の確認と、Azure リソース作成・実接続の確認は別です。
 
 ```powershell
 .\scripts\Set-DeployButtons.ps1 `

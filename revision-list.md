@@ -13,7 +13,7 @@
 | R01 | 順序・既定 CIDR を修正して公開済み／実機確認待ち | 共通ネットワークの統一 | `vnet-vdi`／`10.10.0.0/16`、Cloud PC＝`10.10.1.0/24`・AVD＝`10.10.2.0/24`・Server＝`10.10.3.0/24` の順にスライドへ整合。両方式の入力順・共通モジュール・図・テストも修正。CIDR は編集可能。使用中の旧 VNet へ既定値をそのまま再適用せず、既存 NIC／Cloud PC／ANC の移行は別途計画。実作成・送信設定確認は R10 |
 | R02 | 担当確認待ち | Windows 365 の受け渡し | `snet-cloudpc` を用意。担当者と ANC／Microsoft ホスト型の方式、VNet 利用、通信・権限、待機・復帰条件を照合。Windows 365 実装は担当側 |
 | R03 | RDP 修正版も公開・配信確認済み | 4つの ARM JSON | 運用 Network、検証 Network、AVD、session-host の公開 JSON は匿名取得・JSON 解析・同梱ファイルとの SHA-256 一致を確認。AVD JSON は RDP 2項目修正を含む。Azure 実行は R10 |
-| R04 | 新版の固定リンクへ切替済み | 配信・版固定 | Deploy ボタンは公開コミット `deb290ee113a8e30ab73b07f4a1bf5b1ffdc5090` を参照。`resources/deploy-links.json` の URL・ハッシュを更新し、匿名取得照合済み。GitHub は別タブを強制できないため Ctrl＋クリック等を案内 |
+| R04 | 新版の固定リンクへ切替済み | 配信・版固定 | Deploy ボタンは公開コミット `763bbd163217e82c7970228f41687d0e9ea14f5b` を参照。`resources/deploy-links.json` の URL・ハッシュを更新し、匿名取得照合済み。GitHub は別タブを強制できないため Ctrl＋クリック等を案内 |
 | R05 | 任意名に対応・画像待ち | 手動 RG と権限 | Japan East、必須タグなし。Network と AVD は同一 RG が既定。AVD の VNet RG 入力で同じサブスクリプション内の別 VNet RG も指定可能。作成・IAM 画面の撮影と権限リハーサルは未実施 |
 | R06 | IaC 更新済み・設計確認待ち | 送信・受信制御 | 運用版は Standard NAT Gateway／静的 Standard Public IP と `defaultOutboundAccess: false`、検証版は NAT なし・`defaultOutboundAccess: true`。NSG は未作成。運用版の継続費用と検証版の不定な送信元 IP を案内し、通信・受信・東西制御を配布前に確認 |
 | R07 | ローカル実装済み | Windows 365 後の Network 保護 | AVD は既存ネットワーク参照のみ。VNet・サブネットを再作成しない。NAT ありから検証方式への増分切替で NAT／Public IP が残存し得る点と ANC 等への影響を担当者と R10 で確認 |
