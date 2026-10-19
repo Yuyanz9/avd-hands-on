@@ -1,5 +1,5 @@
 {
-  "status": "published-templates-urls-verified-not-azure-validated",
+  "status": "local-updates-not-published-buttons-reference-previous-release",
   "settingsFile": "infra/settings.json",
   "publication": {
     "templateCommit": "09563547d953a4c68b4746ed1096a3d1e39121ff",
