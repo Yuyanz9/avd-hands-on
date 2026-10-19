@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.42.1.51946",
-      "templateHash": "11163229979791212558"
+      "templateHash": "5022605178338127700"
     }
   },
   "parameters": {
@@ -329,7 +329,7 @@
     },
     "rdpDeviceStoreDirect": {
       "type": "string",
-      "defaultValue": "未構成",
+      "defaultValue": "すべての対応デバイス (*)",
       "allowedValues": [
         "未構成",
         "すべての対応デバイス (*)",
@@ -337,7 +337,7 @@
       ],
       "metadata": {
         "displayName": "RDP - MTP/PTP Device Redirection",
-        "description": "特定のデバイスを指定する場合は、下の Custom Device Value を入力します。"
+        "description": "既定ですべての対応デバイスをリダイレクトします。特定のデバイスを指定する場合は、下の Custom Device Value を入力します。"
       }
     },
     "rdpDeviceStoreDirectCustom": {
@@ -350,7 +350,7 @@
     },
     "rdpDriveStoreDirect": {
       "type": "string",
-      "defaultValue": "未構成",
+      "defaultValue": "リダイレクトしない (空)",
       "allowedValues": [
         "未構成",
         "リダイレクトしない (空)",
@@ -359,7 +359,7 @@
       ],
       "metadata": {
         "displayName": "RDP - Drive Redirection",
-        "description": "ドライブ文字を指定する場合は、下の Custom Drive Value を入力します。"
+        "description": "既定はリダイレクトしない設定です。ドライブ文字を指定する場合は、下の Custom Drive Value を入力します。"
       }
     },
     "rdpDriveStoreDirectCustom": {
@@ -412,14 +412,15 @@
     },
     "rdpRedirectComPorts": {
       "type": "string",
-      "defaultValue": "未構成",
+      "defaultValue": "有効 (1)",
       "allowedValues": [
         "未構成",
         "有効 (1)",
         "無効 (0)"
       ],
       "metadata": {
-        "displayName": "RDP - COM Port Redirection"
+        "displayName": "RDP - COM Port Redirection",
+        "description": "現在の既定は有効 (1) です。"
       }
     },
     "rdpRedirectedVideoCaptureEncodingQuality": {
@@ -449,38 +450,41 @@
     },
     "rdpRedirectPrinters": {
       "type": "string",
-      "defaultValue": "未構成",
+      "defaultValue": "無効 (0)",
       "allowedValues": [
         "未構成",
         "有効 (1)",
         "無効 (0)"
       ],
       "metadata": {
-        "displayName": "RDP - Printer Redirection"
+        "displayName": "RDP - Printer Redirection",
+        "description": "現在の既定は無効 (0) です。"
       }
     },
     "rdpRedirectSmartCards": {
       "type": "string",
-      "defaultValue": "未構成",
+      "defaultValue": "有効 (1)",
       "allowedValues": [
         "未構成",
         "有効 (1)",
         "無効 (0)"
       ],
       "metadata": {
-        "displayName": "RDP - Smart Card Redirection"
+        "displayName": "RDP - Smart Card Redirection",
+        "description": "現在の既定は有効 (1) です。"
       }
     },
     "rdpRedirectWebAuthn": {
       "type": "string",
-      "defaultValue": "未構成",
+      "defaultValue": "有効 (1)",
       "allowedValues": [
         "未構成",
         "有効 (1)",
         "無効 (0)"
       ],
       "metadata": {
-        "displayName": "RDP - WebAuthn Redirection"
+        "displayName": "RDP - WebAuthn Redirection",
+        "description": "現在の既定は有効 (1) です。"
       }
     },
     "rdpSmartRawPrinters": {
@@ -493,7 +497,7 @@
     },
     "rdpUsbDeviceStoreDirect": {
       "type": "string",
-      "defaultValue": "未構成",
+      "defaultValue": "リダイレクトしない (空)",
       "allowedValues": [
         "未構成",
         "リダイレクトしない (空)",
@@ -501,7 +505,7 @@
       ],
       "metadata": {
         "displayName": "RDP - USB Device Redirection",
-        "description": "特定のデバイスを指定する場合は、下の Custom USB Device Value を入力します。"
+        "description": "既定はリダイレクトしない設定です。特定のデバイスを指定する場合は、下の Custom USB Device Value を入力します。"
       }
     },
     "rdpUsbDeviceStoreDirectCustom": {
@@ -640,14 +644,15 @@
     },
     "rdpUseMultimon": {
       "type": "string",
-      "defaultValue": "未構成",
+      "defaultValue": "有効 (1)",
       "allowedValues": [
         "未構成",
         "有効 (1)",
         "無効 (0)"
       ],
       "metadata": {
-        "displayName": "RDP - Use Multiple Monitors"
+        "displayName": "RDP - Use Multiple Monitors",
+        "description": "現在の既定は有効 (1) です。"
       }
     }
   },
@@ -844,7 +849,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.42.1.51946",
-              "templateHash": "8812027659559705024"
+              "templateHash": "12795733797532306475"
             }
           },
           "parameters": {
@@ -1068,7 +1073,7 @@
             },
             "rdpDeviceStoreDirect": {
               "type": "string",
-              "defaultValue": "未構成",
+              "defaultValue": "すべての対応デバイス (*)",
               "allowedValues": [
                 "未構成",
                 "すべての対応デバイス (*)",
@@ -1076,7 +1081,7 @@
               ],
               "metadata": {
                 "displayName": "RDP - MTP/PTP Device Redirection",
-                "description": "特定のデバイスを指定する場合は、下の Custom Device Value を入力します。"
+                "description": "既定ですべての対応デバイスをリダイレクトします。特定のデバイスを指定する場合は、下の Custom Device Value を入力します。"
               }
             },
             "rdpDeviceStoreDirectCustom": {
@@ -1089,7 +1094,7 @@
             },
             "rdpDriveStoreDirect": {
               "type": "string",
-              "defaultValue": "未構成",
+              "defaultValue": "リダイレクトしない (空)",
               "allowedValues": [
                 "未構成",
                 "リダイレクトしない (空)",
@@ -1098,7 +1103,7 @@
               ],
               "metadata": {
                 "displayName": "RDP - Drive Redirection",
-                "description": "ドライブ文字を指定する場合は、下の Custom Drive Value を入力します。"
+                "description": "既定はリダイレクトしない設定です。ドライブ文字を指定する場合は、下の Custom Drive Value を入力します。"
               }
             },
             "rdpDriveStoreDirectCustom": {
@@ -1151,14 +1156,15 @@
             },
             "rdpRedirectComPorts": {
               "type": "string",
-              "defaultValue": "未構成",
+              "defaultValue": "有効 (1)",
               "allowedValues": [
                 "未構成",
                 "有効 (1)",
                 "無効 (0)"
               ],
               "metadata": {
-                "displayName": "RDP - COM Port Redirection"
+                "displayName": "RDP - COM Port Redirection",
+                "description": "現在の既定は有効 (1) です。"
               }
             },
             "rdpRedirectedVideoCaptureEncodingQuality": {
@@ -1188,38 +1194,41 @@
             },
             "rdpRedirectPrinters": {
               "type": "string",
-              "defaultValue": "未構成",
+              "defaultValue": "無効 (0)",
               "allowedValues": [
                 "未構成",
                 "有効 (1)",
                 "無効 (0)"
               ],
               "metadata": {
-                "displayName": "RDP - Printer Redirection"
+                "displayName": "RDP - Printer Redirection",
+                "description": "現在の既定は無効 (0) です。"
               }
             },
             "rdpRedirectSmartCards": {
               "type": "string",
-              "defaultValue": "未構成",
+              "defaultValue": "有効 (1)",
               "allowedValues": [
                 "未構成",
                 "有効 (1)",
                 "無効 (0)"
               ],
               "metadata": {
-                "displayName": "RDP - Smart Card Redirection"
+                "displayName": "RDP - Smart Card Redirection",
+                "description": "現在の既定は有効 (1) です。"
               }
             },
             "rdpRedirectWebAuthn": {
               "type": "string",
-              "defaultValue": "未構成",
+              "defaultValue": "有効 (1)",
               "allowedValues": [
                 "未構成",
                 "有効 (1)",
                 "無効 (0)"
               ],
               "metadata": {
-                "displayName": "RDP - WebAuthn Redirection"
+                "displayName": "RDP - WebAuthn Redirection",
+                "description": "現在の既定は有効 (1) です。"
               }
             },
             "rdpSmartRawPrinters": {
@@ -1232,7 +1241,7 @@
             },
             "rdpUsbDeviceStoreDirect": {
               "type": "string",
-              "defaultValue": "未構成",
+              "defaultValue": "リダイレクトしない (空)",
               "allowedValues": [
                 "未構成",
                 "リダイレクトしない (空)",
@@ -1240,7 +1249,7 @@
               ],
               "metadata": {
                 "displayName": "RDP - USB Device Redirection",
-                "description": "特定のデバイスを指定する場合は、下の Custom USB Device Value を入力します。"
+                "description": "既定はリダイレクトしない設定です。特定のデバイスを指定する場合は、下の Custom USB Device Value を入力します。"
               }
             },
             "rdpUsbDeviceStoreDirectCustom": {
@@ -1379,14 +1388,15 @@
             },
             "rdpUseMultimon": {
               "type": "string",
-              "defaultValue": "未構成",
+              "defaultValue": "有効 (1)",
               "allowedValues": [
                 "未構成",
                 "有効 (1)",
                 "無効 (0)"
               ],
               "metadata": {
-                "displayName": "RDP - Use Multiple Monitors"
+                "displayName": "RDP - Use Multiple Monitors",
+                "description": "現在の既定は有効 (1) です。"
               }
             },
             "tokenExpirationTime": {
