@@ -2,17 +2,6 @@
 
 このリポジトリは、別管理の当日用 PowerPoint を補完する技術資材です。講座の説明・演習手順・実行条件は PowerPoint と講師の指示に従ってください。PowerPoint はこのリポジトリに含めず、このパッケージ単独では使えません。
 
-## Maintainer commands
-
-PowerShell 7 と Azure CLI（Bicep 拡張機能）が必要です。
-
-```powershell
-pwsh -File .\scripts\Build-Templates.ps1
-pwsh -File .\tests\Test-ProductionTemplates.ps1
-```
-
-テンプレートのビルドはローカルで ARM JSON を生成するだけで、Azure リソースは作成しません。Azure への実行は、必ず当日用 PowerPoint と講師の指示を確認してください。
-
 ## Deploy entry points
 
 Deploy ボタンは技術的な入口のみです。PowerPoint と講師の指示なしに実行しないでください。
