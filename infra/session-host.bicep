@@ -10,6 +10,12 @@ param vmAdministratorAccountPassword string
 @minLength(1)
 param registrationToken string
 
+@metadata({ displayName: 'AVD Users Group Object Id' })
+@description('Object ID of the existing Entra security group named AVD Users. Create the group manually before deployment.')
+@minLength(36)
+@maxLength(36)
+param avdUsersGroupObjectId string
+
 @description('Existing Standard-management AVD host pool name. The token must belong to this pool.')
 @minLength(3)
 @maxLength(64)
@@ -76,7 +82,7 @@ module sessionHost './modules/session-host.bicep' = [for index in range(0, vmNum
   params: {
     vmAdministratorAccountPassword: vmAdministratorAccountPassword
     registrationToken: registrationToken
-    connectionUserObjectId: deployer().objectId
+    avdUsersGroupObjectId: avdUsersGroupObjectId
     hostPoolName: hostPoolName
     networkResourceGroupName: networkResourceGroupName
     virtualNetworkName: virtualNetworkName

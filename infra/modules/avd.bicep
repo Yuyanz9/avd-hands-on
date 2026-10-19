@@ -7,7 +7,7 @@ param vmAdministratorAccountPassword string
 
 @minLength(36)
 @maxLength(36)
-param connectionUserObjectId string
+param avdUsersGroupObjectId string
 
 param networkResourceGroupName string
 param virtualNetworkName string
@@ -93,11 +93,11 @@ resource workspace 'Microsoft.DesktopVirtualization/workspaces@2025-10-10' = {
 }
 
 resource desktopAccess 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(desktopApplicationGroup.id, connectionUserObjectId, desktopUserRoleId)
+  name: guid(desktopApplicationGroup.id, avdUsersGroupObjectId, desktopUserRoleId)
   scope: desktopApplicationGroup
   properties: {
-    principalId: connectionUserObjectId
-    principalType: 'User'
+    principalId: avdUsersGroupObjectId
+    principalType: 'Group'
     roleDefinitionId: desktopUserRoleId
   }
 }
@@ -107,7 +107,7 @@ module sessionHost './session-host.bicep' = [for index in range(0, vmNumberOfIns
   params: {
     vmAdministratorAccountPassword: vmAdministratorAccountPassword
     registrationToken: hostPool.listRegistrationTokens().value[0].token
-    connectionUserObjectId: connectionUserObjectId
+    avdUsersGroupObjectId: avdUsersGroupObjectId
     hostPoolName: hostPool.name
     networkResourceGroupName: networkResourceGroupName
     virtualNetworkName: virtualNetwork.name
