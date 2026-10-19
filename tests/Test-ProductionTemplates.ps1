@@ -100,11 +100,16 @@ for ($index = 0; $index -lt 3; $index++) {
 $templates = @{}
 foreach ($phase in @('network', 'network-validation', 'avd', 'session-host')) {
     $stored = Read-Json (Join-Path $root "templates\$phase.json")
-    $compiled = Invoke-TrainingAzureCli -Arguments @(
-        'bicep', 'build', '--file', (Join-Path $root "infra\$phase.bicep"),
-        '--stdout', '--only-show-errors'
-    )
-    $fresh = ($compiled -join [Environment]::NewLine) | ConvertFrom-Json -AsHashtable -Depth 100
+    $freshPath = Join-Path ([System.IO.Path]::GetTempPath()) "avd-hands-on-test-$PID-$phase.json"
+    try {
+        Invoke-TrainingAzureCli -Arguments @(
+            'bicep', 'build', '--file', (Join-Path $root "infra\$phase.bicep"),
+            '--outfile', $freshPath, '--only-show-errors'
+        ) | Out-Null
+        $fresh = Read-Json $freshPath
+    } finally {
+        Remove-Item -LiteralPath $freshPath -Force -ErrorAction SilentlyContinue
+    }
     Assert-Template ((Convert-CompactJson $stored) -ceq (Convert-CompactJson $fresh)) "Stale generated $phase.json. Run Build-Templates.ps1 with the current compiler."
     Assert-Template ($stored['$schema'] -match '/deploymentTemplate.json#$') "$phase must use resource-group deployment scope."
     Assert-Template ((Find-Resources $stored 'Microsoft.Resources/resourceGroups').Count -eq 0) 'Resource groups must be created manually.'
@@ -180,7 +185,7 @@ foreach ($phase in @('network', 'network-validation')) {
 }
 
 $entry = $templates.avd
-Assert-Template ($entry.parameters.Count -eq 18 -and $entry.parameters.ContainsKey('vmAdministratorAccountPassword')) 'AVD must expose the existing inputs, required AVD Users group ID, and Intune enrollment and shutdown-time options.'
+Assert-Template ($entry.parameters.Count -eq 58 -and $entry.parameters.ContainsKey('vmAdministratorAccountPassword')) 'AVD must expose the existing inputs, required AVD Users group ID, Intune enrollment, shutdown-time and all supported AVD RDP properties.'
 $password = $entry.parameters.vmAdministratorAccountPassword
 Assert-Template ($password.type -eq 'securestring' -and -not $password.ContainsKey('defaultValue')) 'The password must be secure and have no default.'
 Assert-Template ($password.minLength -eq 12 -and $password.maxLength -eq 123) 'The password length must be bounded.'
@@ -210,7 +215,61 @@ foreach ($name in $expectedDefaults.Keys) {
 }
 Assert-Template ($entry.parameters.vmNamePrefix.maxLength -eq 13) 'VM name prefix must leave room for the -0 suffix in a Windows computer name.'
 $expectedOrder = @('vmAdministratorAccountPassword', 'avdUsersGroupObjectId', 'networkResourceGroupName', 'virtualNetworkName', 'subnetName', 'location', 'imageSku', 'workspaceFriendlyName', 'vmSize', 'vmDiskType', 'maxSessionLimit', 'vmNamePrefix', 'customConfigurationScriptUrl', 'vmNumberOfInstances', 'hostpoolType', 'loadBalancerType', 'intune', 'autoShutdownTime')
-Assert-Template (($entry.parameters.Keys -join ',') -ceq ($expectedOrder -join ',')) 'Keep the existing portal input order, require the AVD Users group ID, and place shutdown time after the deployment options.'
+$rdpParameterOrder = @('rdpAlternateShell', 'rdpEnableCredSspSupport', 'rdpEnableEntraIdAuth', 'rdpKdcProxyName', 'rdpTargetIsAadJoined', 'rdpAutoReconnectionEnabled', 'rdpBandwidthAutoDetect', 'rdpCompression', 'rdpNetworkAutoDetect', 'rdpVideoPlaybackMode', 'rdpAudioCaptureMode', 'rdpAudioMode', 'rdpCameraStoreDirect', 'rdpDeviceStoreDirect', 'rdpDeviceStoreDirectCustom', 'rdpDriveStoreDirect', 'rdpDriveStoreDirectCustom', 'rdpEncodeRedirectedVideoCapture', 'rdpKeyboardHook', 'rdpRedirectClipboard', 'rdpRedirectComPorts', 'rdpRedirectedVideoCaptureEncodingQuality', 'rdpRedirectLocation', 'rdpRedirectPrinters', 'rdpRedirectSmartCards', 'rdpRedirectWebAuthn', 'rdpSmartRawPrinters', 'rdpUsbDeviceStoreDirect', 'rdpUsbDeviceStoreDirectCustom', 'rdpDesktopSizeId', 'rdpDesktopHeight', 'rdpDesktopScaleFactor', 'rdpDesktopWidth', 'rdpDynamicResolution', 'rdpMaximizeToCurrentDisplays', 'rdpScreenModeId', 'rdpSelectedMonitors', 'rdpSingleMonInWindowedMode', 'rdpSmartSizing', 'rdpUseMultimon')
+$expectedOrder += $rdpParameterOrder
+Assert-Template (($entry.parameters.Keys -join ',') -ceq ($expectedOrder -join ',')) 'Keep the existing portal input order, require the AVD Users group ID, and show every RDP property after the deployment options.'
+$expectedRdpDefaults = @{
+    rdpAlternateShell = ''
+    rdpEnableCredSspSupport = '有効 (1)'
+    rdpEnableEntraIdAuth = '有効 (1)'
+    rdpKdcProxyName = ''
+    rdpTargetIsAadJoined = '未構成'
+    rdpAutoReconnectionEnabled = '未構成'
+    rdpBandwidthAutoDetect = '未構成'
+    rdpCompression = '未構成'
+    rdpNetworkAutoDetect = '未構成'
+    rdpVideoPlaybackMode = '有効 (1)'
+    rdpAudioCaptureMode = '未構成'
+    rdpAudioMode = 'ローカル端末で再生 (0)'
+    rdpCameraStoreDirect = ''
+    rdpDeviceStoreDirect = '未構成'
+    rdpDeviceStoreDirectCustom = ''
+    rdpDriveStoreDirect = '未構成'
+    rdpDriveStoreDirectCustom = ''
+    rdpEncodeRedirectedVideoCapture = '未構成'
+    rdpKeyboardHook = '未構成'
+    rdpRedirectClipboard = '無効 (0)'
+    rdpRedirectComPorts = '未構成'
+    rdpRedirectedVideoCaptureEncodingQuality = '未構成'
+    rdpRedirectLocation = '未構成'
+    rdpRedirectPrinters = '未構成'
+    rdpRedirectSmartCards = '未構成'
+    rdpRedirectWebAuthn = '未構成'
+    rdpSmartRawPrinters = ''
+    rdpUsbDeviceStoreDirect = '未構成'
+    rdpUsbDeviceStoreDirectCustom = ''
+    rdpDesktopSizeId = '未構成'
+    rdpDesktopHeight = 0
+    rdpDesktopScaleFactor = '未構成'
+    rdpDesktopWidth = 0
+    rdpDynamicResolution = '未構成'
+    rdpMaximizeToCurrentDisplays = '未構成'
+    rdpScreenModeId = '未構成'
+    rdpSelectedMonitors = ''
+    rdpSingleMonInWindowedMode = '未構成'
+    rdpSmartSizing = '未構成'
+    rdpUseMultimon = '未構成'
+}
+Assert-Template ($expectedRdpDefaults.Count -eq 40) 'Expose all AVD-supported RDP properties, including their custom-value input fields.'
+foreach ($name in $rdpParameterOrder) {
+    $parameter = $entry.parameters[$name]
+    Assert-Template ($parameter.defaultValue -ceq $expectedRdpDefaults[$name]) "RDP default must preserve the current behavior or remain unconfigured: $name."
+    Assert-Template (-not [string]::IsNullOrWhiteSpace($parameter.metadata.displayName)) "Show every RDP input in the deployment form: $name."
+}
+$rdpEnumParameters = @('rdpEnableCredSspSupport', 'rdpEnableEntraIdAuth', 'rdpTargetIsAadJoined', 'rdpAutoReconnectionEnabled', 'rdpBandwidthAutoDetect', 'rdpCompression', 'rdpNetworkAutoDetect', 'rdpVideoPlaybackMode', 'rdpAudioCaptureMode', 'rdpAudioMode', 'rdpDeviceStoreDirect', 'rdpDriveStoreDirect', 'rdpEncodeRedirectedVideoCapture', 'rdpKeyboardHook', 'rdpRedirectClipboard', 'rdpRedirectComPorts', 'rdpRedirectedVideoCaptureEncodingQuality', 'rdpRedirectLocation', 'rdpRedirectPrinters', 'rdpRedirectSmartCards', 'rdpRedirectWebAuthn', 'rdpUsbDeviceStoreDirect', 'rdpDesktopSizeId', 'rdpDesktopScaleFactor', 'rdpDynamicResolution', 'rdpMaximizeToCurrentDisplays', 'rdpScreenModeId', 'rdpSingleMonInWindowedMode', 'rdpSmartSizing', 'rdpUseMultimon')
+foreach ($name in $rdpEnumParameters) {
+    Assert-Template ($entry.parameters[$name].allowedValues -contains '未構成') "RDP dropdown must offer an explicit unconfigured choice: $name."
+}
 $imageSkus = @('win11-23h2-avd', 'win11-23h2-avd-m365', 'win11-24h2-avd', 'win11-24h2-avd-m365', 'win11-25h2-avd', 'win11-25h2-avd-m365', 'win11-26h2-avd', 'win11-26h2-avd-m365')
 $labels = @{
     avdUsersGroupObjectId = 'AVD Users Group Object Id'
@@ -255,6 +314,7 @@ foreach ($text in @($readmeText, $day1Text)) {
     Assert-Template ($text.Contains('Ctrl＋クリック') -and $text.Contains('新しいタブでリンクを開く') -and $text.Contains('Command＋クリック')) 'Document a reliable new-tab operation instead of promising target=_blank on GitHub.'
     Assert-Template ($text.Contains('空欄') -and $text.Contains('日本語') -and $text.Contains('英語')) 'Explain how an empty script URL skips Japanese configuration for English deployments.'
     Assert-Template ($text.Contains('enablecredsspsupport:i:1') -and $text.Contains('videoplaybackmode:i:1')) 'Document the two explicitly restored RDP defaults.'
+    Assert-Template ($text.Contains('37項目') -and $text.Contains('未構成') -and $text.Contains('自由入力')) 'Document all deployment-time RDP choices, their unconfigured defaults and custom-value inputs.'
     Assert-Template ($text.Contains($settings.avd.customConfigurationScriptUrl) -and $text.Contains('scripts/JPNOFLNG.ps1')) 'Both guides must show the immutable default and link to the bundled Japanese script.'
     Assert-Template ($text.Contains('OS 日本語化') -and $text.Contains('別途 Intune')) 'Do not imply the OS script also localizes Microsoft 365 Apps.'
     Assert-Template ($text -match '(?s)`snet-cloudpc`／`10\.10\.1\.0/24`.*?`snet-avd`／`10\.10\.2\.0/24`.*?`snet-server`／`10\.10\.3\.0/24`') 'Guides must use the slide-aligned subnet mappings and order.'
@@ -270,6 +330,9 @@ Assert-Template ($deployment.properties.parameters.avdUsersGroupObjectId.value -
 Assert-Template ($deployment.properties.parameters.vmAdministratorAccountPassword.value -ceq "[parameters('vmAdministratorAccountPassword')]") 'Forward the secure password directly.'
 foreach ($name in $expectedDefaults.Keys) {
     Assert-Template ($deployment.properties.parameters[$name].value -ceq "[parameters('$name')]") "Forward the editable parameter to the AVD module: $name."
+}
+foreach ($name in $rdpParameterOrder) {
+    Assert-Template ($deployment.properties.parameters[$name].value -ceq "[parameters('$name')]") "Forward the editable RDP parameter to the AVD module: $name."
 }
 
 $avd = $deployment.properties.template
@@ -287,7 +350,14 @@ Assert-Template ($hosts[0].properties.hostPoolType -ceq "[parameters('hostpoolTy
 Assert-Template ($hosts[0].properties.loadBalancerType -ceq "[if(equals(parameters('hostpoolType'), 'Personal'), 'Persistent', parameters('loadBalancerType'))]") 'Pooled must use the selected algorithm; Personal must use Persistent.'
 Assert-Template ($hosts[0].properties.personalDesktopAssignmentType -ceq "[if(equals(parameters('hostpoolType'), 'Personal'), 'Automatic', null())]") 'Personal must use automatic desktop assignment; Pooled must not configure it.'
 Assert-Template ($hosts[0].properties.maxSessionLimit -ceq "[if(equals(parameters('hostpoolType'), 'Personal'), 1, parameters('maxSessionLimit'))]") 'Use the editable Pooled session limit and one session for Personal.'
-Assert-Template ($hosts[0].properties.customRdpProperty -ceq 'enablerdsaadauth:i:1;enablecredsspsupport:i:1;videoplaybackmode:i:1;redirectclipboard:i:0;audiomode:i:0;') 'Disable clipboard by default while preserving SSO, CredSSP, video playback and audio.'
+Assert-Template ($hosts[0].properties.customRdpProperty -ceq "[variables('rdpProperties')]") 'The host pool must receive the composed RDP properties.'
+$rdpExpression = ConvertTo-Json -InputObject $avd.variables -Depth 100 -Compress
+$supportedRdpProperties = @('alternate shell', 'enablecredsspsupport', 'enablerdsaadauth', 'kdcproxyname', 'targetisaadjoined', 'autoreconnection enabled', 'bandwidthautodetect', 'compression', 'networkautodetect', 'videoplaybackmode', 'audiocapturemode', 'audiomode', 'camerastoredirect', 'devicestoredirect', 'drivestoredirect', 'encode redirected video capture', 'keyboardhook', 'redirectclipboard', 'redirectcomports', 'redirected video capture encoding quality', 'redirectlocation', 'redirectprinters', 'redirectsmartcards', 'redirectwebauthn', 'SmartRawPrinters', 'usbdevicestoredirect', 'desktop size id', 'desktopheight', 'desktopscalefactor', 'desktopwidth', 'dynamic resolution', 'maximizetocurrentdisplays', 'screen mode id', 'selectedmonitors', 'singlemoninwindowedmode', 'smart sizing', 'use multimon')
+foreach ($property in $supportedRdpProperties) {
+    Assert-Template ($rdpExpression.Contains($property)) "Compose the selected value for every AVD-supported RDP property: $property."
+}
+Assert-Template ($supportedRdpProperties.Count -eq 37) 'Cover the complete supported AVD RDP property list, excluding RemoteApp-only properties.'
+Assert-Template ($rdpExpression.Contains('enablecredsspsupport') -and $rdpExpression.Contains('videoplaybackmode') -and $rdpExpression.Contains('redirectclipboard') -and $rdpExpression.Contains('audiomode')) 'Preserve the current CredSSP, video playback, clipboard and audio properties in the composed settings.'
 Assert-Template ($hosts[0].properties.registrationInfo.expirationTime -ceq "[parameters('tokenExpirationTime')]") 'Host pool must use the relative expiry.'
 Assert-Template ($dags[0].properties.applicationGroupType -eq 'Desktop' -and $dags[0].properties.hostPoolArmPath -match 'hostPools') 'DAG must belong to the host pool.'
 Assert-Template ($workspaces[0].properties.applicationGroupReferences.Count -eq 1 -and $workspaces[0].properties.applicationGroupReferences[0] -match 'applicationGroups') 'DAG must be registered in the workspace.'

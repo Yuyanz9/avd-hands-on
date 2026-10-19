@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.42.1.51946",
-      "templateHash": "17372879235820135512"
+      "templateHash": "11163229979791212558"
     }
   },
   "parameters": {
@@ -176,6 +176,479 @@
       },
       "minLength": 5,
       "maxLength": 5
+    },
+    "rdpAlternateShell": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "displayName": "RDP - Alternate Shell",
+        "description": "空欄は未構成です。指定する場合はリモート セッションで起動する実行ファイルのパスを入力します。"
+      }
+    },
+    "rdpEnableCredSspSupport": {
+      "type": "string",
+      "defaultValue": "有効 (1)",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - CredSSP",
+        "description": "現在の既定は有効 (1) です。"
+      }
+    },
+    "rdpEnableEntraIdAuth": {
+      "type": "string",
+      "defaultValue": "有効 (1)",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Microsoft Entra SSO",
+        "description": "現在の既定は有効 (1) です。"
+      }
+    },
+    "rdpKdcProxyName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "displayName": "RDP - KDC Proxy Name",
+        "description": "空欄は未構成です。Kerberos KDC プロキシの完全修飾ドメイン名を入力します。"
+      }
+    },
+    "rdpTargetIsAadJoined": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "ユーザー名とパスワード (1)",
+        "Windows クライアントで Entra 認証 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Target Is AAD Joined",
+        "description": "旧式の認証プロパティです。enablerdsaadauth を優先して使用してください。"
+      }
+    },
+    "rdpAutoReconnectionEnabled": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Automatic Reconnection"
+      }
+    },
+    "rdpBandwidthAutoDetect": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Bandwidth Auto Detect"
+      }
+    },
+    "rdpCompression": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Compression"
+      }
+    },
+    "rdpNetworkAutoDetect": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Network Auto Detect"
+      }
+    },
+    "rdpVideoPlaybackMode": {
+      "type": "string",
+      "defaultValue": "有効 (1)",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Video Playback Mode",
+        "description": "現在の既定は有効 (1) です。"
+      }
+    },
+    "rdpAudioCaptureMode": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Audio Capture Mode"
+      }
+    },
+    "rdpAudioMode": {
+      "type": "string",
+      "defaultValue": "ローカル端末で再生 (0)",
+      "allowedValues": [
+        "未構成",
+        "ローカル端末で再生 (0)",
+        "リモート セッションで再生 (1)",
+        "再生しない (2)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Audio Mode",
+        "description": "現在の既定はローカル端末で再生 (0) です。"
+      }
+    },
+    "rdpCameraStoreDirect": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "displayName": "RDP - Camera Redirection",
+        "description": "空欄は未構成です。* または対象カメラのデバイス パスを入力します。"
+      }
+    },
+    "rdpDeviceStoreDirect": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "すべての対応デバイス (*)",
+        "新しく接続する対応デバイス (DynamicDevices)"
+      ],
+      "metadata": {
+        "displayName": "RDP - MTP/PTP Device Redirection",
+        "description": "特定のデバイスを指定する場合は、下の Custom Device Value を入力します。"
+      }
+    },
+    "rdpDeviceStoreDirectCustom": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "displayName": "RDP - MTP/PTP Custom Device Value",
+        "description": "空欄は上の選択を使用します。デバイス パスを指定すると選択より優先されます。"
+      }
+    },
+    "rdpDriveStoreDirect": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "リダイレクトしない (空)",
+        "すべてのドライブ (*)",
+        "新しく接続するドライブ (DynamicDrives)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Drive Redirection",
+        "description": "ドライブ文字を指定する場合は、下の Custom Drive Value を入力します。"
+      }
+    },
+    "rdpDriveStoreDirectCustom": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "displayName": "RDP - Custom Drive Value",
+        "description": "空欄は上の選択を使用します。例: C:\\;E:\\;。値を指定すると選択より優先されます。"
+      }
+    },
+    "rdpEncodeRedirectedVideoCapture": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Encode Redirected Video Capture"
+      }
+    },
+    "rdpKeyboardHook": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "ローカル端末で処理 (0)",
+        "フォーカス中はリモートで処理 (1)",
+        "全画面時のみリモートで処理 (2)",
+        "RemoteApp で処理 (3)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Keyboard Hook",
+        "description": "値 3 は RemoteApp 専用です。このテンプレートの Desktop セッションでは選択しないでください。"
+      }
+    },
+    "rdpRedirectClipboard": {
+      "type": "string",
+      "defaultValue": "無効 (0)",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Clipboard Redirection",
+        "description": "現在の既定は無効 (0) です。"
+      }
+    },
+    "rdpRedirectComPorts": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - COM Port Redirection"
+      }
+    },
+    "rdpRedirectedVideoCaptureEncodingQuality": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "高圧縮 (0)",
+        "中圧縮 (1)",
+        "高画質 (2)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Redirected Video Capture Quality"
+      }
+    },
+    "rdpRedirectLocation": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Location Redirection"
+      }
+    },
+    "rdpRedirectPrinters": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Printer Redirection"
+      }
+    },
+    "rdpRedirectSmartCards": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Smart Card Redirection"
+      }
+    },
+    "rdpRedirectWebAuthn": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - WebAuthn Redirection"
+      }
+    },
+    "rdpSmartRawPrinters": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "displayName": "RDP - Smart Raw Printers",
+        "description": "空欄は未構成です。* または対象プリンターのドライバー名プレフィックスを入力します。"
+      }
+    },
+    "rdpUsbDeviceStoreDirect": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "リダイレクトしない (空)",
+        "すべての対応 USB デバイス (*)"
+      ],
+      "metadata": {
+        "displayName": "RDP - USB Device Redirection",
+        "description": "特定のデバイスを指定する場合は、下の Custom USB Device Value を入力します。"
+      }
+    },
+    "rdpUsbDeviceStoreDirectCustom": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "displayName": "RDP - Custom USB Device Value",
+        "description": "空欄は上の選択を使用します。デバイス クラス GUID またはデバイス インスタンス ID を指定すると選択より優先されます。"
+      }
+    },
+    "rdpDesktopSizeId": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "640x480",
+        "800x600",
+        "1024x768",
+        "1280x1024",
+        "1600x1200"
+      ],
+      "metadata": {
+        "displayName": "RDP - Desktop Size ID"
+      }
+    },
+    "rdpDesktopHeight": {
+      "type": "int",
+      "defaultValue": 0,
+      "metadata": {
+        "displayName": "RDP - Desktop Height",
+        "description": "0 は未構成です。指定する場合は 200～8192 のピクセル数を入力します。指定時は Desktop Size ID より優先されます。"
+      },
+      "minValue": 0,
+      "maxValue": 8192
+    },
+    "rdpDesktopScaleFactor": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "100%",
+        "125%",
+        "150%",
+        "175%",
+        "200%",
+        "250%",
+        "300%",
+        "400%",
+        "500%"
+      ],
+      "metadata": {
+        "displayName": "RDP - Desktop Scale Factor",
+        "description": "0 は未構成です。このプロパティは非推奨です。"
+      }
+    },
+    "rdpDesktopWidth": {
+      "type": "int",
+      "defaultValue": 0,
+      "metadata": {
+        "displayName": "RDP - Desktop Width",
+        "description": "0 は未構成です。指定する場合は 200～8192 のピクセル数を入力します。指定時は Desktop Size ID より優先されます。"
+      },
+      "minValue": 0,
+      "maxValue": 8192
+    },
+    "rdpDynamicResolution": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Dynamic Resolution"
+      }
+    },
+    "rdpMaximizeToCurrentDisplays": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Maximize to Current Displays",
+        "description": "use multimon が有効な場合に利用できます。Windows App for Windows と Windows 用 Remote Desktop アプリのみ対応します。"
+      }
+    },
+    "rdpScreenModeId": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "ウィンドウ (1)",
+        "全画面 (2)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Screen Mode ID",
+        "description": "use multimon が有効な場合は、この設定より複数ディスプレイ設定が優先されます。"
+      }
+    },
+    "rdpSelectedMonitors": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "displayName": "RDP - Selected Monitors",
+        "description": "空欄は未構成です。use multimon が有効な場合に、mstsc.exe /l で取得した連続するディスプレイ ID をカンマ区切りで入力します。Windows クライアント専用です。"
+      }
+    },
+    "rdpSingleMonInWindowedMode": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Single Monitor in Windowed Mode",
+        "description": "use multimon が有効な場合に利用できます。Windows クライアント専用です。"
+      }
+    },
+    "rdpSmartSizing": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Smart Sizing"
+      }
+    },
+    "rdpUseMultimon": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Use Multiple Monitors"
+      }
     }
   },
   "resources": [
@@ -242,6 +715,126 @@
           },
           "autoShutdownTime": {
             "value": "[parameters('autoShutdownTime')]"
+          },
+          "rdpAlternateShell": {
+            "value": "[parameters('rdpAlternateShell')]"
+          },
+          "rdpEnableCredSspSupport": {
+            "value": "[parameters('rdpEnableCredSspSupport')]"
+          },
+          "rdpEnableEntraIdAuth": {
+            "value": "[parameters('rdpEnableEntraIdAuth')]"
+          },
+          "rdpKdcProxyName": {
+            "value": "[parameters('rdpKdcProxyName')]"
+          },
+          "rdpTargetIsAadJoined": {
+            "value": "[parameters('rdpTargetIsAadJoined')]"
+          },
+          "rdpAutoReconnectionEnabled": {
+            "value": "[parameters('rdpAutoReconnectionEnabled')]"
+          },
+          "rdpBandwidthAutoDetect": {
+            "value": "[parameters('rdpBandwidthAutoDetect')]"
+          },
+          "rdpCompression": {
+            "value": "[parameters('rdpCompression')]"
+          },
+          "rdpNetworkAutoDetect": {
+            "value": "[parameters('rdpNetworkAutoDetect')]"
+          },
+          "rdpVideoPlaybackMode": {
+            "value": "[parameters('rdpVideoPlaybackMode')]"
+          },
+          "rdpAudioCaptureMode": {
+            "value": "[parameters('rdpAudioCaptureMode')]"
+          },
+          "rdpAudioMode": {
+            "value": "[parameters('rdpAudioMode')]"
+          },
+          "rdpCameraStoreDirect": {
+            "value": "[parameters('rdpCameraStoreDirect')]"
+          },
+          "rdpDeviceStoreDirect": {
+            "value": "[parameters('rdpDeviceStoreDirect')]"
+          },
+          "rdpDeviceStoreDirectCustom": {
+            "value": "[parameters('rdpDeviceStoreDirectCustom')]"
+          },
+          "rdpDriveStoreDirect": {
+            "value": "[parameters('rdpDriveStoreDirect')]"
+          },
+          "rdpDriveStoreDirectCustom": {
+            "value": "[parameters('rdpDriveStoreDirectCustom')]"
+          },
+          "rdpEncodeRedirectedVideoCapture": {
+            "value": "[parameters('rdpEncodeRedirectedVideoCapture')]"
+          },
+          "rdpKeyboardHook": {
+            "value": "[parameters('rdpKeyboardHook')]"
+          },
+          "rdpRedirectClipboard": {
+            "value": "[parameters('rdpRedirectClipboard')]"
+          },
+          "rdpRedirectComPorts": {
+            "value": "[parameters('rdpRedirectComPorts')]"
+          },
+          "rdpRedirectedVideoCaptureEncodingQuality": {
+            "value": "[parameters('rdpRedirectedVideoCaptureEncodingQuality')]"
+          },
+          "rdpRedirectLocation": {
+            "value": "[parameters('rdpRedirectLocation')]"
+          },
+          "rdpRedirectPrinters": {
+            "value": "[parameters('rdpRedirectPrinters')]"
+          },
+          "rdpRedirectSmartCards": {
+            "value": "[parameters('rdpRedirectSmartCards')]"
+          },
+          "rdpRedirectWebAuthn": {
+            "value": "[parameters('rdpRedirectWebAuthn')]"
+          },
+          "rdpSmartRawPrinters": {
+            "value": "[parameters('rdpSmartRawPrinters')]"
+          },
+          "rdpUsbDeviceStoreDirect": {
+            "value": "[parameters('rdpUsbDeviceStoreDirect')]"
+          },
+          "rdpUsbDeviceStoreDirectCustom": {
+            "value": "[parameters('rdpUsbDeviceStoreDirectCustom')]"
+          },
+          "rdpDesktopSizeId": {
+            "value": "[parameters('rdpDesktopSizeId')]"
+          },
+          "rdpDesktopHeight": {
+            "value": "[parameters('rdpDesktopHeight')]"
+          },
+          "rdpDesktopScaleFactor": {
+            "value": "[parameters('rdpDesktopScaleFactor')]"
+          },
+          "rdpDesktopWidth": {
+            "value": "[parameters('rdpDesktopWidth')]"
+          },
+          "rdpDynamicResolution": {
+            "value": "[parameters('rdpDynamicResolution')]"
+          },
+          "rdpMaximizeToCurrentDisplays": {
+            "value": "[parameters('rdpMaximizeToCurrentDisplays')]"
+          },
+          "rdpScreenModeId": {
+            "value": "[parameters('rdpScreenModeId')]"
+          },
+          "rdpSelectedMonitors": {
+            "value": "[parameters('rdpSelectedMonitors')]"
+          },
+          "rdpSingleMonInWindowedMode": {
+            "value": "[parameters('rdpSingleMonInWindowedMode')]"
+          },
+          "rdpSmartSizing": {
+            "value": "[parameters('rdpSmartSizing')]"
+          },
+          "rdpUseMultimon": {
+            "value": "[parameters('rdpUseMultimon')]"
           }
         },
         "template": {
@@ -251,7 +844,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.42.1.51946",
-              "templateHash": "10978057006713561333"
+              "templateHash": "8812027659559705024"
             }
           },
           "parameters": {
@@ -323,6 +916,479 @@
             "autoShutdownTime": {
               "type": "string"
             },
+            "rdpAlternateShell": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "displayName": "RDP - Alternate Shell",
+                "description": "空欄は未構成です。指定する場合はリモート セッションで起動する実行ファイルのパスを入力します。"
+              }
+            },
+            "rdpEnableCredSspSupport": {
+              "type": "string",
+              "defaultValue": "有効 (1)",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - CredSSP",
+                "description": "現在の既定は有効 (1) です。"
+              }
+            },
+            "rdpEnableEntraIdAuth": {
+              "type": "string",
+              "defaultValue": "有効 (1)",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Microsoft Entra SSO",
+                "description": "現在の既定は有効 (1) です。"
+              }
+            },
+            "rdpKdcProxyName": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "displayName": "RDP - KDC Proxy Name",
+                "description": "空欄は未構成です。Kerberos KDC プロキシの完全修飾ドメイン名を入力します。"
+              }
+            },
+            "rdpTargetIsAadJoined": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "ユーザー名とパスワード (1)",
+                "Windows クライアントで Entra 認証 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Target Is AAD Joined",
+                "description": "旧式の認証プロパティです。enablerdsaadauth を優先して使用してください。"
+              }
+            },
+            "rdpAutoReconnectionEnabled": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Automatic Reconnection"
+              }
+            },
+            "rdpBandwidthAutoDetect": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Bandwidth Auto Detect"
+              }
+            },
+            "rdpCompression": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Compression"
+              }
+            },
+            "rdpNetworkAutoDetect": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Network Auto Detect"
+              }
+            },
+            "rdpVideoPlaybackMode": {
+              "type": "string",
+              "defaultValue": "有効 (1)",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Video Playback Mode",
+                "description": "現在の既定は有効 (1) です。"
+              }
+            },
+            "rdpAudioCaptureMode": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Audio Capture Mode"
+              }
+            },
+            "rdpAudioMode": {
+              "type": "string",
+              "defaultValue": "ローカル端末で再生 (0)",
+              "allowedValues": [
+                "未構成",
+                "ローカル端末で再生 (0)",
+                "リモート セッションで再生 (1)",
+                "再生しない (2)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Audio Mode",
+                "description": "現在の既定はローカル端末で再生 (0) です。"
+              }
+            },
+            "rdpCameraStoreDirect": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "displayName": "RDP - Camera Redirection",
+                "description": "空欄は未構成です。* または対象カメラのデバイス パスを入力します。"
+              }
+            },
+            "rdpDeviceStoreDirect": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "すべての対応デバイス (*)",
+                "新しく接続する対応デバイス (DynamicDevices)"
+              ],
+              "metadata": {
+                "displayName": "RDP - MTP/PTP Device Redirection",
+                "description": "特定のデバイスを指定する場合は、下の Custom Device Value を入力します。"
+              }
+            },
+            "rdpDeviceStoreDirectCustom": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "displayName": "RDP - MTP/PTP Custom Device Value",
+                "description": "空欄は上の選択を使用します。デバイス パスを指定すると選択より優先されます。"
+              }
+            },
+            "rdpDriveStoreDirect": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "リダイレクトしない (空)",
+                "すべてのドライブ (*)",
+                "新しく接続するドライブ (DynamicDrives)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Drive Redirection",
+                "description": "ドライブ文字を指定する場合は、下の Custom Drive Value を入力します。"
+              }
+            },
+            "rdpDriveStoreDirectCustom": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "displayName": "RDP - Custom Drive Value",
+                "description": "空欄は上の選択を使用します。例: C:\\;E:\\;。値を指定すると選択より優先されます。"
+              }
+            },
+            "rdpEncodeRedirectedVideoCapture": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Encode Redirected Video Capture"
+              }
+            },
+            "rdpKeyboardHook": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "ローカル端末で処理 (0)",
+                "フォーカス中はリモートで処理 (1)",
+                "全画面時のみリモートで処理 (2)",
+                "RemoteApp で処理 (3)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Keyboard Hook",
+                "description": "値 3 は RemoteApp 専用です。このテンプレートの Desktop セッションでは選択しないでください。"
+              }
+            },
+            "rdpRedirectClipboard": {
+              "type": "string",
+              "defaultValue": "無効 (0)",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Clipboard Redirection",
+                "description": "現在の既定は無効 (0) です。"
+              }
+            },
+            "rdpRedirectComPorts": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - COM Port Redirection"
+              }
+            },
+            "rdpRedirectedVideoCaptureEncodingQuality": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "高圧縮 (0)",
+                "中圧縮 (1)",
+                "高画質 (2)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Redirected Video Capture Quality"
+              }
+            },
+            "rdpRedirectLocation": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Location Redirection"
+              }
+            },
+            "rdpRedirectPrinters": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Printer Redirection"
+              }
+            },
+            "rdpRedirectSmartCards": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Smart Card Redirection"
+              }
+            },
+            "rdpRedirectWebAuthn": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - WebAuthn Redirection"
+              }
+            },
+            "rdpSmartRawPrinters": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "displayName": "RDP - Smart Raw Printers",
+                "description": "空欄は未構成です。* または対象プリンターのドライバー名プレフィックスを入力します。"
+              }
+            },
+            "rdpUsbDeviceStoreDirect": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "リダイレクトしない (空)",
+                "すべての対応 USB デバイス (*)"
+              ],
+              "metadata": {
+                "displayName": "RDP - USB Device Redirection",
+                "description": "特定のデバイスを指定する場合は、下の Custom USB Device Value を入力します。"
+              }
+            },
+            "rdpUsbDeviceStoreDirectCustom": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "displayName": "RDP - Custom USB Device Value",
+                "description": "空欄は上の選択を使用します。デバイス クラス GUID またはデバイス インスタンス ID を指定すると選択より優先されます。"
+              }
+            },
+            "rdpDesktopSizeId": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "640x480",
+                "800x600",
+                "1024x768",
+                "1280x1024",
+                "1600x1200"
+              ],
+              "metadata": {
+                "displayName": "RDP - Desktop Size ID"
+              }
+            },
+            "rdpDesktopHeight": {
+              "type": "int",
+              "defaultValue": 0,
+              "metadata": {
+                "displayName": "RDP - Desktop Height",
+                "description": "0 は未構成です。指定する場合は 200～8192 のピクセル数を入力します。指定時は Desktop Size ID より優先されます。"
+              },
+              "minValue": 0,
+              "maxValue": 8192
+            },
+            "rdpDesktopScaleFactor": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "100%",
+                "125%",
+                "150%",
+                "175%",
+                "200%",
+                "250%",
+                "300%",
+                "400%",
+                "500%"
+              ],
+              "metadata": {
+                "displayName": "RDP - Desktop Scale Factor",
+                "description": "0 は未構成です。このプロパティは非推奨です。"
+              }
+            },
+            "rdpDesktopWidth": {
+              "type": "int",
+              "defaultValue": 0,
+              "metadata": {
+                "displayName": "RDP - Desktop Width",
+                "description": "0 は未構成です。指定する場合は 200～8192 のピクセル数を入力します。指定時は Desktop Size ID より優先されます。"
+              },
+              "minValue": 0,
+              "maxValue": 8192
+            },
+            "rdpDynamicResolution": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Dynamic Resolution"
+              }
+            },
+            "rdpMaximizeToCurrentDisplays": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Maximize to Current Displays",
+                "description": "use multimon が有効な場合に利用できます。Windows App for Windows と Windows 用 Remote Desktop アプリのみ対応します。"
+              }
+            },
+            "rdpScreenModeId": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "ウィンドウ (1)",
+                "全画面 (2)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Screen Mode ID",
+                "description": "use multimon が有効な場合は、この設定より複数ディスプレイ設定が優先されます。"
+              }
+            },
+            "rdpSelectedMonitors": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "displayName": "RDP - Selected Monitors",
+                "description": "空欄は未構成です。use multimon が有効な場合に、mstsc.exe /l で取得した連続するディスプレイ ID をカンマ区切りで入力します。Windows クライアント専用です。"
+              }
+            },
+            "rdpSingleMonInWindowedMode": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Single Monitor in Windowed Mode",
+                "description": "use multimon が有効な場合に利用できます。Windows クライアント専用です。"
+              }
+            },
+            "rdpSmartSizing": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Smart Sizing"
+              }
+            },
+            "rdpUseMultimon": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Use Multiple Monitors"
+              }
+            },
             "tokenExpirationTime": {
               "type": "string",
               "defaultValue": "[dateTimeAdd(utcNow(), 'PT2H')]"
@@ -362,7 +1428,12 @@
               }
             },
             "settings": "[variables('$fxv#0')]",
-            "desktopUserRoleId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '1d18fff3-a72a-46b5-b4a9-0b38a3cd7e63')]"
+            "desktopUserRoleId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '1d18fff3-a72a-46b5-b4a9-0b38a3cd7e63')]",
+            "rdpDeviceStoreDirectValue": "[if(not(empty(parameters('rdpDeviceStoreDirectCustom'))), parameters('rdpDeviceStoreDirectCustom'), if(equals(parameters('rdpDeviceStoreDirect'), 'すべての対応デバイス (*)'), '*', if(equals(parameters('rdpDeviceStoreDirect'), '新しく接続する対応デバイス (DynamicDevices)'), 'DynamicDevices', '')))]",
+            "rdpDeviceStoreDirectProperty": "[if(empty(variables('rdpDeviceStoreDirectValue')), '', format('devicestoredirect:s:{0};', variables('rdpDeviceStoreDirectValue')))]",
+            "rdpDriveStoreDirectProperty": "[if(not(empty(parameters('rdpDriveStoreDirectCustom'))), format('drivestoredirect:s:{0};', parameters('rdpDriveStoreDirectCustom')), if(equals(parameters('rdpDriveStoreDirect'), '未構成'), '', if(equals(parameters('rdpDriveStoreDirect'), 'リダイレクトしない (空)'), 'drivestoredirect:s:;', if(equals(parameters('rdpDriveStoreDirect'), 'すべてのドライブ (*)'), 'drivestoredirect:s:*;', 'drivestoredirect:s:DynamicDrives;'))))]",
+            "rdpUsbDeviceStoreDirectProperty": "[if(not(empty(parameters('rdpUsbDeviceStoreDirectCustom'))), format('usbdevicestoredirect:s:{0};', parameters('rdpUsbDeviceStoreDirectCustom')), if(equals(parameters('rdpUsbDeviceStoreDirect'), '未構成'), '', if(equals(parameters('rdpUsbDeviceStoreDirect'), 'リダイレクトしない (空)'), 'usbdevicestoredirect:s:;', 'usbdevicestoredirect:s:*;')))]",
+            "rdpProperties": "[concat(if(equals(parameters('rdpEnableEntraIdAuth'), '未構成'), '', format('enablerdsaadauth:i:{0};', if(equals(parameters('rdpEnableEntraIdAuth'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpEnableCredSspSupport'), '未構成'), '', format('enablecredsspsupport:i:{0};', if(equals(parameters('rdpEnableCredSspSupport'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpVideoPlaybackMode'), '未構成'), '', format('videoplaybackmode:i:{0};', if(equals(parameters('rdpVideoPlaybackMode'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpRedirectClipboard'), '未構成'), '', format('redirectclipboard:i:{0};', if(equals(parameters('rdpRedirectClipboard'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpAudioMode'), '未構成'), '', format('audiomode:i:{0};', if(equals(parameters('rdpAudioMode'), 'ローカル端末で再生 (0)'), '0', if(equals(parameters('rdpAudioMode'), 'リモート セッションで再生 (1)'), '1', '2')))), if(equals(parameters('rdpAlternateShell'), ''), '', format('alternate shell:s:{0};', parameters('rdpAlternateShell'))), if(equals(parameters('rdpKdcProxyName'), ''), '', format('kdcproxyname:s:{0};', parameters('rdpKdcProxyName'))), if(equals(parameters('rdpTargetIsAadJoined'), '未構成'), '', format('targetisaadjoined:i:{0};', if(equals(parameters('rdpTargetIsAadJoined'), 'ユーザー名とパスワード (1)'), '1', '0'))), if(equals(parameters('rdpAutoReconnectionEnabled'), '未構成'), '', format('autoreconnection enabled:i:{0};', if(equals(parameters('rdpAutoReconnectionEnabled'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpBandwidthAutoDetect'), '未構成'), '', format('bandwidthautodetect:i:{0};', if(equals(parameters('rdpBandwidthAutoDetect'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpCompression'), '未構成'), '', format('compression:i:{0};', if(equals(parameters('rdpCompression'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpNetworkAutoDetect'), '未構成'), '', format('networkautodetect:i:{0};', if(equals(parameters('rdpNetworkAutoDetect'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpAudioCaptureMode'), '未構成'), '', format('audiocapturemode:i:{0};', if(equals(parameters('rdpAudioCaptureMode'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpCameraStoreDirect'), ''), '', format('camerastoredirect:s:{0};', parameters('rdpCameraStoreDirect'))), variables('rdpDeviceStoreDirectProperty'), variables('rdpDriveStoreDirectProperty'), if(equals(parameters('rdpEncodeRedirectedVideoCapture'), '未構成'), '', format('encode redirected video capture:i:{0};', if(equals(parameters('rdpEncodeRedirectedVideoCapture'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpKeyboardHook'), '未構成'), '', format('keyboardhook:i:{0};', if(equals(parameters('rdpKeyboardHook'), 'ローカル端末で処理 (0)'), '0', if(equals(parameters('rdpKeyboardHook'), 'フォーカス中はリモートで処理 (1)'), '1', if(equals(parameters('rdpKeyboardHook'), '全画面時のみリモートで処理 (2)'), '2', '3'))))), if(equals(parameters('rdpRedirectComPorts'), '未構成'), '', format('redirectcomports:i:{0};', if(equals(parameters('rdpRedirectComPorts'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpRedirectedVideoCaptureEncodingQuality'), '未構成'), '', format('redirected video capture encoding quality:i:{0};', if(equals(parameters('rdpRedirectedVideoCaptureEncodingQuality'), '高圧縮 (0)'), '0', if(equals(parameters('rdpRedirectedVideoCaptureEncodingQuality'), '中圧縮 (1)'), '1', '2')))), if(equals(parameters('rdpRedirectLocation'), '未構成'), '', format('redirectlocation:i:{0};', if(equals(parameters('rdpRedirectLocation'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpRedirectPrinters'), '未構成'), '', format('redirectprinters:i:{0};', if(equals(parameters('rdpRedirectPrinters'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpRedirectSmartCards'), '未構成'), '', format('redirectsmartcards:i:{0};', if(equals(parameters('rdpRedirectSmartCards'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpRedirectWebAuthn'), '未構成'), '', format('redirectwebauthn:i:{0};', if(equals(parameters('rdpRedirectWebAuthn'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpSmartRawPrinters'), ''), '', format('SmartRawPrinters:s:{0};', parameters('rdpSmartRawPrinters'))), variables('rdpUsbDeviceStoreDirectProperty'), if(equals(parameters('rdpDesktopSizeId'), '未構成'), '', format('desktop size id:i:{0};', if(equals(parameters('rdpDesktopSizeId'), '640x480'), '0', if(equals(parameters('rdpDesktopSizeId'), '800x600'), '1', if(equals(parameters('rdpDesktopSizeId'), '1024x768'), '2', if(equals(parameters('rdpDesktopSizeId'), '1280x1024'), '3', '4')))))), if(equals(parameters('rdpDesktopHeight'), 0), '', format('desktopheight:i:{0};', parameters('rdpDesktopHeight'))), if(equals(parameters('rdpDesktopScaleFactor'), '未構成'), '', format('desktopscalefactor:i:{0};', replace(parameters('rdpDesktopScaleFactor'), '%', ''))), if(equals(parameters('rdpDesktopWidth'), 0), '', format('desktopwidth:i:{0};', parameters('rdpDesktopWidth'))), if(equals(parameters('rdpDynamicResolution'), '未構成'), '', format('dynamic resolution:i:{0};', if(equals(parameters('rdpDynamicResolution'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpMaximizeToCurrentDisplays'), '未構成'), '', format('maximizetocurrentdisplays:i:{0};', if(equals(parameters('rdpMaximizeToCurrentDisplays'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpScreenModeId'), '未構成'), '', format('screen mode id:i:{0};', if(equals(parameters('rdpScreenModeId'), 'ウィンドウ (1)'), '1', '2'))), if(equals(parameters('rdpSelectedMonitors'), ''), '', format('selectedmonitors:s:{0};', parameters('rdpSelectedMonitors'))), if(equals(parameters('rdpSingleMonInWindowedMode'), '未構成'), '', format('singlemoninwindowedmode:i:{0};', if(equals(parameters('rdpSingleMonInWindowedMode'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpSmartSizing'), '未構成'), '', format('smart sizing:i:{0};', if(equals(parameters('rdpSmartSizing'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpUseMultimon'), '未構成'), '', format('use multimon:i:{0};', if(equals(parameters('rdpUseMultimon'), '有効 (1)'), '1', '0'))))]"
           },
           "resources": [
             {
@@ -380,7 +1451,7 @@
                 "validationEnvironment": false,
                 "startVMOnConnect": false,
                 "publicNetworkAccess": "Enabled",
-                "customRdpProperty": "enablerdsaadauth:i:1;enablecredsspsupport:i:1;videoplaybackmode:i:1;redirectclipboard:i:0;audiomode:i:0;",
+                "customRdpProperty": "[variables('rdpProperties')]",
                 "registrationInfo": {
                   "expirationTime": "[parameters('tokenExpirationTime')]",
                   "registrationTokenOperation": "Update"
