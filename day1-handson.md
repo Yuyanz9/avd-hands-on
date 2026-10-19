@@ -4,7 +4,7 @@
 
 > **新版公開済み（2026-10-18）：** 初回構築・ホスト追加とも、英語での新規展開を早めるには `Custom Configuration Script Url` の既定 URL を消して空欄にします。日本語設定を省略しても Entra ID 参加・AVD 登録・RBAC・自動停止は設定します。SKU 選択、台数などの新しい入力も公開ボタンから利用できます。Azure 実機での所要時間・接続は未確認です。
 
-> **ローカル更新版・未公開：AVD 対応 RDP プロパティをデプロイ時に選択可能にしました。** Microsoft Learn に記載された AVD 対応の全37項目を入力欄として追加しました。固定値は「未構成」を含む選択式、デバイス ID／パスや解像度などは入力式です。従来の既定値は維持しています。公開 Deploy ボタンへの反映と実機確認は [R19](revision-list.md) の残作業です。
+> **AVD RDP 設定を公開済み（2026-10-19）：** Deploy ボタンから AVD 対応の全37項目を選択・入力できます。設定項目は Azure portal の入力フォーム最下部にまとめています。従来の既定値は維持しています。Portal 入力画面の表示、Azure での実デプロイと接続確認は未実施で、[R19](revision-list.md) に残しています。
 
 > **日本語化スクリプトも GitHub へ移行・公開済み（2026-10-18）：** 初回 AVD／ホスト追加とも、同梱スクリプトの GitHub 固定コミット Raw URL が既定です。空欄で省略可能。OS 日本語化と Windows Update 用で、Office は別途 Intune の設定が必要です。
 
@@ -165,7 +165,7 @@ NAT ありから検証方式へ切り替える場合、増分デプロイでは 
 | OS | 既定 `microsoftwindowsdesktop`／`office-365`／`win11-25h2-avd-m365`／`latest`（Microsoft 365 Apps 入り）。Office なし SKU は `windows-11` Offer |
 | ID・保護 | Entra ID 参加、システム割り当て ID、Intune MDM 自動登録（既定有効）、Trusted Launch／Secure Boot／vTPM |
 | 接続権限 | `AVD Users` グループへ DAG の Desktop Virtualization User と各 VM の Virtual Machine User Login |
-| RDP プロパティ | Microsoft Learn の AVD 対応37項目をデプロイ時に表示。固定値は選択式、デバイス ID／パス・解像度などは入力式 |
+| RDP プロパティ | Microsoft Learn の AVD 対応37項目をフォーム最下部に表示。固定値は選択式、デバイス ID／パス・解像度などは入力式 |
 | RDP 既定値 | SSO／CredSSP／ビデオ再生は有効、クリップボードは無効、音声はローカル再生。ほかは未構成 |
 | 登録 | Entra ID 参加 → DSC による AVD 登録。登録トークンは2時間、保護設定にのみ格納 |
 | 日本語設定等 | URL がある場合のみ登録後に Custom Script を実行。既定 `JPNOFLNG.ps1` は Windows Update・自動再起動を含む。空欄なら拡張機能を作らない |
@@ -173,7 +173,7 @@ NAT ありから検証方式へ切り替える場合、増分デプロイでは 
 
 Intune 自動登録は初回 AVD 展開と既存プールへのホスト追加の両方で既定で要求されます。Microsoft Entra ID P1 と適切な Intune ライセンス、テナントの自動 MDM 登録範囲、必要な外向き接続が前提です。Windows Enterprise multi-session の Intune 管理は Pooled host pool が前提のため、Personal pool または未準備のテナントでは portal の `Intune Enrollment` を `false` にしてください。前提不足で Entra ログイン拡張機能または登録が失敗する可能性があります。
 
-ホストプールの RDP プロパティは [Microsoft Learn の AVD 対応一覧](https://learn.microsoft.com/azure/virtual-desktop/rdp-properties)に基づいてデプロイ入力にしています。現在の既定は SSO `enablerdsaadauth:i:1`、CredSSP `enablecredsspsupport:i:1`、ビデオ再生 `videoplaybackmode:i:1`、クリップボード `redirectclipboard:i:0`、音声 `audiomode:i:0` です。その他の選択は「未構成」、自由入力欄は空欄、解像度の数値欄は `0` が既定で、これらは RDP 文字列に追加しません。「未構成」は無効を意味せず、ホストプール／クライアントの既定動作を使います。固定値の選択肢にないデバイス ID／パス、ドライブ文字、ディスプレイ ID は入力欄から指定できます。特定値欄に値を入れた場合は、対応する一般選択より優先されます。RemoteApp 専用のプロパティは対象外です。公開 Deploy ボタンへの反映と実機 GUI／接続確認は未完了です。
+ホストプールの RDP プロパティは [Microsoft Learn の AVD 対応一覧](https://learn.microsoft.com/azure/virtual-desktop/rdp-properties)に基づいてデプロイ入力にしています。現在の既定は SSO `enablerdsaadauth:i:1`、CredSSP `enablecredsspsupport:i:1`、ビデオ再生 `videoplaybackmode:i:1`、クリップボード `redirectclipboard:i:0`、音声 `audiomode:i:0` です。その他の選択は「未構成」、自由入力欄は空欄、解像度の数値欄は `0` が既定で、これらは RDP 文字列に追加しません。「未構成」は無効を意味せず、ホストプール／クライアントの既定動作を使います。固定値の選択肢にないデバイス ID／パス、ドライブ文字、ディスプレイ ID は入力欄から指定できます。特定値欄に値を入れた場合は、対応する一般選択より優先されます。RemoteApp 専用のプロパティは対象外です。公開 Deploy ボタンはこのテンプレートを参照しますが、Portal 入力画面の表示・Azure での実デプロイ・接続は未確認です。
 
 クリップボードは新規ホストプールの既定に合わせて無効です。後から有効にする場合は［ホストプール］→対象プール→［RDP プロパティ］→［デバイスのリダイレクト］で変更・保存し、セッションを切断して再接続します。Intune／グループ ポリシーで禁止されている場合はそちらも変更します。追加ホストのボタンだけでは既存プールの設定は変わらず、初回 AVD テンプレートの再適用時は無効へ戻るため、継続運用ではソースも合わせて管理します。
 1回の展開で指定した台数には同じプレフィックスと異なる連番が付きます。追加・再実行時は既存 VM と重複しないプレフィックスを使います。台数を増やすと費用・クォータ・IP 消費も増えます。SKU の提供地域とサポート期限は事前に確認します。既定スクリプト本体は GitHub 固定コミットですが、イメージの `latest`、依存モジュールと Windows Update の取得内容は変わり得ます。サイズ・イメージの利用可否と、スクリプトの再起動・拡張機能結果は配布前の実機確認が必要です。
