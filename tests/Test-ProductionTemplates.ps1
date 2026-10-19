@@ -180,7 +180,7 @@ foreach ($phase in @('network', 'network-validation')) {
 }
 
 $entry = $templates.avd
-Assert-Template ($entry.parameters.Count -eq 17 -and $entry.parameters.ContainsKey('vmAdministratorAccountPassword')) 'AVD must expose the existing inputs, required AVD Users group ID, and Intune enrollment option.'
+Assert-Template ($entry.parameters.Count -eq 18 -and $entry.parameters.ContainsKey('vmAdministratorAccountPassword')) 'AVD must expose the existing inputs, required AVD Users group ID, and Intune enrollment and shutdown-time options.'
 $password = $entry.parameters.vmAdministratorAccountPassword
 Assert-Template ($password.type -eq 'securestring' -and -not $password.ContainsKey('defaultValue')) 'The password must be secure and have no default.'
 Assert-Template ($password.minLength -eq 12 -and $password.maxLength -eq 123) 'The password length must be bounded.'
@@ -203,13 +203,14 @@ $expectedDefaults = @{
     hostpoolType = 'Pooled'
     loadBalancerType = 'BreadthFirst'
     intune = $true
+    autoShutdownTime = '19:00'
 }
 foreach ($name in $expectedDefaults.Keys) {
     Assert-Template ($entry.parameters[$name].defaultValue -ceq $expectedDefaults[$name]) "AVD default must be editable and preserve the expected value: $name."
 }
 Assert-Template ($entry.parameters.vmNamePrefix.maxLength -eq 13) 'VM name prefix must leave room for the -0 suffix in a Windows computer name.'
-$expectedOrder = @('vmAdministratorAccountPassword', 'avdUsersGroupObjectId', 'networkResourceGroupName', 'virtualNetworkName', 'subnetName', 'location', 'imageSku', 'workspaceFriendlyName', 'vmSize', 'vmDiskType', 'maxSessionLimit', 'vmNamePrefix', 'customConfigurationScriptUrl', 'vmNumberOfInstances', 'hostpoolType', 'loadBalancerType', 'intune')
-Assert-Template (($entry.parameters.Keys -join ',') -ceq ($expectedOrder -join ',')) 'Keep the existing portal input order, require the AVD Users group ID, and append Intune enrollment after the deployment options.'
+$expectedOrder = @('vmAdministratorAccountPassword', 'avdUsersGroupObjectId', 'networkResourceGroupName', 'virtualNetworkName', 'subnetName', 'location', 'imageSku', 'workspaceFriendlyName', 'vmSize', 'vmDiskType', 'maxSessionLimit', 'vmNamePrefix', 'customConfigurationScriptUrl', 'vmNumberOfInstances', 'hostpoolType', 'loadBalancerType', 'intune', 'autoShutdownTime')
+Assert-Template (($entry.parameters.Keys -join ',') -ceq ($expectedOrder -join ',')) 'Keep the existing portal input order, require the AVD Users group ID, and place shutdown time after the deployment options.'
 $imageSkus = @('win11-23h2-avd', 'win11-23h2-avd-m365', 'win11-24h2-avd', 'win11-24h2-avd-m365', 'win11-25h2-avd', 'win11-25h2-avd-m365', 'win11-26h2-avd', 'win11-26h2-avd-m365')
 $labels = @{
     avdUsersGroupObjectId = 'AVD Users Group Object Id'
@@ -220,12 +221,14 @@ $labels = @{
     hostpoolType = 'Hostpool Type'
     loadBalancerType = 'Load Balancer Type'
     intune = 'Intune Enrollment'
+    autoShutdownTime = 'Auto Shutdown Time (JST)'
 }
 foreach ($name in $labels.Keys) {
     Assert-Template ($entry.parameters[$name].metadata.displayName -ceq $labels[$name]) "Show the requested portal label: $name."
 }
 Assert-Template (($entry.parameters.hostpoolType.allowedValues -join ',') -ceq 'Pooled,Personal') 'Host pool type must be a Pooled/Personal selection.'
 Assert-Template (($entry.parameters.loadBalancerType.allowedValues -join ',') -ceq 'BreadthFirst,DepthFirst') 'Expose only the supported pooled load balancing algorithms.'
+Assert-Template ($entry.parameters.autoShutdownTime.minLength -eq 5 -and $entry.parameters.autoShutdownTime.maxLength -eq 5 -and $entry.parameters.autoShutdownTime.metadata.description -match 'HH:mm.*Japan Standard Time') 'Shutdown time must use a five-character HH:mm value in Japan Standard Time.'
 $readmeText = Get-Content -LiteralPath (Join-Path $root 'README.md') -Raw
 $day1Text = Get-Content -LiteralPath (Join-Path $root 'day1-handson.md') -Raw
 $day2Text = Get-Content -LiteralPath (Join-Path $root 'day2-secure-jump.md') -Raw
@@ -239,6 +242,7 @@ for ($index = 0; $index -lt 3; $index++) {
 Assert-Template ($readmeText -match '12～123文字が必須' -and $readmeText -match 'InvalidTemplate') 'README must explain the minimum password length error.'
 Assert-Template ($day1Text -match '12～123文字が必須' -and $day1Text -match 'InvalidTemplate') 'Day 1 guide must explain the minimum password length error.'
 Assert-Template ($day1Text.Contains('Virtual Network Resource Group Name') -and $day1Text.Contains('Work Space Name') -and $day1Text.Contains('Max Session Limit')) 'Day 1 guide must describe the editable fields.'
+Assert-Template ($readmeText.Contains('Auto Shutdown Time (JST)') -and $readmeText.Contains('19:00') -and $day1Text.Contains('Auto Shutdown Time (JST)') -and $day1Text.Contains('19:00')) 'Both guides must document the editable Japan-time shutdown setting and its 19:00 default.'
 Assert-Template ($day1Text.Contains('(device.displayName -startsWith "AVD")') -and $day1Text.Contains('(device.deviceModel -startsWith "Cloud PC") -or (device.deviceModel -startsWith "Windows 365")')) 'Day 1 guide must document AVD and Cloud PC dynamic device rules.'
 Assert-Template ($day1Text.Contains('プロビジョニング ポリシー') -and $day1Text.Contains('ユーザー グループ')) 'Day 1 guide must distinguish Windows 365 provisioning policy assignments from device groups.'
 Assert-Template ($readmeText.Contains('AVD Users') -and $readmeText.Contains('Object ID') -and $readmeText.Contains('増分デプロイ') -and $day1Text.Contains('AVD Users') -and $day1Text.Contains('Object ID') -and $day1Text.Contains('増分デプロイ')) 'Both guides must explain the manually created AVD Users group, its required Object ID, and incremental cleanup of old user assignments.'
@@ -292,6 +296,7 @@ Assert-Template ($workspaces[0].properties.friendlyName -ceq "[parameters('works
 $sessionModule = @($avd.resources | Where-Object { $_.type -eq 'Microsoft.Resources/deployments' })
 Assert-Template ($sessionModule.Count -eq 1 -and -not $sessionModule[0].properties.ContainsKey('templateLink')) 'AVD must embed its shared session-host module.'
 Assert-Template ($sessionModule[0].properties.parameters.registrationToken.value -match 'listRegistrationTokens') 'AVD must mint its registration token for the new host.'
+Assert-Template ($sessionModule[0].properties.parameters.autoShutdownTime.value -ceq "[parameters('autoShutdownTime')]") 'Forward the editable shutdown time into each AVD session host.'
 $sessionHost = $sessionModule[0].properties.template
 Assert-Template ($sessionHost.parameters.registrationToken.type -eq 'securestring' -and $sessionHost.parameters.vmAdministratorAccountPassword.type -eq 'securestring') 'Nested session-host secrets must remain secure parameters.'
 $vms = Find-Resources $sessionHost 'Microsoft.Compute/virtualMachines'
@@ -344,15 +349,17 @@ foreach ($resource in $sessionHost.resources) {
 }
 
 $sessionEntry = $templates['session-host']
-Assert-Template ($sessionEntry.parameters.Count -eq 15 -and $sessionEntry.parameters.registrationToken.type -eq 'securestring' -and -not $sessionEntry.parameters.registrationToken.ContainsKey('defaultValue')) 'The add-host template must require a secure registration token and AVD Users group ID and expose script/count/Intune options.'
+Assert-Template ($sessionEntry.parameters.Count -eq 16 -and $sessionEntry.parameters.registrationToken.type -eq 'securestring' -and -not $sessionEntry.parameters.registrationToken.ContainsKey('defaultValue')) 'The add-host template must require a secure registration token and AVD Users group ID and expose script/count/Intune/shutdown-time options.'
 Assert-Template ($sessionEntry.parameters.avdUsersGroupObjectId.type -eq 'string' -and $sessionEntry.parameters.avdUsersGroupObjectId.minLength -eq 36 -and $sessionEntry.parameters.avdUsersGroupObjectId.maxLength -eq 36 -and -not $sessionEntry.parameters.avdUsersGroupObjectId.ContainsKey('defaultValue')) 'The add-host template must require the existing AVD Users group Object ID.'
 Assert-Template ($sessionEntry.parameters.avdUsersGroupObjectId.metadata.displayName -ceq 'AVD Users Group Object Id') 'The add-host template must clearly label the AVD Users group Object ID.'
 Assert-Template ($sessionEntry.parameters.intune.type -eq 'bool' -and $sessionEntry.parameters.intune.defaultValue -eq $true) 'The add-host template must request Intune enrollment by default.'
+Assert-Template ($sessionEntry.parameters.autoShutdownTime.defaultValue -ceq '19:00' -and $sessionEntry.parameters.autoShutdownTime.metadata.displayName -ceq 'Auto Shutdown Time (JST)') 'The add-host template must expose a 19:00 Japan-time shutdown default.'
 Assert-Template (-not $sessionEntry.parameters.ContainsKey('hostpoolType') -and -not $sessionEntry.parameters.ContainsKey('loadBalancerType')) 'Adding hosts must not offer to change existing pool properties.'
 Assert-Template ($sessionEntry.parameters.vmAdministratorAccountPassword.type -eq 'securestring' -and -not $sessionEntry.parameters.vmAdministratorAccountPassword.ContainsKey('defaultValue')) 'The add-host template must require a secure VM password.'
 Assert-Template ($sessionEntry.resources.Count -eq 1 -and $sessionEntry.resources[0].type -eq 'Microsoft.Resources/deployments') 'The add-host entry must use one embedded module.'
 $addHostDeployment = $sessionEntry.resources[0]
 Assert-Template (-not $addHostDeployment.properties.ContainsKey('templateLink') -and $addHostDeployment.properties.mode -eq 'Incremental') 'The add-host template must be embedded and incremental.'
+Assert-Template ($addHostDeployment.properties.parameters.autoShutdownTime.value -ceq "[parameters('autoShutdownTime')]") 'Forward the editable shutdown time into the add-host module.'
 Assert-Template ($addHostDeployment.properties.parameters.avdUsersGroupObjectId.value -ceq "[parameters('avdUsersGroupObjectId')]") 'The add-host VM login role must target the supplied AVD Users group.'
 Assert-Template ($addHostDeployment.properties.parameters.registrationToken.value -ceq "[parameters('registrationToken')]") 'Forward the secure registration token directly.'
 $addHostLeaf = $addHostDeployment.properties.template
@@ -427,7 +434,7 @@ try {
 foreach ($template in @($sessionHost, $addHostLeaf)) {
     $schedules = Find-Resources $template 'Microsoft.DevTestLab/schedules'
     Assert-Template ($schedules.Count -eq 1) 'Each session-host workflow must configure one VM shutdown schedule.'
-    Assert-Template ($schedules[0].properties.dailyRecurrence.time -eq '2200' -and $schedules[0].properties.timeZoneId -eq 'Tokyo Standard Time') 'Stop each VM daily at 22:00 Japan time.'
+    Assert-Template ($schedules[0].properties.dailyRecurrence.time -ceq "[replace(parameters('autoShutdownTime'), ':', '')]" -and $schedules[0].properties.timeZoneId -eq 'Tokyo Standard Time') 'Convert the editable HH:mm input to the schedule API format in Japan Standard Time.'
     Assert-Template ($schedules[0].properties.taskType -eq 'ComputeVmShutdownTask' -and $schedules[0].properties.status -eq 'Enabled') 'Enable the VM shutdown task.'
     Assert-Template ($schedules[0].properties.targetResourceId -match 'virtualMachines') 'Target the created VM with the shutdown schedule.'
     Assert-Template ($schedules[0].name -ceq "[format('shutdown-computevm-{0}', variables('vmName'))]" -and $schedules[0].properties.targetResourceId -ceq "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]") 'Shutdown must be distinct for every indexed VM and target that same VM.'

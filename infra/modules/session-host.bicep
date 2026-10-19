@@ -27,6 +27,7 @@ param vmNamePrefix string
 @minValue(0)
 @maxValue(9)
 param vmIndex int
+param autoShutdownTime string
 param customConfigurationScriptUrl string
 param intune bool
 
@@ -204,7 +205,7 @@ resource autoShutdown 'Microsoft.DevTestLab/schedules@2018-09-15' = {
   location: location
   properties: {
     dailyRecurrence: {
-      time: '2200'
+      time: replace(autoShutdownTime, ':', '')
     }
     notificationSettings: {
       emailRecipient: ''

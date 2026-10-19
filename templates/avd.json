@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.42.1.51946",
-      "templateHash": "9257473008938331346"
+      "templateHash": "17372879235820135512"
     }
   },
   "parameters": {
@@ -166,6 +166,16 @@
         "displayName": "Intune Enrollment",
         "description": "Request Microsoft Intune enrollment for new Microsoft Entra joined session hosts. Requires tenant MDM auto-enrollment and appropriate licensing; use false for Personal host pools."
       }
+    },
+    "autoShutdownTime": {
+      "type": "string",
+      "defaultValue": "19:00",
+      "metadata": {
+        "displayName": "Auto Shutdown Time (JST)",
+        "description": "Daily VM shutdown time in 24-hour HH:mm format, Japan Standard Time. Default is 19:00."
+      },
+      "minLength": 5,
+      "maxLength": 5
     }
   },
   "resources": [
@@ -229,6 +239,9 @@
           },
           "intune": {
             "value": "[parameters('intune')]"
+          },
+          "autoShutdownTime": {
+            "value": "[parameters('autoShutdownTime')]"
           }
         },
         "template": {
@@ -238,7 +251,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.42.1.51946",
-              "templateHash": "14887173704597141270"
+              "templateHash": "10978057006713561333"
             }
           },
           "parameters": {
@@ -306,6 +319,9 @@
             },
             "intune": {
               "type": "bool"
+            },
+            "autoShutdownTime": {
+              "type": "string"
             },
             "tokenExpirationTime": {
               "type": "string",
@@ -472,6 +488,9 @@
                   },
                   "intune": {
                     "value": "[parameters('intune')]"
+                  },
+                  "autoShutdownTime": {
+                    "value": "[parameters('autoShutdownTime')]"
                   }
                 },
                 "template": {
@@ -481,7 +500,7 @@
                     "_generator": {
                       "name": "bicep",
                       "version": "0.42.1.51946",
-                      "templateHash": "13990691664176466948"
+                      "templateHash": "11085699619135408738"
                     }
                   },
                   "parameters": {
@@ -532,6 +551,9 @@
                       "type": "int",
                       "minValue": 0,
                       "maxValue": 9
+                    },
+                    "autoShutdownTime": {
+                      "type": "string"
                     },
                     "customConfigurationScriptUrl": {
                       "type": "string"
@@ -753,7 +775,7 @@
                       "location": "[parameters('location')]",
                       "properties": {
                         "dailyRecurrence": {
-                          "time": "2200"
+                          "time": "[replace(parameters('autoShutdownTime'), ':', '')]"
                         },
                         "notificationSettings": {
                           "emailRecipient": "",
