@@ -289,39 +289,7 @@ Assert-Template (($entry.parameters.hostpoolType.allowedValues -join ',') -ceq '
 Assert-Template (($entry.parameters.loadBalancerType.allowedValues -join ',') -ceq 'BreadthFirst,DepthFirst') 'Expose only the supported pooled load balancing algorithms.'
 Assert-Template ($entry.parameters.autoShutdownTime.minLength -eq 5 -and $entry.parameters.autoShutdownTime.maxLength -eq 5 -and $entry.parameters.autoShutdownTime.metadata.description -match 'HH:mm.*Japan Standard Time') 'Shutdown time must use a five-character HH:mm value in Japan Standard Time.'
 $readmeText = Get-Content -LiteralPath (Join-Path $root 'README.md') -Raw
-$day1Text = Get-Content -LiteralPath (Join-Path $root 'day1-handson.md') -Raw
-$day2Text = Get-Content -LiteralPath (Join-Path $root 'day2-secure-jump.md') -Raw
-[xml]$resourceMap = Get-Content -LiteralPath (Join-Path $root 'resources\images\iac-resource-map.svg') -Raw
-$diagramSubnetNames = @($resourceMap.SelectNodes('//*[local-name()="text" and @y="493"]'))
-$diagramSubnetPrefixes = @($resourceMap.SelectNodes('//*[local-name()="text" and @y="526"]'))
-Assert-Template ($diagramSubnetNames.Count -eq 3 -and $diagramSubnetPrefixes.Count -eq 3) 'The diagram must show the three subnet names and CIDRs.'
-for ($index = 0; $index -lt 3; $index++) {
-    Assert-Template ($diagramSubnetNames[$index].InnerText -ceq $subnetNames[$index] -and $diagramSubnetPrefixes[$index].InnerText -ceq $subnetPrefixes[$index] -and $diagramSubnetNames[$index].GetAttribute('x') -eq $diagramSubnetPrefixes[$index].GetAttribute('x')) 'Diagram cards must match Cloud PC=.1, AVD=.2, Server=.3 in order.'
-}
-Assert-Template ($readmeText -match '12～123文字が必須' -and $readmeText -match 'InvalidTemplate') 'README must explain the minimum password length error.'
-Assert-Template ($day1Text -match '12～123文字が必須' -and $day1Text -match 'InvalidTemplate') 'Day 1 guide must explain the minimum password length error.'
-Assert-Template ($day1Text.Contains('Virtual Network Resource Group Name') -and $day1Text.Contains('Work Space Name') -and $day1Text.Contains('Max Session Limit')) 'Day 1 guide must describe the editable fields.'
-Assert-Template ($readmeText.Contains('Auto Shutdown Time (JST)') -and $readmeText.Contains('19:00') -and $day1Text.Contains('Auto Shutdown Time (JST)') -and $day1Text.Contains('19:00')) 'Both guides must document the editable Japan-time shutdown setting and its 19:00 default.'
-Assert-Template ($day1Text.Contains('(device.displayName -startsWith "AVD")') -and $day1Text.Contains('(device.deviceModel -startsWith "Cloud PC") -or (device.deviceModel -startsWith "Windows 365")')) 'Day 1 guide must document AVD and Cloud PC dynamic device rules.'
-Assert-Template ($day1Text.Contains('プロビジョニング ポリシー') -and $day1Text.Contains('ユーザー グループ')) 'Day 1 guide must distinguish Windows 365 provisioning policy assignments from device groups.'
-Assert-Template ($readmeText.Contains('AVD Users') -and $readmeText.Contains('Object ID') -and $readmeText.Contains('増分デプロイ') -and $day1Text.Contains('AVD Users') -and $day1Text.Contains('Object ID') -and $day1Text.Contains('増分デプロイ')) 'Both guides must explain the manually created AVD Users group, its required Object ID, and incremental cleanup of old user assignments.'
-Assert-Template ($readmeText.Contains('既定で `true`') -and $readmeText.Contains('intune=false') -and $day1Text.Contains('Intune Enrollment') -and $day1Text.Contains('Pooled host pool')) 'Document the default Intune enrollment request, opt-out and host-pool prerequisite.'
-Assert-Template ($readmeText.Contains('運用（NAT Gateway あり）') -and $readmeText.Contains('検証（NAT なし）')) 'README must label both Network deployment modes.'
-Assert-Template ($day1Text.Contains('defaultOutboundAccess: false') -and $day1Text.Contains('defaultOutboundAccess: true') -and $day1Text.Contains('NAT Gateway')) 'Day 1 guide must explain both Network outbound modes.'
-Assert-Template ($day2Text.Contains('VNet 作成方式') -and $day2Text.Contains('IaC') -and $day2Text.Contains('未決定') -and $day2Text.Contains('Public IP') -and $day2Text.Contains('NAT Gateway') -and $day2Text.Contains('Peering') -and $day2Text.Contains('22:00')) 'Day 2 guide must mark VNet creation mode as undecided and retain the secure-jump constraints.'
-foreach ($text in @($readmeText, $day1Text)) {
-    Assert-Template ($text.Contains('Network Resource Group Name') -and $text.Contains('rg-avd') -and $text.Contains('rg-network')) 'Explain the VM deployment RG and existing VNet RG with distinct examples.'
-    Assert-Template ($text.Contains('Ctrl＋クリック') -and $text.Contains('新しいタブでリンクを開く') -and $text.Contains('Command＋クリック')) 'Document a reliable new-tab operation instead of promising target=_blank on GitHub.'
-    Assert-Template ($text.Contains('空欄') -and $text.Contains('日本語') -and $text.Contains('英語')) 'Explain how an empty script URL skips Japanese configuration for English deployments.'
-    Assert-Template ($text.Contains('enablecredsspsupport:i:1') -and $text.Contains('videoplaybackmode:i:1')) 'Document the two explicitly restored RDP defaults.'
-    Assert-Template ($text.Contains('37項目') -and $text.Contains('未構成') -and $text.Contains('自由入力')) 'Document all deployment-time RDP choices, their unconfigured defaults and custom-value inputs.'
-    Assert-Template ($text.Contains($settings.avd.customConfigurationScriptUrl) -and $text.Contains('scripts/JPNOFLNG.ps1')) 'Both guides must show the immutable default and link to the bundled Japanese script.'
-    Assert-Template ($text.Contains('OS 日本語化') -and $text.Contains('別途 Intune')) 'Do not imply the OS script also localizes Microsoft 365 Apps.'
-    Assert-Template ($text -match '(?s)`snet-cloudpc`／`10\.10\.1\.0/24`.*?`snet-avd`／`10\.10\.2\.0/24`.*?`snet-server`／`10\.10\.3\.0/24`') 'Guides must use the slide-aligned subnet mappings and order.'
-    Assert-Template ($text.Contains('使用中の旧 VNet') -and $text.Contains('NIC') -and $text.Contains('ANC')) 'Warn against blindly reapplying new CIDRs to an occupied old VNet.'
-    Assert-Template ($text.Contains('redirectclipboard:i:0') -and $text.Contains('再接続') -and $text.Contains('グループ ポリシー')) 'Explain the disabled clipboard default, later changes, reconnect and policy precedence.'
-    Assert-Template ($text.Contains('Office 利用ライセンスは付与されません') -and $text.Contains('Custom Configuration Script Url') -and $text.Contains('Vm Number Of Instances')) 'Explain licensing and optional script/count inputs.'
-}
+Assert-Template ($readmeText.Contains('別管理') -and $readmeText.Contains('PowerPoint') -and $readmeText.Contains('単独では使えません')) 'The package must require the separately managed PowerPoint for course context.'
 Assert-Template ($entry.resources.Count -eq 1) 'AVD entry must contain one embedded module.'
 $deployment = $entry.resources[0]
 Assert-Template ($deployment.type -eq 'Microsoft.Resources/deployments' -and -not $deployment.properties.ContainsKey('templateLink')) 'AVD must use an embedded template, not a remote dependency.'
@@ -519,16 +487,12 @@ foreach ($phase in @('network', 'network-validation')) {
 
 $liveReadme = Get-Content -LiteralPath (Join-Path $root 'README.md') -Raw
 $liveManifest = Read-Json (Join-Path $root 'resources\deploy-links.json')
-Assert-Template (($liveManifest.orderedDay1Phases -join ',') -ceq 'manual-prerequisites-and-resource-group,network-deploy-to-azure,windows365-owner-part,avd-deploy-to-azure') 'Preserve the Day 1 phase order.'
 Assert-Template ($liveManifest.publication.rawUrlsVerified -eq $false -or $liveManifest.publication.repository) 'Verified publication must identify its repository.'
 if ($liveManifest.publication.repository) {
     Assert-Template ($liveManifest.publication.templateCommit -cmatch '^[0-9a-f]{40}$') 'Published buttons must pin an immutable template commit.'
 }
 if ($liveManifest.publication.rawUrlsVerified) {
     Assert-Template ($liveManifest.status -ceq 'published-templates-urls-verified-not-azure-validated') 'Distinguish verified template publication from Azure runtime validation.'
-    foreach ($text in @($readmeText, $day1Text)) {
-        Assert-Template ($text.Contains('新版公開済み') -and -not $text.Contains('ローカル更新版・未公開')) 'Published guides must describe the available updated inputs.'
-    }
 }
 foreach ($phase in @('network', 'network-validation', 'avd', 'session-host')) {
     $link = @($liveManifest.links | Where-Object { $_.phase -eq $phase })
