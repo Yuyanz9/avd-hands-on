@@ -87,6 +87,22 @@ param loadBalancerType string = 'BreadthFirst'
 @description('Request Microsoft Intune enrollment for new Microsoft Entra joined session hosts. Requires tenant MDM auto-enrollment and appropriate licensing; use false for Personal host pools.')
 param intune bool = true
 
+@metadata({ displayName: 'Enable Automatic Shutdown' })
+@description('Enable the daily VM shutdown schedule. Setting this to false disables an existing schedule when redeploying.')
+param autoShutdownEnabled bool = true
+
+@metadata({ displayName: 'Shutdown Hour (Japan Time)' })
+@description('Hour of the daily VM shutdown in Japan time (0-23).')
+@minValue(0)
+@maxValue(23)
+param autoShutdownHour int = 19
+
+@metadata({ displayName: 'Shutdown Minute' })
+@description('Minute of the daily VM shutdown (0-59).')
+@minValue(0)
+@maxValue(59)
+param autoShutdownMinute int = 0
+
 module avd './modules/avd.bicep' = {
   name: 'avd-editable-configuration'
   params: {
@@ -107,6 +123,9 @@ module avd './modules/avd.bicep' = {
     hostpoolType: hostpoolType
     loadBalancerType: loadBalancerType
     intune: intune
+    autoShutdownEnabled: autoShutdownEnabled
+    autoShutdownHour: autoShutdownHour
+    autoShutdownMinute: autoShutdownMinute
   }
 }
 

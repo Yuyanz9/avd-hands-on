@@ -8,7 +8,7 @@
 | --- | --- |
 | [固定設定](infra/settings.json) | 3サブネット、VNet／NAT の既定値、AVD の固定設定部分 |
 | [運用 Network ソース](infra/network.bicep)／[検証 Network ソース](infra/network-validation.bicep)／[共通モジュール](infra/modules/network-core.bicep) | 同じ3サブネットと編集可能な CIDR。運用版は NAT Gateway／Public IP あり、検証版は NAT なし |
-| [AVD 入口](infra/avd.bicep)／[モジュール](infra/modules/avd.bicep) | 既定値付き編集可能パラメーター、secure password、実行者 ID、VM・AVD・RBAC・SSO・22:00停止 |
+| [AVD 入口](infra/avd.bicep)／[モジュール](infra/modules/avd.bicep) | 既定値付き編集可能パラメーター、secure password、実行者 ID、VM・AVD・RBAC・SSO・設定可能な自動停止（既定19:00 JST） |
 | [セッションホスト共通モジュール](infra/modules/session-host.bicep) | SKU／Offer の連動、Entra 参加、既存プール登録、任意の日本語設定拡張機能、VM Login RBAC、自動停止 |
 | [追加ホスト入口](infra/session-host.bicep) | 既存 Standard 管理プールへ既定1台、1～10台を追加。登録キーは secure parameter |
 | [運用 Network JSON](templates/network.json)／[検証 Network JSON](templates/network-validation.json)／[AVD JSON](templates/avd.json)／[追加ホスト JSON](templates/session-host.json) | Deploy to Azure 用に生成。モジュールは JSON に埋め込み |

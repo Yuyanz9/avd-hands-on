@@ -29,6 +29,13 @@ param vmNamePrefix string
 param vmIndex int
 param customConfigurationScriptUrl string
 param intune bool
+param autoShutdownEnabled bool
+@minValue(0)
+@maxValue(23)
+param autoShutdownHour int
+@minValue(0)
+@maxValue(59)
+param autoShutdownMinute int
 
 var settings = loadJsonContent('../settings.json')
 var vmName = '${vmNamePrefix}-${vmIndex}'
@@ -204,7 +211,7 @@ resource autoShutdown 'Microsoft.DevTestLab/schedules@2018-09-15' = {
   location: location
   properties: {
     dailyRecurrence: {
-      time: '2200'
+      time: concat(padLeft(string(autoShutdownHour), 2, '0'), padLeft(string(autoShutdownMinute), 2, '0'))
     }
     notificationSettings: {
       emailRecipient: ''
@@ -212,7 +219,7 @@ resource autoShutdown 'Microsoft.DevTestLab/schedules@2018-09-15' = {
       timeInMinutes: 30
       webhookUrl: ''
     }
-    status: 'Enabled'
+    status: autoShutdownEnabled ? 'Enabled' : 'Disabled'
     targetResourceId: virtualMachine.id
     taskType: 'ComputeVmShutdownTask'
     timeZoneId: 'Tokyo Standard Time'

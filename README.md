@@ -4,7 +4,7 @@
 
 **Network は運用版と検証版を選べます。** 運用版は Standard NAT Gateway と静的 Standard Public IP を作成するため継続費用が発生します。検証版は NAT Gateway／Public IP を作らず、Azure の既定の送信アクセスを使います。Network の Azure 実デプロイ、動的デバイスグループの評価、Windows 365 との通しリハーサル、SSO のシームレスな資格情報フローは未確認です。2026-10-07 の旧版 Network／AVD ボタンでは Windows App 接続成功と日本語化に問題がなさそうとの利用者報告がありますが、[修正一覧](revision-list.md) R10 の確認を講師が済ませてから受講者へ配布してください。
 
-> **新版公開済み（2026-10-18）：** Deploy ボタンから Office 入り既定イメージ、SKU 選択、スクリプト省略、複数台、ホストプール方式の入力を利用できます。**英語での新規展開を早める場合は `Custom Configuration Script Url` の既定 URL をすべて消して空欄にします。** 日本語化用 Custom Script Extension を作成せず、Entra ID 参加・AVD 登録・RBAC・22時停止は引き続き設定します。初回構築・ホスト追加の両方で利用でき、Azure 実機での所要時間・接続は別途確認が必要です。
+> **自動停止時刻を設定可能（既定19:00、日本時間）：** 初回 AVD／ホスト追加の Deploy ボタンで自動停止の有効・無効、時、分を指定できます。無効で再デプロイすると既存の停止スケジュールも無効になります。VM は毎日停止時刻に停止し、実行中のセッションが中断される場合があります。Azure 実機での所要時間・接続は別途確認が必要です。
 
 > **RDP 2項目も公開済み（2026-10-18）：** CredSSP とビデオ再生の既定値を明示する修正を公開 Deploy ボタンへ反映しました。デバイス／ディスプレイ全体の照合と実機確認は [R19](revision-list.md) に残しています。
 
@@ -33,7 +33,7 @@ Network のどちらか一方を選んでください。2つのボタンはど�
 ### 2.1 運用（NAT Gateway あり）
 
 <!-- deploy-button-network:start -->
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F3166a1f68663049c779ad0ff7c91b4fec08dcbc0%2Ftemplates%2Fnetwork.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F05bceb92ec540ddafb67ccf1c88fddd855e5c119%2Ftemplates%2Fnetwork.json)
 <!-- deploy-button-network:end -->
 
 **Ctrl＋クリックで、Azure portal を別タブで開けます（macOS は Command＋クリック）。**
@@ -43,7 +43,7 @@ Network のどちらか一方を選んでください。2つのボタンはど�
 ### 2.2 検証（NAT なし）
 
 <!-- deploy-button-network-validation:start -->
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F3166a1f68663049c779ad0ff7c91b4fec08dcbc0%2Ftemplates%2Fnetwork-validation.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F05bceb92ec540ddafb67ccf1c88fddd855e5c119%2Ftemplates%2Fnetwork-validation.json)
 <!-- deploy-button-network-validation:end -->
 
 **Ctrl＋クリックで、Azure portal を別タブで開けます（macOS は Command＋クリック）。**
@@ -73,7 +73,7 @@ Network の成功と3サブネットを確認後、Windows 365 担当者の資�
 ## 4. AVD を Deploy to Azure
 
 <!-- deploy-button-avd:start -->
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F3166a1f68663049c779ad0ff7c91b4fec08dcbc0%2Ftemplates%2Favd.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F05bceb92ec540ddafb67ccf1c88fddd855e5c119%2Ftemplates%2Favd.json)
 <!-- deploy-button-avd:end -->
 
 **Ctrl＋クリックで、Azure portal を別タブで開けます（macOS は Command＋クリック）。**
@@ -97,7 +97,7 @@ Network の成功と3サブネットを確認後、Windows 365 担当者の資�
 | クリップボード転送 | `redirectclipboard:i:0`（新規ホストプールの既定に合わせて無効）。後から RDP プロパティで変更可能 |
 | 接続用 RBAC | 実行ユーザーへ DAG の Desktop Virtualization User と VM の Virtual Machine User Login |
 | 日本語設定等 | `Custom Configuration Script Url` の既定は同梱 [JPNOFLNG.ps1](scripts/JPNOFLNG.ps1) の GitHub 固定コミット URL。空欄なら Custom Script Extension を作らずイメージの言語（通常は英語）のまま高速展開。既定スクリプトは Windows Update と自動再起動を含む |
-| 自動停止 | 毎日22:00（`Tokyo Standard Time`）。実行中のセッションも中断される場合があります |
+| 自動停止 | `Enable Automatic Shutdown` は既定 `true`、時は `19`、分は `0`（日本時間）。時は0～23、分は0～59。無効で再デプロイすると既存スケジュールも無効 |
 
 `Intune Enrollment`（`intune`）は既定で `true` です。Entra ID 参加時に Intune MDM 自動登録を要求します。Microsoft Entra ID P1 と適切な Intune ライセンス、テナントの自動 MDM 登録範囲、必要な外向き接続を事前に確認してください。Windows Enterprise multi-session の Intune 管理は Pooled host pool が前提です。Personal pool または Intune を使わない環境では `intune=false` にします。テンプレートはテナントのライセンスや登録範囲を変更しません。[AVD の Entra joined session host](https://learn.microsoft.com/azure/virtual-desktop/azure-ad-joined-session-hosts)、[multi-session の Intune 要件](https://learn.microsoft.com/intune/solutions/azure-virtual-desktop-multi-session)、[Azure VM の MDM 自動登録要件](https://learn.microsoft.com/entra/identity/devices/howto-vm-sign-in-azure-ad-windows)も確認してください。
 
@@ -118,23 +118,23 @@ AVD は、入力した VNet の RG／名前／サブネットを参照するだ�
 
 SKU は Windows 11 **23H2／24H2／25H2／26H2 の `-avd` と `-avd-m365`** から選べます。`-m365` は Office 入りの `office-365` Offer、Office なしは `windows-11` Offer を自動指定します。**Microsoft 365 Apps が入っていても Office 利用ライセンスは付与されません。** Office の利用・認証や日本語化の成功を保証せず、研修では Office 操作を必須にしません。Office 日本語化はライセンス・Intune の前提を確認したデモ／説明として別途準備します。各 SKU の提供地域、サポート期限、利用資格は講師が確認してください。
 
-`Custom Configuration Script Url` を空欄にしても、Entra ID 参加、AVD 登録、接続権限、22時停止は実行されます。変更する場合は講師が承認した HTTPS の PowerShell `.ps1` URL だけを使います。ダウンロード・実行エラーはデプロイ失敗として扱い、成功と見なしません。既存 VM に空欄で再適用しても日本語設定を取り消したり、既存の拡張機能を増分デプロイで削除したりするものではありません。
+`Custom Configuration Script Url` を空欄にしても、Entra ID 参加、AVD 登録、接続権限、自動停止設定は実行されます。停止の有効・無効と時刻は `Enable Automatic Shutdown`、`Shutdown Hour (Japan Time)`、`Shutdown Minute` で設定します。変更する場合は講師が承認した HTTPS の PowerShell `.ps1` URL だけを使います。ダウンロード・実行エラーはデプロイ失敗として扱い、成功と見なしません。既存 VM に空欄で再適用しても日本語設定を取り消したり、既存の拡張機能を増分デプロイで削除したりするものではありません。
 
 **Personal を選ぶと、Pooled 向けの負荷分散選択と最大セッション数は使わず、Persistent・Automatic・1セッションで作成します。** ユーザーとホストは1対1です。既存プールの方式は変更できないため、別方式を試す場合は講師と既存リソースの保持・削除を確認して新規に作成します。
 
-VM 名の既定プレフィックスはデプロイ時刻から作られ、1回の展開では `-0` から連番を付けます。**ホスト追加や再実行ではプレフィックスを新しくし、既存 VM と重複させません。** 台数増加に応じて VM・ディスク等の費用、vCPU クォータ、サブネット IP 消費も増えます。各 VM は毎日22:00（日本時間）に自動停止します。実行中のセッションが中断されることがあり、停止後もディスク・ネットワーク等の料金は残ります。
+VM 名の既定プレフィックスはデプロイ時刻から作られ、1回の展開では `-0` から連番を付けます。**ホスト追加や再実行ではプレフィックスを新しくし、既存 VM と重複させません。** 台数増加に応じて VM・ディスク等の費用、vCPU クォータ、サブネット IP 消費も増えます。自動停止は有効時、既定で毎日19:00（日本時間）です。実行中のセッションが中断されることがあり、停止後もディスク・ネットワーク等の料金は残ります。
 
 ## 5. 既存プールへセッションホストを追加
 
 <!-- deploy-button-session-host:start -->
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F3166a1f68663049c779ad0ff7c91b4fec08dcbc0%2Ftemplates%2Fsession-host.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F05bceb92ec540ddafb67ccf1c88fddd855e5c119%2Ftemplates%2Fsession-host.json)
 <!-- deploy-button-session-host:end -->
 
 **Ctrl＋クリックで、Azure portal を別タブで開けます（macOS は Command＋クリック）。**
 
 使用するテンプレート：[templates/session-host.json](templates/session-host.json)。このテンプレートは既存の Standard 管理ホストプールへ VM を既定1台、1回につき1～10台追加します。**台数は追加分であり、プール全体の目標台数ではありません。** 既存のホストプール、アプリケーショングループ、Workspace は作成・更新しません。Azure portal で新しい VM の配置先 RG を選びます。VNet が別 RG の場合は、上の配置表と同様に **Network Resource Group Name を VNet 側 RG に変更**してください。プールの RG は登録キーを発行する場所で、VM の配置先 RG と区別します。
 
-デプロイ前に対象ホストプールで有効な登録キーを発行し、Secure registration token 欄へ貼り付けます。トークンと VM ローカル管理者パスワードは秘密情報として扱い、ファイル・チャット・スクリーンショットへ保存しません。イメージ、VM サイズ、リージョン、サブネットは既存プールと互換性があることを講師が確認してください。既定名は日時プレフィックス＋ `-0` からの連番です。既存ホストとの名前衝突を避け、再実行時はプレフィックスを変更します。作成した各 VM も毎日22:00（日本時間）に自動停止します。
+デプロイ前に対象ホストプールで有効な登録キーを発行し、Secure registration token 欄へ貼り付けます。トークンと VM ローカル管理者パスワードは秘密情報として扱い、ファイル・チャット・スクリーンショットへ保存しません。イメージ、VM サイズ、リージョン、サブネットは既存プールと互換性があることを講師が確認してください。既定名は日時プレフィックス＋ `-0` からの連番です。既存ホストとの名前衝突を避け、再実行時はプレフィックスを変更します。自動停止は既定で有効、毎日19:00（日本時間）です。停止を無効にして再デプロイすると既存スケジュールも無効になります。
 
 | 入力項目 | 既定値 | 用途・注意 |
 | --- | --- | --- |
@@ -147,6 +147,7 @@ VM 名の既定プレフィックスはデプロイ時刻から作られ、1回�
 | Vm Name Prefix | JST の日時 `AVDMMddHHmm` | 実行時刻が近い場合は一意になる値へ変更 |
 | Custom Configuration Script Url | `https://raw.githubusercontent.com/Yuyanz9/avd-hands-on/7b0923fcc78335ac25bafc418d9d3ab4538292d8/scripts/JPNOFLNG.ps1` | GitHub 固定コミット。空欄なら日本語設定を省略 |
 | Vm Number Of Instances | `1` | 追加する台数。1～10台。費用・クォータを確認 |
+| Enable Automatic Shutdown／Shutdown Hour (Japan Time)／Shutdown Minute | `true`／`19`／`0` | 日本時間の毎日停止。時は0～23、分は0～59。無効で再デプロイするとスケジュールも無効 |
 | Registration Token／Vm Administrator Account Password | 既定なし | 必須の secure parameter。秘密を保存しない |
 
 ## 6. 動的デバイスグループ（任意・手動）
@@ -165,7 +166,7 @@ Windows 365 のプロビジョニング ポリシーを割り当てる対象は 
 ## 記事からの意図的な変更と未確認事項
 
 - VM 名プレフィックス、VM サイズ、ディスク種別、イメージ SKU、最大セッション数、VNet／サブネット名、配置 RG、ロケーション、Workspace 表示名は既定値を確認・変更できます。名前の重複や VNet とリージョンの不整合を避けます。
-- AVD と追加ホストの VM は毎日22:00（日本時間）に自動停止します。Day 2 のセキュアジャンプ VM は IaC 対象外で、手動で同じ停止時刻を設定します。
+- AVD と追加ホストの VM は自動停止を既定で有効にし、毎日19:00（日本時間）に停止します。Deploy ボタンで有効・無効と時・分を指定でき、無効で再デプロイすると既存スケジュールも無効になります。Day 2 のセキュアジャンプ VM は IaC 対象外で、手動で22:00停止を設定します。
 - Network は運用版（NAT Gateway／静的 Public IP、`defaultOutboundAccess: false`）と検証版（NAT なし、`defaultOutboundAccess: true`）から選びます。運用版には継続費用がかかり、検証版の既定送信元 IP は固定されません。
 - 接続権限2種類とホストプール SSO を自動設定します。Windows Cloud Login のテナント側準備は講師担当です。
 

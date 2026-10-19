@@ -34,6 +34,13 @@ param hostpoolType string
 ])
 param loadBalancerType string
 param intune bool
+param autoShutdownEnabled bool
+@minValue(0)
+@maxValue(23)
+param autoShutdownHour int
+@minValue(0)
+@maxValue(59)
+param autoShutdownMinute int
 
 param tokenExpirationTime string = dateTimeAdd(utcNow(), 'PT2H')
 
@@ -120,6 +127,9 @@ module sessionHost './session-host.bicep' = [for index in range(0, vmNumberOfIns
     vmIndex: index
     customConfigurationScriptUrl: customConfigurationScriptUrl
     intune: intune
+    autoShutdownEnabled: autoShutdownEnabled
+    autoShutdownHour: autoShutdownHour
+    autoShutdownMinute: autoShutdownMinute
   }
 }]
 

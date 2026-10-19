@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.42.1.51946",
-      "templateHash": "2420847443271719209"
+      "templateHash": "3532586533325085593"
     }
   },
   "parameters": {
@@ -120,6 +120,34 @@
         "description": "Request Microsoft Intune enrollment for new Microsoft Entra joined session hosts. Requires tenant MDM auto-enrollment and appropriate licensing; use false for Personal host pools."
       }
     },
+    "autoShutdownEnabled": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "displayName": "Enable Automatic Shutdown",
+        "description": "Enable the daily VM shutdown schedule. Setting this to false disables an existing schedule when redeploying."
+      }
+    },
+    "autoShutdownHour": {
+      "type": "int",
+      "defaultValue": 19,
+      "metadata": {
+        "displayName": "Shutdown Hour (Japan Time)",
+        "description": "Hour of the daily VM shutdown in Japan time (0-23)."
+      },
+      "minValue": 0,
+      "maxValue": 23
+    },
+    "autoShutdownMinute": {
+      "type": "int",
+      "defaultValue": 0,
+      "metadata": {
+        "displayName": "Shutdown Minute",
+        "description": "Minute of the daily VM shutdown (0-59)."
+      },
+      "minValue": 0,
+      "maxValue": 59
+    },
     "vmNumberOfInstances": {
       "type": "int",
       "defaultValue": 1,
@@ -190,6 +218,15 @@
           },
           "intune": {
             "value": "[parameters('intune')]"
+          },
+          "autoShutdownEnabled": {
+            "value": "[parameters('autoShutdownEnabled')]"
+          },
+          "autoShutdownHour": {
+            "value": "[parameters('autoShutdownHour')]"
+          },
+          "autoShutdownMinute": {
+            "value": "[parameters('autoShutdownMinute')]"
           }
         },
         "template": {
@@ -199,7 +236,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.42.1.51946",
-              "templateHash": "1673470654123918294"
+              "templateHash": "15949330815246755852"
             }
           },
           "parameters": {
@@ -256,6 +293,19 @@
             },
             "intune": {
               "type": "bool"
+            },
+            "autoShutdownEnabled": {
+              "type": "bool"
+            },
+            "autoShutdownHour": {
+              "type": "int",
+              "minValue": 0,
+              "maxValue": 23
+            },
+            "autoShutdownMinute": {
+              "type": "int",
+              "minValue": 0,
+              "maxValue": 59
             }
           },
           "variables": {
@@ -471,7 +521,7 @@
               "location": "[parameters('location')]",
               "properties": {
                 "dailyRecurrence": {
-                  "time": "2200"
+                  "time": "[concat(padLeft(string(parameters('autoShutdownHour')), 2, '0'), padLeft(string(parameters('autoShutdownMinute')), 2, '0'))]"
                 },
                 "notificationSettings": {
                   "emailRecipient": "",
@@ -479,7 +529,7 @@
                   "timeInMinutes": 30,
                   "webhookUrl": ""
                 },
-                "status": "Enabled",
+                "status": "[if(parameters('autoShutdownEnabled'), 'Enabled', 'Disabled')]",
                 "targetResourceId": "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]",
                 "taskType": "ComputeVmShutdownTask",
                 "timeZoneId": "Tokyo Standard Time"

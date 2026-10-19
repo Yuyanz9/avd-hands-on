@@ -180,7 +180,7 @@ foreach ($phase in @('network', 'network-validation')) {
 }
 
 $entry = $templates.avd
-Assert-Template ($entry.parameters.Count -eq 16 -and $entry.parameters.ContainsKey('vmAdministratorAccountPassword')) 'AVD must expose the existing inputs plus the Intune enrollment option.'
+Assert-Template ($entry.parameters.Count -eq 19 -and $entry.parameters.ContainsKey('vmAdministratorAccountPassword')) 'AVD must expose the existing inputs plus Intune and automatic shutdown options.'
 $password = $entry.parameters.vmAdministratorAccountPassword
 Assert-Template ($password.type -eq 'securestring' -and -not $password.ContainsKey('defaultValue')) 'The password must be secure and have no default.'
 Assert-Template ($password.minLength -eq 12 -and $password.maxLength -eq 123) 'The password length must be bounded.'
@@ -200,13 +200,16 @@ $expectedDefaults = @{
     hostpoolType = 'Pooled'
     loadBalancerType = 'BreadthFirst'
     intune = $true
+    autoShutdownEnabled = $true
+    autoShutdownHour = 19
+    autoShutdownMinute = 0
 }
 foreach ($name in $expectedDefaults.Keys) {
     Assert-Template ($entry.parameters[$name].defaultValue -ceq $expectedDefaults[$name]) "AVD default must be editable and preserve the expected value: $name."
 }
 Assert-Template ($entry.parameters.vmNamePrefix.maxLength -eq 13) 'VM name prefix must leave room for the -0 suffix in a Windows computer name.'
-$expectedOrder = @('vmAdministratorAccountPassword', 'networkResourceGroupName', 'virtualNetworkName', 'subnetName', 'location', 'imageSku', 'workspaceFriendlyName', 'vmSize', 'vmDiskType', 'maxSessionLimit', 'vmNamePrefix', 'customConfigurationScriptUrl', 'vmNumberOfInstances', 'hostpoolType', 'loadBalancerType', 'intune')
-Assert-Template (($entry.parameters.Keys -join ',') -ceq ($expectedOrder -join ',')) 'Keep the existing portal input order and append Intune enrollment after the deployment options.'
+$expectedOrder = @('vmAdministratorAccountPassword', 'networkResourceGroupName', 'virtualNetworkName', 'subnetName', 'location', 'imageSku', 'workspaceFriendlyName', 'vmSize', 'vmDiskType', 'maxSessionLimit', 'vmNamePrefix', 'customConfigurationScriptUrl', 'vmNumberOfInstances', 'hostpoolType', 'loadBalancerType', 'intune', 'autoShutdownEnabled', 'autoShutdownHour', 'autoShutdownMinute')
+Assert-Template (($entry.parameters.Keys -join ',') -ceq ($expectedOrder -join ',')) 'Keep the existing portal input order and append Intune and shutdown options.'
 $imageSkus = @('win11-23h2-avd', 'win11-23h2-avd-m365', 'win11-24h2-avd', 'win11-24h2-avd-m365', 'win11-25h2-avd', 'win11-25h2-avd-m365', 'win11-26h2-avd', 'win11-26h2-avd-m365')
 $labels = @{
     networkResourceGroupName = 'Network Resource Group Name'
@@ -216,12 +219,17 @@ $labels = @{
     hostpoolType = 'Hostpool Type'
     loadBalancerType = 'Load Balancer Type'
     intune = 'Intune Enrollment'
+    autoShutdownEnabled = 'Enable Automatic Shutdown'
+    autoShutdownHour = 'Shutdown Hour (Japan Time)'
+    autoShutdownMinute = 'Shutdown Minute'
 }
 foreach ($name in $labels.Keys) {
     Assert-Template ($entry.parameters[$name].metadata.displayName -ceq $labels[$name]) "Show the requested portal label: $name."
 }
 Assert-Template (($entry.parameters.hostpoolType.allowedValues -join ',') -ceq 'Pooled,Personal') 'Host pool type must be a Pooled/Personal selection.'
 Assert-Template (($entry.parameters.loadBalancerType.allowedValues -join ',') -ceq 'BreadthFirst,DepthFirst') 'Expose only the supported pooled load balancing algorithms.'
+Assert-Template ($entry.parameters.autoShutdownEnabled.type -eq 'bool' -and $entry.parameters.autoShutdownHour.type -eq 'int' -and $entry.parameters.autoShutdownMinute.type -eq 'int') 'Expose typed automatic-shutdown controls.'
+Assert-Template ($entry.parameters.autoShutdownHour.minValue -eq 0 -and $entry.parameters.autoShutdownHour.maxValue -eq 23 -and $entry.parameters.autoShutdownMinute.minValue -eq 0 -and $entry.parameters.autoShutdownMinute.maxValue -eq 59) 'Bound shutdown hour and minute to valid clock values.'
 $readmeText = Get-Content -LiteralPath (Join-Path $root 'README.md') -Raw
 $day1Text = Get-Content -LiteralPath (Join-Path $root 'day1-handson.md') -Raw
 $day2Text = Get-Content -LiteralPath (Join-Path $root 'day2-secure-jump.md') -Raw
@@ -339,8 +347,10 @@ foreach ($resource in $sessionHost.resources) {
 }
 
 $sessionEntry = $templates['session-host']
-Assert-Template ($sessionEntry.parameters.Count -eq 14 -and $sessionEntry.parameters.registrationToken.type -eq 'securestring' -and -not $sessionEntry.parameters.registrationToken.ContainsKey('defaultValue')) 'The add-host template must require a secure registration token and expose script/count/Intune options.'
+Assert-Template ($sessionEntry.parameters.Count -eq 17 -and $sessionEntry.parameters.registrationToken.type -eq 'securestring' -and -not $sessionEntry.parameters.registrationToken.ContainsKey('defaultValue')) 'The add-host template must require a secure registration token and expose script/count/Intune/shutdown options.'
 Assert-Template ($sessionEntry.parameters.intune.type -eq 'bool' -and $sessionEntry.parameters.intune.defaultValue -eq $true) 'The add-host template must request Intune enrollment by default.'
+Assert-Template ($sessionEntry.parameters.autoShutdownEnabled.type -eq 'bool' -and $sessionEntry.parameters.autoShutdownEnabled.defaultValue -eq $true -and $sessionEntry.parameters.autoShutdownHour.defaultValue -eq 19 -and $sessionEntry.parameters.autoShutdownMinute.defaultValue -eq 0) 'The add-host template must enable shutdown at 19:00 Japan time by default.'
+Assert-Template ($sessionEntry.parameters.autoShutdownHour.minValue -eq 0 -and $sessionEntry.parameters.autoShutdownHour.maxValue -eq 23 -and $sessionEntry.parameters.autoShutdownMinute.minValue -eq 0 -and $sessionEntry.parameters.autoShutdownMinute.maxValue -eq 59) 'The add-host template must bound shutdown hour and minute.'
 Assert-Template (-not $sessionEntry.parameters.ContainsKey('hostpoolType') -and -not $sessionEntry.parameters.ContainsKey('loadBalancerType')) 'Adding hosts must not offer to change existing pool properties.'
 Assert-Template ($sessionEntry.parameters.vmAdministratorAccountPassword.type -eq 'securestring' -and -not $sessionEntry.parameters.vmAdministratorAccountPassword.ContainsKey('defaultValue')) 'The add-host template must require a secure VM password.'
 Assert-Template ($sessionEntry.resources.Count -eq 1 -and $sessionEntry.resources[0].type -eq 'Microsoft.Resources/deployments') 'The add-host entry must use one embedded module.'
@@ -369,6 +379,7 @@ foreach ($parent in @($avd, $sessionEntry)) {
     Assert-Template ($loop.name -match "range\(0, parameters\('vmNumberOfInstances'\)\)\[copyIndex\(\)\]") 'Nested deployment names must be distinct per VM.'
     Assert-Template ($loop.properties.parameters.customConfigurationScriptUrl.value -ceq "[parameters('customConfigurationScriptUrl')]") 'Forward the script choice to every VM.'
     Assert-Template ($loop.properties.parameters.intune.value -ceq "[parameters('intune')]") 'Forward the Intune enrollment choice to every VM.'
+    Assert-Template ($loop.properties.parameters.autoShutdownEnabled.value -ceq "[parameters('autoShutdownEnabled')]" -and $loop.properties.parameters.autoShutdownHour.value -ceq "[parameters('autoShutdownHour')]" -and $loop.properties.parameters.autoShutdownMinute.value -ceq "[parameters('autoShutdownMinute')]") 'Forward shutdown controls to every VM.'
     Assert-Template ($parent.outputs.sessionHostName.type -eq 'string' -and $parent.outputs.sessionHostName.value -match "\[0\]") 'Retain the first-host string output for compatibility.'
     Assert-Template ($parent.outputs.sessionHostNames.type -eq 'array' -and $parent.outputs.sessionHostNames.copy.count -ceq $loop.copy.count) 'Return every created name in the array output.'
 }
@@ -420,8 +431,9 @@ try {
 foreach ($template in @($sessionHost, $addHostLeaf)) {
     $schedules = Find-Resources $template 'Microsoft.DevTestLab/schedules'
     Assert-Template ($schedules.Count -eq 1) 'Each session-host workflow must configure one VM shutdown schedule.'
-    Assert-Template ($schedules[0].properties.dailyRecurrence.time -eq '2200' -and $schedules[0].properties.timeZoneId -eq 'Tokyo Standard Time') 'Stop each VM daily at 22:00 Japan time.'
-    Assert-Template ($schedules[0].properties.taskType -eq 'ComputeVmShutdownTask' -and $schedules[0].properties.status -eq 'Enabled') 'Enable the VM shutdown task.'
+    Assert-Template ($schedules[0].properties.dailyRecurrence.time -match "autoShutdownHour.*autoShutdownMinute" -and $schedules[0].properties.timeZoneId -eq 'Tokyo Standard Time') 'Set each VM daily shutdown from the configured hour and minute in Japan time.'
+    Assert-Template ($schedules[0].properties.taskType -eq 'ComputeVmShutdownTask' -and $schedules[0].properties.status -match "parameters\('autoShutdownEnabled'\).*'Enabled'.*'Disabled'") 'Enable or disable the VM shutdown task through the deployment input.'
+    Assert-Template (-not $schedules[0].ContainsKey('condition')) 'Always deploy the schedule resource so disabling it updates an existing schedule.'
     Assert-Template ($schedules[0].properties.targetResourceId -match 'virtualMachines') 'Target the created VM with the shutdown schedule.'
     Assert-Template ($schedules[0].name -ceq "[format('shutdown-computevm-{0}', variables('vmName'))]" -and $schedules[0].properties.targetResourceId -ceq "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]") 'Shutdown must be distinct for every indexed VM and target that same VM.'
 }
@@ -443,7 +455,7 @@ if ($liveManifest.publication.repository) {
 if ($liveManifest.publication.rawUrlsVerified) {
     Assert-Template ($liveManifest.status -ceq 'published-templates-urls-verified-not-azure-validated') 'Distinguish verified template publication from Azure runtime validation.'
     foreach ($text in @($readmeText, $day1Text)) {
-        Assert-Template ($text.Contains('新版公開済み') -and -not $text.Contains('ローカル更新版・未公開')) 'Published guides must describe the available updated inputs.'
+        Assert-Template ($text.Contains('自動停止時刻を設定可能') -and -not $text.Contains('ローカル更新版・未公開')) 'Published guides must describe the available shutdown inputs.'
     }
 }
 foreach ($phase in @('network', 'network-validation', 'avd', 'session-host')) {
