@@ -198,27 +198,27 @@ param rdpAudioMode string = 'ローカル端末で再生 (0)'
 param rdpCameraStoreDirect string = ''
 
 @metadata({ displayName: 'RDP - MTP/PTP Device Redirection' })
-@description('特定のデバイスを指定する場合は、下の Custom Device Value を入力します。')
+@description('既定ですべての対応デバイスをリダイレクトします。特定のデバイスを指定する場合は、下の Custom Device Value を入力します。')
 @allowed([
   '未構成'
   'すべての対応デバイス (*)'
   '新しく接続する対応デバイス (DynamicDevices)'
 ])
-param rdpDeviceStoreDirect string = '未構成'
+param rdpDeviceStoreDirect string = 'すべての対応デバイス (*)'
 
 @metadata({ displayName: 'RDP - MTP/PTP Custom Device Value' })
 @description('空欄は上の選択を使用します。デバイス パスを指定すると選択より優先されます。')
 param rdpDeviceStoreDirectCustom string = ''
 
 @metadata({ displayName: 'RDP - Drive Redirection' })
-@description('ドライブ文字を指定する場合は、下の Custom Drive Value を入力します。')
+@description('既定はリダイレクトしない設定です。ドライブ文字を指定する場合は、下の Custom Drive Value を入力します。')
 @allowed([
   '未構成'
   'リダイレクトしない (空)'
   'すべてのドライブ (*)'
   '新しく接続するドライブ (DynamicDrives)'
 ])
-param rdpDriveStoreDirect string = '未構成'
+param rdpDriveStoreDirect string = 'リダイレクトしない (空)'
 
 @metadata({ displayName: 'RDP - Custom Drive Value' })
 @description('空欄は上の選択を使用します。例: C:\\;E:\\;。値を指定すると選択より優先されます。')
@@ -253,12 +253,13 @@ param rdpKeyboardHook string = '未構成'
 param rdpRedirectClipboard string = '無効 (0)'
 
 @metadata({ displayName: 'RDP - COM Port Redirection' })
+@description('現在の既定は有効 (1) です。')
 @allowed([
   '未構成'
   '有効 (1)'
   '無効 (0)'
 ])
-param rdpRedirectComPorts string = '未構成'
+param rdpRedirectComPorts string = '有効 (1)'
 
 @metadata({ displayName: 'RDP - Redirected Video Capture Quality' })
 @allowed([
@@ -278,41 +279,44 @@ param rdpRedirectedVideoCaptureEncodingQuality string = '未構成'
 param rdpRedirectLocation string = '未構成'
 
 @metadata({ displayName: 'RDP - Printer Redirection' })
+@description('現在の既定は無効 (0) です。')
 @allowed([
   '未構成'
   '有効 (1)'
   '無効 (0)'
 ])
-param rdpRedirectPrinters string = '未構成'
+param rdpRedirectPrinters string = '無効 (0)'
 
 @metadata({ displayName: 'RDP - Smart Card Redirection' })
+@description('現在の既定は有効 (1) です。')
 @allowed([
   '未構成'
   '有効 (1)'
   '無効 (0)'
 ])
-param rdpRedirectSmartCards string = '未構成'
+param rdpRedirectSmartCards string = '有効 (1)'
 
 @metadata({ displayName: 'RDP - WebAuthn Redirection' })
+@description('現在の既定は有効 (1) です。')
 @allowed([
   '未構成'
   '有効 (1)'
   '無効 (0)'
 ])
-param rdpRedirectWebAuthn string = '未構成'
+param rdpRedirectWebAuthn string = '有効 (1)'
 
 @metadata({ displayName: 'RDP - Smart Raw Printers' })
 @description('空欄は未構成です。* または対象プリンターのドライバー名プレフィックスを入力します。')
 param rdpSmartRawPrinters string = ''
 
 @metadata({ displayName: 'RDP - USB Device Redirection' })
-@description('特定のデバイスを指定する場合は、下の Custom USB Device Value を入力します。')
+@description('既定はリダイレクトしない設定です。特定のデバイスを指定する場合は、下の Custom USB Device Value を入力します。')
 @allowed([
   '未構成'
   'リダイレクトしない (空)'
   'すべての対応 USB デバイス (*)'
 ])
-param rdpUsbDeviceStoreDirect string = '未構成'
+param rdpUsbDeviceStoreDirect string = 'リダイレクトしない (空)'
 
 @metadata({ displayName: 'RDP - Custom USB Device Value' })
 @description('空欄は上の選択を使用します。デバイス クラス GUID またはデバイス インスタンス ID を指定すると選択より優先されます。')
@@ -405,12 +409,13 @@ param rdpSingleMonInWindowedMode string = '未構成'
 param rdpSmartSizing string = '未構成'
 
 @metadata({ displayName: 'RDP - Use Multiple Monitors' })
+@description('現在の既定は有効 (1) です。')
 @allowed([
   '未構成'
   '有効 (1)'
   '無効 (0)'
 ])
-param rdpUseMultimon string = '未構成'
+param rdpUseMultimon string = '有効 (1)'
 
 module avd './modules/avd.bicep' = {
   name: 'avd-editable-configuration'
