@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.42.1.51946",
-      "templateHash": "5022605178338127700"
+      "templateHash": "3468189808993118331"
     }
   },
   "parameters": {
@@ -849,7 +849,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.42.1.51946",
-              "templateHash": "12795733797532306475"
+              "templateHash": "4604143767422030481"
             }
           },
           "parameters": {
@@ -1418,10 +1418,6 @@
                   {
                     "name": "snet-avd",
                     "addressPrefix": "10.10.2.0/24"
-                  },
-                  {
-                    "name": "snet-server",
-                    "addressPrefix": "10.10.3.0/24"
                   }
                 ]
               },
@@ -1581,7 +1577,7 @@
                     "_generator": {
                       "name": "bicep",
                       "version": "0.42.1.51946",
-                      "templateHash": "11085699619135408738"
+                      "templateHash": "14065960091143019465"
                     }
                   },
                   "parameters": {
@@ -1657,10 +1653,6 @@
                           {
                             "name": "snet-avd",
                             "addressPrefix": "10.10.2.0/24"
-                          },
-                          {
-                            "name": "snet-server",
-                            "addressPrefix": "10.10.3.0/24"
                           }
                         ]
                       },

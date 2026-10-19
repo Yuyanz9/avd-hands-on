@@ -5,7 +5,6 @@ param vnetName string
 param vnetAddressPrefix string
 param cloudPcSubnetPrefix string
 param avdSubnetPrefix string
-param serverSubnetPrefix string
 param natGatewayName string
 param publicIpName string
 param useNatGateway bool
@@ -18,10 +17,6 @@ var subnets = [
   {
     name: 'snet-avd'
     addressPrefix: avdSubnetPrefix
-  }
-  {
-    name: 'snet-server'
-    addressPrefix: serverSubnetPrefix
   }
 ]
 
@@ -82,4 +77,3 @@ output resourceGroupName string = resourceGroup().name
 output vnetId string = virtualNetwork.id
 output cloudPcSubnetId string = '${virtualNetwork.id}/subnets/snet-cloudpc'
 output avdSubnetId string = '${virtualNetwork.id}/subnets/snet-avd'
-output serverSubnetId string = '${virtualNetwork.id}/subnets/snet-server'

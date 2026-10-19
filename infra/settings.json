@@ -5,8 +5,7 @@
     "addressPrefix": "10.10.0.0/16",
     "subnets": [
       { "name": "snet-cloudpc", "addressPrefix": "10.10.1.0/24" },
-      { "name": "snet-avd", "addressPrefix": "10.10.2.0/24" },
-      { "name": "snet-server", "addressPrefix": "10.10.3.0/24" }
+      { "name": "snet-avd", "addressPrefix": "10.10.2.0/24" }
     ]
   },
   "avd": {
