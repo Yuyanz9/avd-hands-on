@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.42.1.51946",
-      "templateHash": "14048490293305683337"
+      "templateHash": "1235853650465543929"
     }
   },
   "parameters": {
@@ -138,6 +138,16 @@
       },
       "minValue": 1,
       "maxValue": 10
+    },
+    "autoShutdownTime": {
+      "type": "string",
+      "defaultValue": "19:00",
+      "metadata": {
+        "displayName": "Auto Shutdown Time (JST)",
+        "description": "Daily VM shutdown time in 24-hour HH:mm format, Japan Standard Time. Default is 19:00."
+      },
+      "minLength": 5,
+      "maxLength": 5
     }
   },
   "resources": [
@@ -194,6 +204,9 @@
           "vmIndex": {
             "value": "[range(0, parameters('vmNumberOfInstances'))[copyIndex()]]"
           },
+          "autoShutdownTime": {
+            "value": "[parameters('autoShutdownTime')]"
+          },
           "customConfigurationScriptUrl": {
             "value": "[parameters('customConfigurationScriptUrl')]"
           },
@@ -208,7 +221,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.42.1.51946",
-              "templateHash": "13990691664176466948"
+              "templateHash": "11085699619135408738"
             }
           },
           "parameters": {
@@ -259,6 +272,9 @@
               "type": "int",
               "minValue": 0,
               "maxValue": 9
+            },
+            "autoShutdownTime": {
+              "type": "string"
             },
             "customConfigurationScriptUrl": {
               "type": "string"
@@ -480,7 +496,7 @@
               "location": "[parameters('location')]",
               "properties": {
                 "dailyRecurrence": {
-                  "time": "2200"
+                  "time": "[replace(parameters('autoShutdownTime'), ':', '')]"
                 },
                 "notificationSettings": {
                   "emailRecipient": "",

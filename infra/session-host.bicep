@@ -77,6 +77,12 @@ param intune bool = true
 @maxValue(10)
 param vmNumberOfInstances int = 1
 
+@metadata({ displayName: 'Auto Shutdown Time (JST)' })
+@description('Daily VM shutdown time in 24-hour HH:mm format, Japan Standard Time. Default is 19:00.')
+@minLength(5)
+@maxLength(5)
+param autoShutdownTime string = '19:00'
+
 module sessionHost './modules/session-host.bicep' = [for index in range(0, vmNumberOfInstances): {
   name: 'add-avd-session-host-${index}'
   params: {
@@ -93,6 +99,7 @@ module sessionHost './modules/session-host.bicep' = [for index in range(0, vmNum
     vmDiskType: vmDiskType
     vmNamePrefix: vmNamePrefix
     vmIndex: index
+    autoShutdownTime: autoShutdownTime
     customConfigurationScriptUrl: customConfigurationScriptUrl
     intune: intune
   }
