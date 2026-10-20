@@ -20,4 +20,6 @@ foreach ($phase in @('network', 'network-validation', 'avd', 'session-host')) {
     ) | Out-Host
 }
 
+& (Join-Path $PSScriptRoot 'Test-DeployButtons.ps1')
+
 Write-Host 'Built operational Network, NAT-free validation Network, AVD, and session-host ARM JSON. No Azure resources were deployed.'
