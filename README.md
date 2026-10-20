@@ -9,7 +9,7 @@ Deploy ボタンは技術的な入口のみです。PowerPoint と講師の指�
 ### Network (NAT Gateway)
 
 <!-- deploy-button-network:start -->
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F9ef84dc969b7ef730306bc451959e6afee907b17%2Ftemplates%2Fnetwork.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F21dd95b645354feacc14405023f022b3fa891045%2Ftemplates%2Fnetwork.json)
 <!-- deploy-button-network:end -->
 
 **Ctrl＋クリックで Azure portal を別タブで開けます（macOS は Command＋クリック）。**
@@ -17,7 +17,7 @@ Deploy ボタンは技術的な入口のみです。PowerPoint と講師の指�
 ### Network (NAT-free validation)
 
 <!-- deploy-button-network-validation:start -->
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F9ef84dc969b7ef730306bc451959e6afee907b17%2Ftemplates%2Fnetwork-validation.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F21dd95b645354feacc14405023f022b3fa891045%2Ftemplates%2Fnetwork-validation.json)
 <!-- deploy-button-network-validation:end -->
 
 **Ctrl＋クリックで Azure portal を別タブで開けます（macOS は Command＋クリック）。**
@@ -25,7 +25,7 @@ Deploy ボタンは技術的な入口のみです。PowerPoint と講師の指�
 ### AVD
 
 <!-- deploy-button-avd:start -->
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F9ef84dc969b7ef730306bc451959e6afee907b17%2Ftemplates%2Favd.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F21dd95b645354feacc14405023f022b3fa891045%2Ftemplates%2Favd.json)
 <!-- deploy-button-avd:end -->
 
 **Ctrl＋クリックで Azure portal を別タブで開けます（macOS は Command＋クリック）。**
@@ -33,7 +33,7 @@ Deploy ボタンは技術的な入口のみです。PowerPoint と講師の指�
 ### Add session hosts
 
 <!-- deploy-button-session-host:start -->
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F9ef84dc969b7ef730306bc451959e6afee907b17%2Ftemplates%2Fsession-host.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2F21dd95b645354feacc14405023f022b3fa891045%2Ftemplates%2Fsession-host.json)
 <!-- deploy-button-session-host:end -->
 
 **Ctrl＋クリックで Azure portal を別タブで開けます（macOS は Command＋クリック）。**
