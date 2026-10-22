@@ -1,0 +1,242 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.42.1.51946",
+      "templateHash": "13770095098035892620"
+    }
+  },
+  "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "japaneast",
+      "metadata": {
+        "displayName": "Location",
+        "description": "Azure region for the virtual network."
+      }
+    },
+    "vnetName": {
+      "type": "string",
+      "defaultValue": "vnet-vdi",
+      "metadata": {
+        "displayName": "Virtual Network Name",
+        "description": "Name of the virtual network."
+      },
+      "minLength": 2,
+      "maxLength": 64
+    },
+    "vnetAddressPrefix": {
+      "type": "string",
+      "defaultValue": "10.10.0.0/16",
+      "metadata": {
+        "displayName": "Virtual Network Address Prefix",
+        "description": "Virtual network CIDR. Keep all subnet prefixes inside this address space."
+      }
+    },
+    "cloudPcSubnetPrefix": {
+      "type": "string",
+      "defaultValue": "10.10.1.0/24",
+      "metadata": {
+        "displayName": "Cloud PC Subnet Address Prefix",
+        "description": "Cloud PC subnet CIDR. Subnet prefixes must not overlap."
+      }
+    },
+    "avdSubnetPrefix": {
+      "type": "string",
+      "defaultValue": "10.10.2.0/24",
+      "metadata": {
+        "displayName": "AVD Subnet Address Prefix",
+        "description": "AVD subnet CIDR. Subnet prefixes must not overlap."
+      }
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "network",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "vnetName": {
+            "value": "[parameters('vnetName')]"
+          },
+          "vnetAddressPrefix": {
+            "value": "[parameters('vnetAddressPrefix')]"
+          },
+          "cloudPcSubnetPrefix": {
+            "value": "[parameters('cloudPcSubnetPrefix')]"
+          },
+          "avdSubnetPrefix": {
+            "value": "[parameters('avdSubnetPrefix')]"
+          },
+          "natGatewayName": {
+            "value": "nat-vdi"
+          },
+          "publicIpName": {
+            "value": "pip-vdi"
+          },
+          "useNatGateway": {
+            "value": false
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.42.1.51946",
+              "templateHash": "4897726201377920206"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string"
+            },
+            "vnetName": {
+              "type": "string"
+            },
+            "vnetAddressPrefix": {
+              "type": "string"
+            },
+            "cloudPcSubnetPrefix": {
+              "type": "string"
+            },
+            "avdSubnetPrefix": {
+              "type": "string"
+            },
+            "natGatewayName": {
+              "type": "string"
+            },
+            "publicIpName": {
+              "type": "string"
+            },
+            "useNatGateway": {
+              "type": "bool"
+            }
+          },
+          "variables": {
+            "subnets": [
+              {
+                "name": "snet-cloudpc",
+                "addressPrefix": "[parameters('cloudPcSubnetPrefix')]"
+              },
+              {
+                "name": "snet-avd",
+                "addressPrefix": "[parameters('avdSubnetPrefix')]"
+              }
+            ]
+          },
+          "resources": [
+            {
+              "condition": "[parameters('useNatGateway')]",
+              "type": "Microsoft.Network/publicIPAddresses",
+              "apiVersion": "2024-05-01",
+              "name": "[parameters('publicIpName')]",
+              "location": "[parameters('location')]",
+              "sku": {
+                "name": "Standard"
+              },
+              "properties": {
+                "publicIPAllocationMethod": "Static",
+                "publicIPAddressVersion": "IPv4"
+              }
+            },
+            {
+              "condition": "[parameters('useNatGateway')]",
+              "type": "Microsoft.Network/natGateways",
+              "apiVersion": "2024-05-01",
+              "name": "[parameters('natGatewayName')]",
+              "location": "[parameters('location')]",
+              "sku": {
+                "name": "Standard"
+              },
+              "properties": {
+                "idleTimeoutInMinutes": 4,
+                "publicIpAddresses": [
+                  {
+                    "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIpName'))]"
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIpName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/virtualNetworks",
+              "apiVersion": "2024-05-01",
+              "name": "[parameters('vnetName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "copy": [
+                  {
+                    "name": "subnets",
+                    "count": "[length(variables('subnets'))]",
+                    "input": {
+                      "name": "[variables('subnets')[copyIndex('subnets')].name]",
+                      "properties": "[union(createObject('addressPrefix', variables('subnets')[copyIndex('subnets')].addressPrefix, 'defaultOutboundAccess', not(parameters('useNatGateway')), 'privateEndpointNetworkPolicies', 'Disabled', 'privateLinkServiceNetworkPolicies', 'Enabled'), if(parameters('useNatGateway'), createObject('natGateway', createObject('id', resourceId('Microsoft.Network/natGateways', parameters('natGatewayName')))), createObject()))]"
+                    }
+                  }
+                ],
+                "addressSpace": {
+                  "addressPrefixes": [
+                    "[parameters('vnetAddressPrefix')]"
+                  ]
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/natGateways', parameters('natGatewayName'))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "resourceGroupName": {
+              "type": "string",
+              "value": "[resourceGroup().name]"
+            },
+            "vnetId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+            },
+            "cloudPcSubnetId": {
+              "type": "string",
+              "value": "[format('{0}/subnets/snet-cloudpc', resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')))]"
+            },
+            "avdSubnetId": {
+              "type": "string",
+              "value": "[format('{0}/subnets/snet-avd', resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')))]"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "resourceGroupName": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'network'), '2025-04-01').outputs.resourceGroupName.value]"
+    },
+    "vnetId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'network'), '2025-04-01').outputs.vnetId.value]"
+    },
+    "cloudPcSubnetId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'network'), '2025-04-01').outputs.cloudPcSubnetId.value]"
+    },
+    "avdSubnetId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'network'), '2025-04-01').outputs.avdSubnetId.value]"
+    }
+  }
+}

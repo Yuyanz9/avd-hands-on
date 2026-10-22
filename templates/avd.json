@@ -1,0 +1,1925 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.42.1.51946",
+      "templateHash": "3468189808993118331"
+    }
+  },
+  "parameters": {
+    "vmAdministratorAccountPassword": {
+      "type": "securestring",
+      "minLength": 12,
+      "maxLength": 123,
+      "metadata": {
+        "description": "Local VM administrator password. Do not use or store the tenant account password."
+      }
+    },
+    "avdUsersGroupObjectId": {
+      "type": "string",
+      "metadata": {
+        "displayName": "AVD Users Group Object Id",
+        "description": "Object ID of the existing Entra security group named AVD Users. Create the group manually before deployment."
+      },
+      "minLength": 36,
+      "maxLength": 36
+    },
+    "networkResourceGroupName": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().name]",
+      "metadata": {
+        "displayName": "Network Resource Group Name",
+        "description": "Existing VNet resource group, not the new VM resource group. Leave the default only when both are the same; otherwise enter the VNet resource group name."
+      }
+    },
+    "virtualNetworkName": {
+      "type": "string",
+      "defaultValue": "vnet-vdi",
+      "minLength": 2,
+      "maxLength": 64,
+      "metadata": {
+        "description": "Name of the existing virtual network."
+      }
+    },
+    "subnetName": {
+      "type": "string",
+      "defaultValue": "snet-avd",
+      "minLength": 1,
+      "maxLength": 80,
+      "metadata": {
+        "description": "Name of the existing subnet used for AVD session hosts."
+      }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "japaneast",
+      "metadata": {
+        "description": "Location for the AVD resources. It must match the existing VNet location."
+      }
+    },
+    "imageSku": {
+      "type": "string",
+      "defaultValue": "win11-25h2-avd-m365",
+      "allowedValues": [
+        "win11-23h2-avd",
+        "win11-23h2-avd-m365",
+        "win11-24h2-avd",
+        "win11-24h2-avd-m365",
+        "win11-25h2-avd",
+        "win11-25h2-avd-m365",
+        "win11-26h2-avd",
+        "win11-26h2-avd-m365"
+      ],
+      "metadata": {
+        "displayName": "Vm Gallery Image SKU",
+        "description": "Windows 11 multi-session image. M365 SKUs include Microsoft 365 Apps but do not grant an Apps license. The offer is selected automatically."
+      }
+    },
+    "workspaceFriendlyName": {
+      "type": "string",
+      "defaultValue": "AVD Session Host",
+      "minLength": 1,
+      "maxLength": 64,
+      "metadata": {
+        "description": "Workspace display name shown in Windows App."
+      }
+    },
+    "vmSize": {
+      "type": "string",
+      "defaultValue": "Standard_D4as_v6",
+      "metadata": {
+        "description": "Size of the session host VM."
+      }
+    },
+    "vmDiskType": {
+      "type": "string",
+      "defaultValue": "StandardSSD_LRS",
+      "metadata": {
+        "description": "OS disk storage account type supported by the selected VM size and region."
+      }
+    },
+    "maxSessionLimit": {
+      "type": "int",
+      "defaultValue": 5,
+      "minValue": 1,
+      "metadata": {
+        "description": "Maximum number of user sessions allowed on each session host."
+      }
+    },
+    "vmNamePrefix": {
+      "type": "string",
+      "defaultValue": "[dateTimeAdd(utcNow(), 'PT9H', 'AVDMMddHHmm')]",
+      "minLength": 1,
+      "maxLength": 13,
+      "metadata": {
+        "description": "Prefix for the Windows computer and Azure VM names. Appends -0 through -9; maximum prefix length is 13. Use a new prefix for subsequent host additions."
+      }
+    },
+    "customConfigurationScriptUrl": {
+      "type": "string",
+      "defaultValue": "https://raw.githubusercontent.com/Yuyanz9/avd-hands-on/7b0923fcc78335ac25bafc418d9d3ab4538292d8/scripts/JPNOFLNG.ps1",
+      "metadata": {
+        "displayName": "Custom Configuration Script Url",
+        "description": "Approved PowerShell script URL. Default runs Japanese configuration; clear this field to skip custom configuration and keep the image language."
+      }
+    },
+    "vmNumberOfInstances": {
+      "type": "int",
+      "defaultValue": 1,
+      "metadata": {
+        "displayName": "Vm Number Of Instances",
+        "description": "Number of session hosts to create (1-10). More VMs increase cost and require sufficient quota and subnet capacity."
+      },
+      "minValue": 1,
+      "maxValue": 10
+    },
+    "hostpoolType": {
+      "type": "string",
+      "defaultValue": "Pooled",
+      "allowedValues": [
+        "Pooled",
+        "Personal"
+      ],
+      "metadata": {
+        "displayName": "Hostpool Type",
+        "description": "New host pool type. Cannot be changed for an existing pool. Personal uses automatic assignment and Persistent balancing."
+      }
+    },
+    "loadBalancerType": {
+      "type": "string",
+      "defaultValue": "BreadthFirst",
+      "allowedValues": [
+        "BreadthFirst",
+        "DepthFirst"
+      ],
+      "metadata": {
+        "displayName": "Load Balancer Type",
+        "description": "Pooled load balancing algorithm. Personal pools always use Persistent instead of this pooled setting."
+      }
+    },
+    "intune": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "displayName": "Intune Enrollment",
+        "description": "Request Microsoft Intune enrollment for new Microsoft Entra joined session hosts. Requires tenant MDM auto-enrollment and appropriate licensing; use false for Personal host pools."
+      }
+    },
+    "autoShutdownTime": {
+      "type": "string",
+      "defaultValue": "19:00",
+      "metadata": {
+        "displayName": "Auto Shutdown Time (JST)",
+        "description": "Daily VM shutdown time in 24-hour HH:mm format, Japan Standard Time. Default is 19:00."
+      },
+      "minLength": 5,
+      "maxLength": 5
+    },
+    "rdpAlternateShell": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "displayName": "RDP - Alternate Shell",
+        "description": "空欄は未構成です。指定する場合はリモート セッションで起動する実行ファイルのパスを入力します。"
+      }
+    },
+    "rdpEnableCredSspSupport": {
+      "type": "string",
+      "defaultValue": "有効 (1)",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - CredSSP",
+        "description": "現在の既定は有効 (1) です。"
+      }
+    },
+    "rdpEnableEntraIdAuth": {
+      "type": "string",
+      "defaultValue": "有効 (1)",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Microsoft Entra SSO",
+        "description": "現在の既定は有効 (1) です。"
+      }
+    },
+    "rdpKdcProxyName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "displayName": "RDP - KDC Proxy Name",
+        "description": "空欄は未構成です。Kerberos KDC プロキシの完全修飾ドメイン名を入力します。"
+      }
+    },
+    "rdpTargetIsAadJoined": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "ユーザー名とパスワード (1)",
+        "Windows クライアントで Entra 認証 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Target Is AAD Joined",
+        "description": "旧式の認証プロパティです。enablerdsaadauth を優先して使用してください。"
+      }
+    },
+    "rdpAutoReconnectionEnabled": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Automatic Reconnection"
+      }
+    },
+    "rdpBandwidthAutoDetect": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Bandwidth Auto Detect"
+      }
+    },
+    "rdpCompression": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Compression"
+      }
+    },
+    "rdpNetworkAutoDetect": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Network Auto Detect"
+      }
+    },
+    "rdpVideoPlaybackMode": {
+      "type": "string",
+      "defaultValue": "有効 (1)",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Video Playback Mode",
+        "description": "現在の既定は有効 (1) です。"
+      }
+    },
+    "rdpAudioCaptureMode": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Audio Capture Mode"
+      }
+    },
+    "rdpAudioMode": {
+      "type": "string",
+      "defaultValue": "ローカル端末で再生 (0)",
+      "allowedValues": [
+        "未構成",
+        "ローカル端末で再生 (0)",
+        "リモート セッションで再生 (1)",
+        "再生しない (2)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Audio Mode",
+        "description": "現在の既定はローカル端末で再生 (0) です。"
+      }
+    },
+    "rdpCameraStoreDirect": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "displayName": "RDP - Camera Redirection",
+        "description": "空欄は未構成です。* または対象カメラのデバイス パスを入力します。"
+      }
+    },
+    "rdpDeviceStoreDirect": {
+      "type": "string",
+      "defaultValue": "すべての対応デバイス (*)",
+      "allowedValues": [
+        "未構成",
+        "すべての対応デバイス (*)",
+        "新しく接続する対応デバイス (DynamicDevices)"
+      ],
+      "metadata": {
+        "displayName": "RDP - MTP/PTP Device Redirection",
+        "description": "既定ですべての対応デバイスをリダイレクトします。特定のデバイスを指定する場合は、下の Custom Device Value を入力します。"
+      }
+    },
+    "rdpDeviceStoreDirectCustom": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "displayName": "RDP - MTP/PTP Custom Device Value",
+        "description": "空欄は上の選択を使用します。デバイス パスを指定すると選択より優先されます。"
+      }
+    },
+    "rdpDriveStoreDirect": {
+      "type": "string",
+      "defaultValue": "リダイレクトしない (空)",
+      "allowedValues": [
+        "未構成",
+        "リダイレクトしない (空)",
+        "すべてのドライブ (*)",
+        "新しく接続するドライブ (DynamicDrives)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Drive Redirection",
+        "description": "既定はリダイレクトしない設定です。ドライブ文字を指定する場合は、下の Custom Drive Value を入力します。"
+      }
+    },
+    "rdpDriveStoreDirectCustom": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "displayName": "RDP - Custom Drive Value",
+        "description": "空欄は上の選択を使用します。例: C:\\;E:\\;。値を指定すると選択より優先されます。"
+      }
+    },
+    "rdpEncodeRedirectedVideoCapture": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Encode Redirected Video Capture"
+      }
+    },
+    "rdpKeyboardHook": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "ローカル端末で処理 (0)",
+        "フォーカス中はリモートで処理 (1)",
+        "全画面時のみリモートで処理 (2)",
+        "RemoteApp で処理 (3)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Keyboard Hook",
+        "description": "値 3 は RemoteApp 専用です。このテンプレートの Desktop セッションでは選択しないでください。"
+      }
+    },
+    "rdpRedirectClipboard": {
+      "type": "string",
+      "defaultValue": "無効 (0)",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Clipboard Redirection",
+        "description": "現在の既定は無効 (0) です。"
+      }
+    },
+    "rdpRedirectComPorts": {
+      "type": "string",
+      "defaultValue": "有効 (1)",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - COM Port Redirection",
+        "description": "現在の既定は有効 (1) です。"
+      }
+    },
+    "rdpRedirectedVideoCaptureEncodingQuality": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "高圧縮 (0)",
+        "中圧縮 (1)",
+        "高画質 (2)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Redirected Video Capture Quality"
+      }
+    },
+    "rdpRedirectLocation": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Location Redirection"
+      }
+    },
+    "rdpRedirectPrinters": {
+      "type": "string",
+      "defaultValue": "無効 (0)",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Printer Redirection",
+        "description": "現在の既定は無効 (0) です。"
+      }
+    },
+    "rdpRedirectSmartCards": {
+      "type": "string",
+      "defaultValue": "有効 (1)",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Smart Card Redirection",
+        "description": "現在の既定は有効 (1) です。"
+      }
+    },
+    "rdpRedirectWebAuthn": {
+      "type": "string",
+      "defaultValue": "有効 (1)",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - WebAuthn Redirection",
+        "description": "現在の既定は有効 (1) です。"
+      }
+    },
+    "rdpSmartRawPrinters": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "displayName": "RDP - Smart Raw Printers",
+        "description": "空欄は未構成です。* または対象プリンターのドライバー名プレフィックスを入力します。"
+      }
+    },
+    "rdpUsbDeviceStoreDirect": {
+      "type": "string",
+      "defaultValue": "リダイレクトしない (空)",
+      "allowedValues": [
+        "未構成",
+        "リダイレクトしない (空)",
+        "すべての対応 USB デバイス (*)"
+      ],
+      "metadata": {
+        "displayName": "RDP - USB Device Redirection",
+        "description": "既定はリダイレクトしない設定です。特定のデバイスを指定する場合は、下の Custom USB Device Value を入力します。"
+      }
+    },
+    "rdpUsbDeviceStoreDirectCustom": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "displayName": "RDP - Custom USB Device Value",
+        "description": "空欄は上の選択を使用します。デバイス クラス GUID またはデバイス インスタンス ID を指定すると選択より優先されます。"
+      }
+    },
+    "rdpDesktopSizeId": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "640x480",
+        "800x600",
+        "1024x768",
+        "1280x1024",
+        "1600x1200"
+      ],
+      "metadata": {
+        "displayName": "RDP - Desktop Size ID"
+      }
+    },
+    "rdpDesktopHeight": {
+      "type": "int",
+      "defaultValue": 0,
+      "metadata": {
+        "displayName": "RDP - Desktop Height",
+        "description": "0 は未構成です。指定する場合は 200～8192 のピクセル数を入力します。指定時は Desktop Size ID より優先されます。"
+      },
+      "minValue": 0,
+      "maxValue": 8192
+    },
+    "rdpDesktopScaleFactor": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "100%",
+        "125%",
+        "150%",
+        "175%",
+        "200%",
+        "250%",
+        "300%",
+        "400%",
+        "500%"
+      ],
+      "metadata": {
+        "displayName": "RDP - Desktop Scale Factor",
+        "description": "0 は未構成です。このプロパティは非推奨です。"
+      }
+    },
+    "rdpDesktopWidth": {
+      "type": "int",
+      "defaultValue": 0,
+      "metadata": {
+        "displayName": "RDP - Desktop Width",
+        "description": "0 は未構成です。指定する場合は 200～8192 のピクセル数を入力します。指定時は Desktop Size ID より優先されます。"
+      },
+      "minValue": 0,
+      "maxValue": 8192
+    },
+    "rdpDynamicResolution": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Dynamic Resolution"
+      }
+    },
+    "rdpMaximizeToCurrentDisplays": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Maximize to Current Displays",
+        "description": "use multimon が有効な場合に利用できます。Windows App for Windows と Windows 用 Remote Desktop アプリのみ対応します。"
+      }
+    },
+    "rdpScreenModeId": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "ウィンドウ (1)",
+        "全画面 (2)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Screen Mode ID",
+        "description": "use multimon が有効な場合は、この設定より複数ディスプレイ設定が優先されます。"
+      }
+    },
+    "rdpSelectedMonitors": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "displayName": "RDP - Selected Monitors",
+        "description": "空欄は未構成です。use multimon が有効な場合に、mstsc.exe /l で取得した連続するディスプレイ ID をカンマ区切りで入力します。Windows クライアント専用です。"
+      }
+    },
+    "rdpSingleMonInWindowedMode": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Single Monitor in Windowed Mode",
+        "description": "use multimon が有効な場合に利用できます。Windows クライアント専用です。"
+      }
+    },
+    "rdpSmartSizing": {
+      "type": "string",
+      "defaultValue": "未構成",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Smart Sizing"
+      }
+    },
+    "rdpUseMultimon": {
+      "type": "string",
+      "defaultValue": "有効 (1)",
+      "allowedValues": [
+        "未構成",
+        "有効 (1)",
+        "無効 (0)"
+      ],
+      "metadata": {
+        "displayName": "RDP - Use Multiple Monitors",
+        "description": "現在の既定は有効 (1) です。"
+      }
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "avd-editable-configuration",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "vmAdministratorAccountPassword": {
+            "value": "[parameters('vmAdministratorAccountPassword')]"
+          },
+          "avdUsersGroupObjectId": {
+            "value": "[parameters('avdUsersGroupObjectId')]"
+          },
+          "networkResourceGroupName": {
+            "value": "[parameters('networkResourceGroupName')]"
+          },
+          "virtualNetworkName": {
+            "value": "[parameters('virtualNetworkName')]"
+          },
+          "subnetName": {
+            "value": "[parameters('subnetName')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "imageSku": {
+            "value": "[parameters('imageSku')]"
+          },
+          "workspaceFriendlyName": {
+            "value": "[parameters('workspaceFriendlyName')]"
+          },
+          "vmSize": {
+            "value": "[parameters('vmSize')]"
+          },
+          "vmDiskType": {
+            "value": "[parameters('vmDiskType')]"
+          },
+          "maxSessionLimit": {
+            "value": "[parameters('maxSessionLimit')]"
+          },
+          "vmNamePrefix": {
+            "value": "[parameters('vmNamePrefix')]"
+          },
+          "customConfigurationScriptUrl": {
+            "value": "[parameters('customConfigurationScriptUrl')]"
+          },
+          "vmNumberOfInstances": {
+            "value": "[parameters('vmNumberOfInstances')]"
+          },
+          "hostpoolType": {
+            "value": "[parameters('hostpoolType')]"
+          },
+          "loadBalancerType": {
+            "value": "[parameters('loadBalancerType')]"
+          },
+          "intune": {
+            "value": "[parameters('intune')]"
+          },
+          "autoShutdownTime": {
+            "value": "[parameters('autoShutdownTime')]"
+          },
+          "rdpAlternateShell": {
+            "value": "[parameters('rdpAlternateShell')]"
+          },
+          "rdpEnableCredSspSupport": {
+            "value": "[parameters('rdpEnableCredSspSupport')]"
+          },
+          "rdpEnableEntraIdAuth": {
+            "value": "[parameters('rdpEnableEntraIdAuth')]"
+          },
+          "rdpKdcProxyName": {
+            "value": "[parameters('rdpKdcProxyName')]"
+          },
+          "rdpTargetIsAadJoined": {
+            "value": "[parameters('rdpTargetIsAadJoined')]"
+          },
+          "rdpAutoReconnectionEnabled": {
+            "value": "[parameters('rdpAutoReconnectionEnabled')]"
+          },
+          "rdpBandwidthAutoDetect": {
+            "value": "[parameters('rdpBandwidthAutoDetect')]"
+          },
+          "rdpCompression": {
+            "value": "[parameters('rdpCompression')]"
+          },
+          "rdpNetworkAutoDetect": {
+            "value": "[parameters('rdpNetworkAutoDetect')]"
+          },
+          "rdpVideoPlaybackMode": {
+            "value": "[parameters('rdpVideoPlaybackMode')]"
+          },
+          "rdpAudioCaptureMode": {
+            "value": "[parameters('rdpAudioCaptureMode')]"
+          },
+          "rdpAudioMode": {
+            "value": "[parameters('rdpAudioMode')]"
+          },
+          "rdpCameraStoreDirect": {
+            "value": "[parameters('rdpCameraStoreDirect')]"
+          },
+          "rdpDeviceStoreDirect": {
+            "value": "[parameters('rdpDeviceStoreDirect')]"
+          },
+          "rdpDeviceStoreDirectCustom": {
+            "value": "[parameters('rdpDeviceStoreDirectCustom')]"
+          },
+          "rdpDriveStoreDirect": {
+            "value": "[parameters('rdpDriveStoreDirect')]"
+          },
+          "rdpDriveStoreDirectCustom": {
+            "value": "[parameters('rdpDriveStoreDirectCustom')]"
+          },
+          "rdpEncodeRedirectedVideoCapture": {
+            "value": "[parameters('rdpEncodeRedirectedVideoCapture')]"
+          },
+          "rdpKeyboardHook": {
+            "value": "[parameters('rdpKeyboardHook')]"
+          },
+          "rdpRedirectClipboard": {
+            "value": "[parameters('rdpRedirectClipboard')]"
+          },
+          "rdpRedirectComPorts": {
+            "value": "[parameters('rdpRedirectComPorts')]"
+          },
+          "rdpRedirectedVideoCaptureEncodingQuality": {
+            "value": "[parameters('rdpRedirectedVideoCaptureEncodingQuality')]"
+          },
+          "rdpRedirectLocation": {
+            "value": "[parameters('rdpRedirectLocation')]"
+          },
+          "rdpRedirectPrinters": {
+            "value": "[parameters('rdpRedirectPrinters')]"
+          },
+          "rdpRedirectSmartCards": {
+            "value": "[parameters('rdpRedirectSmartCards')]"
+          },
+          "rdpRedirectWebAuthn": {
+            "value": "[parameters('rdpRedirectWebAuthn')]"
+          },
+          "rdpSmartRawPrinters": {
+            "value": "[parameters('rdpSmartRawPrinters')]"
+          },
+          "rdpUsbDeviceStoreDirect": {
+            "value": "[parameters('rdpUsbDeviceStoreDirect')]"
+          },
+          "rdpUsbDeviceStoreDirectCustom": {
+            "value": "[parameters('rdpUsbDeviceStoreDirectCustom')]"
+          },
+          "rdpDesktopSizeId": {
+            "value": "[parameters('rdpDesktopSizeId')]"
+          },
+          "rdpDesktopHeight": {
+            "value": "[parameters('rdpDesktopHeight')]"
+          },
+          "rdpDesktopScaleFactor": {
+            "value": "[parameters('rdpDesktopScaleFactor')]"
+          },
+          "rdpDesktopWidth": {
+            "value": "[parameters('rdpDesktopWidth')]"
+          },
+          "rdpDynamicResolution": {
+            "value": "[parameters('rdpDynamicResolution')]"
+          },
+          "rdpMaximizeToCurrentDisplays": {
+            "value": "[parameters('rdpMaximizeToCurrentDisplays')]"
+          },
+          "rdpScreenModeId": {
+            "value": "[parameters('rdpScreenModeId')]"
+          },
+          "rdpSelectedMonitors": {
+            "value": "[parameters('rdpSelectedMonitors')]"
+          },
+          "rdpSingleMonInWindowedMode": {
+            "value": "[parameters('rdpSingleMonInWindowedMode')]"
+          },
+          "rdpSmartSizing": {
+            "value": "[parameters('rdpSmartSizing')]"
+          },
+          "rdpUseMultimon": {
+            "value": "[parameters('rdpUseMultimon')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.42.1.51946",
+              "templateHash": "4604143767422030481"
+            }
+          },
+          "parameters": {
+            "vmAdministratorAccountPassword": {
+              "type": "securestring",
+              "minLength": 12,
+              "maxLength": 123
+            },
+            "avdUsersGroupObjectId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36
+            },
+            "networkResourceGroupName": {
+              "type": "string"
+            },
+            "virtualNetworkName": {
+              "type": "string"
+            },
+            "subnetName": {
+              "type": "string"
+            },
+            "location": {
+              "type": "string"
+            },
+            "imageSku": {
+              "type": "string"
+            },
+            "workspaceFriendlyName": {
+              "type": "string"
+            },
+            "vmSize": {
+              "type": "string"
+            },
+            "vmDiskType": {
+              "type": "string"
+            },
+            "maxSessionLimit": {
+              "type": "int"
+            },
+            "vmNamePrefix": {
+              "type": "string"
+            },
+            "customConfigurationScriptUrl": {
+              "type": "string"
+            },
+            "vmNumberOfInstances": {
+              "type": "int",
+              "minValue": 1,
+              "maxValue": 10
+            },
+            "hostpoolType": {
+              "type": "string",
+              "allowedValues": [
+                "Pooled",
+                "Personal"
+              ]
+            },
+            "loadBalancerType": {
+              "type": "string",
+              "allowedValues": [
+                "BreadthFirst",
+                "DepthFirst"
+              ]
+            },
+            "intune": {
+              "type": "bool"
+            },
+            "autoShutdownTime": {
+              "type": "string"
+            },
+            "rdpAlternateShell": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "displayName": "RDP - Alternate Shell",
+                "description": "空欄は未構成です。指定する場合はリモート セッションで起動する実行ファイルのパスを入力します。"
+              }
+            },
+            "rdpEnableCredSspSupport": {
+              "type": "string",
+              "defaultValue": "有効 (1)",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - CredSSP",
+                "description": "現在の既定は有効 (1) です。"
+              }
+            },
+            "rdpEnableEntraIdAuth": {
+              "type": "string",
+              "defaultValue": "有効 (1)",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Microsoft Entra SSO",
+                "description": "現在の既定は有効 (1) です。"
+              }
+            },
+            "rdpKdcProxyName": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "displayName": "RDP - KDC Proxy Name",
+                "description": "空欄は未構成です。Kerberos KDC プロキシの完全修飾ドメイン名を入力します。"
+              }
+            },
+            "rdpTargetIsAadJoined": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "ユーザー名とパスワード (1)",
+                "Windows クライアントで Entra 認証 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Target Is AAD Joined",
+                "description": "旧式の認証プロパティです。enablerdsaadauth を優先して使用してください。"
+              }
+            },
+            "rdpAutoReconnectionEnabled": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Automatic Reconnection"
+              }
+            },
+            "rdpBandwidthAutoDetect": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Bandwidth Auto Detect"
+              }
+            },
+            "rdpCompression": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Compression"
+              }
+            },
+            "rdpNetworkAutoDetect": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Network Auto Detect"
+              }
+            },
+            "rdpVideoPlaybackMode": {
+              "type": "string",
+              "defaultValue": "有効 (1)",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Video Playback Mode",
+                "description": "現在の既定は有効 (1) です。"
+              }
+            },
+            "rdpAudioCaptureMode": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Audio Capture Mode"
+              }
+            },
+            "rdpAudioMode": {
+              "type": "string",
+              "defaultValue": "ローカル端末で再生 (0)",
+              "allowedValues": [
+                "未構成",
+                "ローカル端末で再生 (0)",
+                "リモート セッションで再生 (1)",
+                "再生しない (2)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Audio Mode",
+                "description": "現在の既定はローカル端末で再生 (0) です。"
+              }
+            },
+            "rdpCameraStoreDirect": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "displayName": "RDP - Camera Redirection",
+                "description": "空欄は未構成です。* または対象カメラのデバイス パスを入力します。"
+              }
+            },
+            "rdpDeviceStoreDirect": {
+              "type": "string",
+              "defaultValue": "すべての対応デバイス (*)",
+              "allowedValues": [
+                "未構成",
+                "すべての対応デバイス (*)",
+                "新しく接続する対応デバイス (DynamicDevices)"
+              ],
+              "metadata": {
+                "displayName": "RDP - MTP/PTP Device Redirection",
+                "description": "既定ですべての対応デバイスをリダイレクトします。特定のデバイスを指定する場合は、下の Custom Device Value を入力します。"
+              }
+            },
+            "rdpDeviceStoreDirectCustom": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "displayName": "RDP - MTP/PTP Custom Device Value",
+                "description": "空欄は上の選択を使用します。デバイス パスを指定すると選択より優先されます。"
+              }
+            },
+            "rdpDriveStoreDirect": {
+              "type": "string",
+              "defaultValue": "リダイレクトしない (空)",
+              "allowedValues": [
+                "未構成",
+                "リダイレクトしない (空)",
+                "すべてのドライブ (*)",
+                "新しく接続するドライブ (DynamicDrives)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Drive Redirection",
+                "description": "既定はリダイレクトしない設定です。ドライブ文字を指定する場合は、下の Custom Drive Value を入力します。"
+              }
+            },
+            "rdpDriveStoreDirectCustom": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "displayName": "RDP - Custom Drive Value",
+                "description": "空欄は上の選択を使用します。例: C:\\;E:\\;。値を指定すると選択より優先されます。"
+              }
+            },
+            "rdpEncodeRedirectedVideoCapture": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Encode Redirected Video Capture"
+              }
+            },
+            "rdpKeyboardHook": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "ローカル端末で処理 (0)",
+                "フォーカス中はリモートで処理 (1)",
+                "全画面時のみリモートで処理 (2)",
+                "RemoteApp で処理 (3)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Keyboard Hook",
+                "description": "値 3 は RemoteApp 専用です。このテンプレートの Desktop セッションでは選択しないでください。"
+              }
+            },
+            "rdpRedirectClipboard": {
+              "type": "string",
+              "defaultValue": "無効 (0)",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Clipboard Redirection",
+                "description": "現在の既定は無効 (0) です。"
+              }
+            },
+            "rdpRedirectComPorts": {
+              "type": "string",
+              "defaultValue": "有効 (1)",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - COM Port Redirection",
+                "description": "現在の既定は有効 (1) です。"
+              }
+            },
+            "rdpRedirectedVideoCaptureEncodingQuality": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "高圧縮 (0)",
+                "中圧縮 (1)",
+                "高画質 (2)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Redirected Video Capture Quality"
+              }
+            },
+            "rdpRedirectLocation": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Location Redirection"
+              }
+            },
+            "rdpRedirectPrinters": {
+              "type": "string",
+              "defaultValue": "無効 (0)",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Printer Redirection",
+                "description": "現在の既定は無効 (0) です。"
+              }
+            },
+            "rdpRedirectSmartCards": {
+              "type": "string",
+              "defaultValue": "有効 (1)",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Smart Card Redirection",
+                "description": "現在の既定は有効 (1) です。"
+              }
+            },
+            "rdpRedirectWebAuthn": {
+              "type": "string",
+              "defaultValue": "有効 (1)",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - WebAuthn Redirection",
+                "description": "現在の既定は有効 (1) です。"
+              }
+            },
+            "rdpSmartRawPrinters": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "displayName": "RDP - Smart Raw Printers",
+                "description": "空欄は未構成です。* または対象プリンターのドライバー名プレフィックスを入力します。"
+              }
+            },
+            "rdpUsbDeviceStoreDirect": {
+              "type": "string",
+              "defaultValue": "リダイレクトしない (空)",
+              "allowedValues": [
+                "未構成",
+                "リダイレクトしない (空)",
+                "すべての対応 USB デバイス (*)"
+              ],
+              "metadata": {
+                "displayName": "RDP - USB Device Redirection",
+                "description": "既定はリダイレクトしない設定です。特定のデバイスを指定する場合は、下の Custom USB Device Value を入力します。"
+              }
+            },
+            "rdpUsbDeviceStoreDirectCustom": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "displayName": "RDP - Custom USB Device Value",
+                "description": "空欄は上の選択を使用します。デバイス クラス GUID またはデバイス インスタンス ID を指定すると選択より優先されます。"
+              }
+            },
+            "rdpDesktopSizeId": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "640x480",
+                "800x600",
+                "1024x768",
+                "1280x1024",
+                "1600x1200"
+              ],
+              "metadata": {
+                "displayName": "RDP - Desktop Size ID"
+              }
+            },
+            "rdpDesktopHeight": {
+              "type": "int",
+              "defaultValue": 0,
+              "metadata": {
+                "displayName": "RDP - Desktop Height",
+                "description": "0 は未構成です。指定する場合は 200～8192 のピクセル数を入力します。指定時は Desktop Size ID より優先されます。"
+              },
+              "minValue": 0,
+              "maxValue": 8192
+            },
+            "rdpDesktopScaleFactor": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "100%",
+                "125%",
+                "150%",
+                "175%",
+                "200%",
+                "250%",
+                "300%",
+                "400%",
+                "500%"
+              ],
+              "metadata": {
+                "displayName": "RDP - Desktop Scale Factor",
+                "description": "0 は未構成です。このプロパティは非推奨です。"
+              }
+            },
+            "rdpDesktopWidth": {
+              "type": "int",
+              "defaultValue": 0,
+              "metadata": {
+                "displayName": "RDP - Desktop Width",
+                "description": "0 は未構成です。指定する場合は 200～8192 のピクセル数を入力します。指定時は Desktop Size ID より優先されます。"
+              },
+              "minValue": 0,
+              "maxValue": 8192
+            },
+            "rdpDynamicResolution": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Dynamic Resolution"
+              }
+            },
+            "rdpMaximizeToCurrentDisplays": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Maximize to Current Displays",
+                "description": "use multimon が有効な場合に利用できます。Windows App for Windows と Windows 用 Remote Desktop アプリのみ対応します。"
+              }
+            },
+            "rdpScreenModeId": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "ウィンドウ (1)",
+                "全画面 (2)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Screen Mode ID",
+                "description": "use multimon が有効な場合は、この設定より複数ディスプレイ設定が優先されます。"
+              }
+            },
+            "rdpSelectedMonitors": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "displayName": "RDP - Selected Monitors",
+                "description": "空欄は未構成です。use multimon が有効な場合に、mstsc.exe /l で取得した連続するディスプレイ ID をカンマ区切りで入力します。Windows クライアント専用です。"
+              }
+            },
+            "rdpSingleMonInWindowedMode": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Single Monitor in Windowed Mode",
+                "description": "use multimon が有効な場合に利用できます。Windows クライアント専用です。"
+              }
+            },
+            "rdpSmartSizing": {
+              "type": "string",
+              "defaultValue": "未構成",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Smart Sizing"
+              }
+            },
+            "rdpUseMultimon": {
+              "type": "string",
+              "defaultValue": "有効 (1)",
+              "allowedValues": [
+                "未構成",
+                "有効 (1)",
+                "無効 (0)"
+              ],
+              "metadata": {
+                "displayName": "RDP - Use Multiple Monitors",
+                "description": "現在の既定は有効 (1) です。"
+              }
+            },
+            "tokenExpirationTime": {
+              "type": "string",
+              "defaultValue": "[dateTimeAdd(utcNow(), 'PT2H')]"
+            }
+          },
+          "variables": {
+            "$fxv#0": {
+              "location": "japaneast",
+              "network": {
+                "vnetName": "vnet-vdi",
+                "addressPrefix": "10.10.0.0/16",
+                "subnets": [
+                  {
+                    "name": "snet-cloudpc",
+                    "addressPrefix": "10.10.1.0/24"
+                  },
+                  {
+                    "name": "snet-avd",
+                    "addressPrefix": "10.10.2.0/24"
+                  }
+                ]
+              },
+              "avd": {
+                "hostpoolName": "DefaultHostPool",
+                "workspaceName": "AVD Session Host",
+                "vmAdminUsername": "vmadmin",
+                "vmDiskSizeGB": 128,
+                "imagePublisher": "microsoftwindowsdesktop",
+                "imageOffer": "windows-11",
+                "imageVersion": "latest",
+                "customConfigurationScriptUrl": "https://raw.githubusercontent.com/Yuyanz9/avd-hands-on/7b0923fcc78335ac25bafc418d9d3ab4538292d8/scripts/JPNOFLNG.ps1",
+                "configurationPackageUrl": "https://wvdportalstorageblob.blob.core.windows.net/galleryartifacts/Configuration_1.0.03537.1471.zip"
+              }
+            },
+            "settings": "[variables('$fxv#0')]",
+            "desktopUserRoleId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '1d18fff3-a72a-46b5-b4a9-0b38a3cd7e63')]",
+            "rdpDeviceStoreDirectValue": "[if(not(empty(parameters('rdpDeviceStoreDirectCustom'))), parameters('rdpDeviceStoreDirectCustom'), if(equals(parameters('rdpDeviceStoreDirect'), 'すべての対応デバイス (*)'), '*', if(equals(parameters('rdpDeviceStoreDirect'), '新しく接続する対応デバイス (DynamicDevices)'), 'DynamicDevices', '')))]",
+            "rdpDeviceStoreDirectProperty": "[if(empty(variables('rdpDeviceStoreDirectValue')), '', format('devicestoredirect:s:{0};', variables('rdpDeviceStoreDirectValue')))]",
+            "rdpDriveStoreDirectProperty": "[if(not(empty(parameters('rdpDriveStoreDirectCustom'))), format('drivestoredirect:s:{0};', parameters('rdpDriveStoreDirectCustom')), if(equals(parameters('rdpDriveStoreDirect'), '未構成'), '', if(equals(parameters('rdpDriveStoreDirect'), 'リダイレクトしない (空)'), 'drivestoredirect:s:;', if(equals(parameters('rdpDriveStoreDirect'), 'すべてのドライブ (*)'), 'drivestoredirect:s:*;', 'drivestoredirect:s:DynamicDrives;'))))]",
+            "rdpUsbDeviceStoreDirectProperty": "[if(not(empty(parameters('rdpUsbDeviceStoreDirectCustom'))), format('usbdevicestoredirect:s:{0};', parameters('rdpUsbDeviceStoreDirectCustom')), if(equals(parameters('rdpUsbDeviceStoreDirect'), '未構成'), '', if(equals(parameters('rdpUsbDeviceStoreDirect'), 'リダイレクトしない (空)'), 'usbdevicestoredirect:s:;', 'usbdevicestoredirect:s:*;')))]",
+            "rdpProperties": "[concat(if(equals(parameters('rdpEnableEntraIdAuth'), '未構成'), '', format('enablerdsaadauth:i:{0};', if(equals(parameters('rdpEnableEntraIdAuth'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpEnableCredSspSupport'), '未構成'), '', format('enablecredsspsupport:i:{0};', if(equals(parameters('rdpEnableCredSspSupport'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpVideoPlaybackMode'), '未構成'), '', format('videoplaybackmode:i:{0};', if(equals(parameters('rdpVideoPlaybackMode'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpRedirectClipboard'), '未構成'), '', format('redirectclipboard:i:{0};', if(equals(parameters('rdpRedirectClipboard'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpAudioMode'), '未構成'), '', format('audiomode:i:{0};', if(equals(parameters('rdpAudioMode'), 'ローカル端末で再生 (0)'), '0', if(equals(parameters('rdpAudioMode'), 'リモート セッションで再生 (1)'), '1', '2')))), if(equals(parameters('rdpAlternateShell'), ''), '', format('alternate shell:s:{0};', parameters('rdpAlternateShell'))), if(equals(parameters('rdpKdcProxyName'), ''), '', format('kdcproxyname:s:{0};', parameters('rdpKdcProxyName'))), if(equals(parameters('rdpTargetIsAadJoined'), '未構成'), '', format('targetisaadjoined:i:{0};', if(equals(parameters('rdpTargetIsAadJoined'), 'ユーザー名とパスワード (1)'), '1', '0'))), if(equals(parameters('rdpAutoReconnectionEnabled'), '未構成'), '', format('autoreconnection enabled:i:{0};', if(equals(parameters('rdpAutoReconnectionEnabled'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpBandwidthAutoDetect'), '未構成'), '', format('bandwidthautodetect:i:{0};', if(equals(parameters('rdpBandwidthAutoDetect'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpCompression'), '未構成'), '', format('compression:i:{0};', if(equals(parameters('rdpCompression'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpNetworkAutoDetect'), '未構成'), '', format('networkautodetect:i:{0};', if(equals(parameters('rdpNetworkAutoDetect'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpAudioCaptureMode'), '未構成'), '', format('audiocapturemode:i:{0};', if(equals(parameters('rdpAudioCaptureMode'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpCameraStoreDirect'), ''), '', format('camerastoredirect:s:{0};', parameters('rdpCameraStoreDirect'))), variables('rdpDeviceStoreDirectProperty'), variables('rdpDriveStoreDirectProperty'), if(equals(parameters('rdpEncodeRedirectedVideoCapture'), '未構成'), '', format('encode redirected video capture:i:{0};', if(equals(parameters('rdpEncodeRedirectedVideoCapture'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpKeyboardHook'), '未構成'), '', format('keyboardhook:i:{0};', if(equals(parameters('rdpKeyboardHook'), 'ローカル端末で処理 (0)'), '0', if(equals(parameters('rdpKeyboardHook'), 'フォーカス中はリモートで処理 (1)'), '1', if(equals(parameters('rdpKeyboardHook'), '全画面時のみリモートで処理 (2)'), '2', '3'))))), if(equals(parameters('rdpRedirectComPorts'), '未構成'), '', format('redirectcomports:i:{0};', if(equals(parameters('rdpRedirectComPorts'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpRedirectedVideoCaptureEncodingQuality'), '未構成'), '', format('redirected video capture encoding quality:i:{0};', if(equals(parameters('rdpRedirectedVideoCaptureEncodingQuality'), '高圧縮 (0)'), '0', if(equals(parameters('rdpRedirectedVideoCaptureEncodingQuality'), '中圧縮 (1)'), '1', '2')))), if(equals(parameters('rdpRedirectLocation'), '未構成'), '', format('redirectlocation:i:{0};', if(equals(parameters('rdpRedirectLocation'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpRedirectPrinters'), '未構成'), '', format('redirectprinters:i:{0};', if(equals(parameters('rdpRedirectPrinters'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpRedirectSmartCards'), '未構成'), '', format('redirectsmartcards:i:{0};', if(equals(parameters('rdpRedirectSmartCards'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpRedirectWebAuthn'), '未構成'), '', format('redirectwebauthn:i:{0};', if(equals(parameters('rdpRedirectWebAuthn'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpSmartRawPrinters'), ''), '', format('SmartRawPrinters:s:{0};', parameters('rdpSmartRawPrinters'))), variables('rdpUsbDeviceStoreDirectProperty'), if(equals(parameters('rdpDesktopSizeId'), '未構成'), '', format('desktop size id:i:{0};', if(equals(parameters('rdpDesktopSizeId'), '640x480'), '0', if(equals(parameters('rdpDesktopSizeId'), '800x600'), '1', if(equals(parameters('rdpDesktopSizeId'), '1024x768'), '2', if(equals(parameters('rdpDesktopSizeId'), '1280x1024'), '3', '4')))))), if(equals(parameters('rdpDesktopHeight'), 0), '', format('desktopheight:i:{0};', parameters('rdpDesktopHeight'))), if(equals(parameters('rdpDesktopScaleFactor'), '未構成'), '', format('desktopscalefactor:i:{0};', replace(parameters('rdpDesktopScaleFactor'), '%', ''))), if(equals(parameters('rdpDesktopWidth'), 0), '', format('desktopwidth:i:{0};', parameters('rdpDesktopWidth'))), if(equals(parameters('rdpDynamicResolution'), '未構成'), '', format('dynamic resolution:i:{0};', if(equals(parameters('rdpDynamicResolution'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpMaximizeToCurrentDisplays'), '未構成'), '', format('maximizetocurrentdisplays:i:{0};', if(equals(parameters('rdpMaximizeToCurrentDisplays'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpScreenModeId'), '未構成'), '', format('screen mode id:i:{0};', if(equals(parameters('rdpScreenModeId'), 'ウィンドウ (1)'), '1', '2'))), if(equals(parameters('rdpSelectedMonitors'), ''), '', format('selectedmonitors:s:{0};', parameters('rdpSelectedMonitors'))), if(equals(parameters('rdpSingleMonInWindowedMode'), '未構成'), '', format('singlemoninwindowedmode:i:{0};', if(equals(parameters('rdpSingleMonInWindowedMode'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpSmartSizing'), '未構成'), '', format('smart sizing:i:{0};', if(equals(parameters('rdpSmartSizing'), '有効 (1)'), '1', '0'))), if(equals(parameters('rdpUseMultimon'), '未構成'), '', format('use multimon:i:{0};', if(equals(parameters('rdpUseMultimon'), '有効 (1)'), '1', '0'))))]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.DesktopVirtualization/hostPools",
+              "apiVersion": "2025-10-10",
+              "name": "[variables('settings').avd.hostpoolName]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "hostPoolType": "[parameters('hostpoolType')]",
+                "managementType": "Standard",
+                "loadBalancerType": "[if(equals(parameters('hostpoolType'), 'Personal'), 'Persistent', parameters('loadBalancerType'))]",
+                "maxSessionLimit": "[if(equals(parameters('hostpoolType'), 'Personal'), 1, parameters('maxSessionLimit'))]",
+                "personalDesktopAssignmentType": "[if(equals(parameters('hostpoolType'), 'Personal'), 'Automatic', null())]",
+                "preferredAppGroupType": "Desktop",
+                "validationEnvironment": false,
+                "startVMOnConnect": false,
+                "publicNetworkAccess": "Enabled",
+                "customRdpProperty": "[variables('rdpProperties')]",
+                "registrationInfo": {
+                  "expirationTime": "[parameters('tokenExpirationTime')]",
+                  "registrationTokenOperation": "Update"
+                }
+              }
+            },
+            {
+              "type": "Microsoft.DesktopVirtualization/applicationGroups",
+              "apiVersion": "2025-10-10",
+              "name": "[format('{0}-DAG', variables('settings').avd.hostpoolName)]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "applicationGroupType": "Desktop",
+                "hostPoolArmPath": "[resourceId('Microsoft.DesktopVirtualization/hostPools', variables('settings').avd.hostpoolName)]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.DesktopVirtualization/hostPools', variables('settings').avd.hostpoolName)]"
+              ]
+            },
+            {
+              "type": "Microsoft.DesktopVirtualization/workspaces",
+              "apiVersion": "2025-10-10",
+              "name": "[variables('settings').avd.workspaceName]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "friendlyName": "[parameters('workspaceFriendlyName')]",
+                "publicNetworkAccess": "Enabled",
+                "applicationGroupReferences": [
+                  "[resourceId('Microsoft.DesktopVirtualization/applicationGroups', format('{0}-DAG', variables('settings').avd.hostpoolName))]"
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.DesktopVirtualization/applicationGroups', format('{0}-DAG', variables('settings').avd.hostpoolName))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.DesktopVirtualization/applicationGroups', format('{0}-DAG', variables('settings').avd.hostpoolName))]",
+              "name": "[guid(resourceId('Microsoft.DesktopVirtualization/applicationGroups', format('{0}-DAG', variables('settings').avd.hostpoolName)), parameters('avdUsersGroupObjectId'), variables('desktopUserRoleId'))]",
+              "properties": {
+                "principalId": "[parameters('avdUsersGroupObjectId')]",
+                "principalType": "Group",
+                "roleDefinitionId": "[variables('desktopUserRoleId')]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.DesktopVirtualization/applicationGroups', format('{0}-DAG', variables('settings').avd.hostpoolName))]"
+              ]
+            },
+            {
+              "copy": {
+                "name": "sessionHost",
+                "count": "[length(range(0, parameters('vmNumberOfInstances')))]"
+              },
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2025-04-01",
+              "name": "[format('avd-session-host-{0}', range(0, parameters('vmNumberOfInstances'))[copyIndex()])]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "vmAdministratorAccountPassword": {
+                    "value": "[parameters('vmAdministratorAccountPassword')]"
+                  },
+                  "registrationToken": {
+                    "value": "[listRegistrationTokens(resourceId('Microsoft.DesktopVirtualization/hostPools', variables('settings').avd.hostpoolName), '2025-10-10').value[0].token]"
+                  },
+                  "avdUsersGroupObjectId": {
+                    "value": "[parameters('avdUsersGroupObjectId')]"
+                  },
+                  "hostPoolName": {
+                    "value": "[variables('settings').avd.hostpoolName]"
+                  },
+                  "networkResourceGroupName": {
+                    "value": "[parameters('networkResourceGroupName')]"
+                  },
+                  "virtualNetworkName": {
+                    "value": "[parameters('virtualNetworkName')]"
+                  },
+                  "subnetName": {
+                    "value": "[parameters('subnetName')]"
+                  },
+                  "location": {
+                    "value": "[parameters('location')]"
+                  },
+                  "imageSku": {
+                    "value": "[parameters('imageSku')]"
+                  },
+                  "vmSize": {
+                    "value": "[parameters('vmSize')]"
+                  },
+                  "vmDiskType": {
+                    "value": "[parameters('vmDiskType')]"
+                  },
+                  "vmNamePrefix": {
+                    "value": "[parameters('vmNamePrefix')]"
+                  },
+                  "vmIndex": {
+                    "value": "[range(0, parameters('vmNumberOfInstances'))[copyIndex()]]"
+                  },
+                  "customConfigurationScriptUrl": {
+                    "value": "[parameters('customConfigurationScriptUrl')]"
+                  },
+                  "intune": {
+                    "value": "[parameters('intune')]"
+                  },
+                  "autoShutdownTime": {
+                    "value": "[parameters('autoShutdownTime')]"
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.42.1.51946",
+                      "templateHash": "14065960091143019465"
+                    }
+                  },
+                  "parameters": {
+                    "vmAdministratorAccountPassword": {
+                      "type": "securestring",
+                      "minLength": 12,
+                      "maxLength": 123
+                    },
+                    "registrationToken": {
+                      "type": "securestring",
+                      "minLength": 1
+                    },
+                    "avdUsersGroupObjectId": {
+                      "type": "string",
+                      "minLength": 36,
+                      "maxLength": 36
+                    },
+                    "hostPoolName": {
+                      "type": "string"
+                    },
+                    "networkResourceGroupName": {
+                      "type": "string"
+                    },
+                    "virtualNetworkName": {
+                      "type": "string"
+                    },
+                    "subnetName": {
+                      "type": "string"
+                    },
+                    "location": {
+                      "type": "string"
+                    },
+                    "imageSku": {
+                      "type": "string"
+                    },
+                    "vmSize": {
+                      "type": "string"
+                    },
+                    "vmDiskType": {
+                      "type": "string"
+                    },
+                    "vmNamePrefix": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 13
+                    },
+                    "vmIndex": {
+                      "type": "int",
+                      "minValue": 0,
+                      "maxValue": 9
+                    },
+                    "autoShutdownTime": {
+                      "type": "string"
+                    },
+                    "customConfigurationScriptUrl": {
+                      "type": "string"
+                    },
+                    "intune": {
+                      "type": "bool"
+                    }
+                  },
+                  "variables": {
+                    "$fxv#0": {
+                      "location": "japaneast",
+                      "network": {
+                        "vnetName": "vnet-vdi",
+                        "addressPrefix": "10.10.0.0/16",
+                        "subnets": [
+                          {
+                            "name": "snet-cloudpc",
+                            "addressPrefix": "10.10.1.0/24"
+                          },
+                          {
+                            "name": "snet-avd",
+                            "addressPrefix": "10.10.2.0/24"
+                          }
+                        ]
+                      },
+                      "avd": {
+                        "hostpoolName": "DefaultHostPool",
+                        "workspaceName": "AVD Session Host",
+                        "vmAdminUsername": "vmadmin",
+                        "vmDiskSizeGB": 128,
+                        "imagePublisher": "microsoftwindowsdesktop",
+                        "imageOffer": "windows-11",
+                        "imageVersion": "latest",
+                        "customConfigurationScriptUrl": "https://raw.githubusercontent.com/Yuyanz9/avd-hands-on/7b0923fcc78335ac25bafc418d9d3ab4538292d8/scripts/JPNOFLNG.ps1",
+                        "configurationPackageUrl": "https://wvdportalstorageblob.blob.core.windows.net/galleryartifacts/Configuration_1.0.03537.1471.zip"
+                      }
+                    },
+                    "settings": "[variables('$fxv#0')]",
+                    "vmName": "[format('{0}-{1}', parameters('vmNamePrefix'), parameters('vmIndex'))]",
+                    "imageOffer": "[if(endsWith(parameters('imageSku'), '-m365'), 'office-365', variables('settings').avd.imageOffer)]",
+                    "vmUserLoginRoleId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'fb879df8-f326-4884-b1cf-06f3ad86be52')]"
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.Network/networkInterfaces",
+                      "apiVersion": "2024-05-01",
+                      "name": "[format('{0}-nic', variables('vmName'))]",
+                      "location": "[parameters('location')]",
+                      "properties": {
+                        "ipConfigurations": [
+                          {
+                            "name": "ipconfig1",
+                            "properties": {
+                              "privateIPAllocationMethod": "Dynamic",
+                              "subnet": {
+                                "id": "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('networkResourceGroupName')), 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('subnetName'))]"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "Microsoft.Compute/virtualMachines",
+                      "apiVersion": "2024-11-01",
+                      "name": "[variables('vmName')]",
+                      "location": "[parameters('location')]",
+                      "identity": {
+                        "type": "SystemAssigned"
+                      },
+                      "properties": {
+                        "licenseType": "Windows_Client",
+                        "hardwareProfile": {
+                          "vmSize": "[parameters('vmSize')]"
+                        },
+                        "storageProfile": {
+                          "imageReference": {
+                            "publisher": "[variables('settings').avd.imagePublisher]",
+                            "offer": "[variables('imageOffer')]",
+                            "sku": "[parameters('imageSku')]",
+                            "version": "[variables('settings').avd.imageVersion]"
+                          },
+                          "osDisk": {
+                            "createOption": "FromImage",
+                            "diskSizeGB": "[variables('settings').avd.vmDiskSizeGB]",
+                            "deleteOption": "Delete",
+                            "managedDisk": {
+                              "storageAccountType": "[parameters('vmDiskType')]"
+                            }
+                          }
+                        },
+                        "osProfile": {
+                          "computerName": "[variables('vmName')]",
+                          "adminUsername": "[variables('settings').avd.vmAdminUsername]",
+                          "adminPassword": "[parameters('vmAdministratorAccountPassword')]",
+                          "windowsConfiguration": {
+                            "provisionVMAgent": true,
+                            "enableAutomaticUpdates": true
+                          }
+                        },
+                        "networkProfile": {
+                          "networkInterfaces": [
+                            {
+                              "id": "[resourceId('Microsoft.Network/networkInterfaces', format('{0}-nic', variables('vmName')))]",
+                              "properties": {
+                                "deleteOption": "Delete"
+                              }
+                            }
+                          ]
+                        },
+                        "securityProfile": {
+                          "securityType": "TrustedLaunch",
+                          "uefiSettings": {
+                            "secureBootEnabled": true,
+                            "vTpmEnabled": true
+                          }
+                        },
+                        "diagnosticsProfile": {
+                          "bootDiagnostics": {
+                            "enabled": true
+                          }
+                        }
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Network/networkInterfaces', format('{0}-nic', variables('vmName')))]"
+                      ]
+                    },
+                    {
+                      "type": "Microsoft.Authorization/roleAssignments",
+                      "apiVersion": "2022-04-01",
+                      "scope": "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]",
+                      "name": "[guid(resourceId('Microsoft.Compute/virtualMachines', variables('vmName')), parameters('avdUsersGroupObjectId'), variables('vmUserLoginRoleId'))]",
+                      "properties": {
+                        "principalId": "[parameters('avdUsersGroupObjectId')]",
+                        "principalType": "Group",
+                        "roleDefinitionId": "[variables('vmUserLoginRoleId')]"
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]"
+                      ]
+                    },
+                    {
+                      "type": "Microsoft.Compute/virtualMachines/extensions",
+                      "apiVersion": "2024-11-01",
+                      "name": "[format('{0}/{1}', variables('vmName'), 'AADLoginForWindows')]",
+                      "location": "[parameters('location')]",
+                      "properties": {
+                        "publisher": "Microsoft.Azure.ActiveDirectory",
+                        "type": "AADLoginForWindows",
+                        "typeHandlerVersion": "2.0",
+                        "autoUpgradeMinorVersion": true,
+                        "settings": "[if(parameters('intune'), createObject('mdmId', '0000000a-0000-0000-c000-000000000000'), null())]"
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]"
+                      ]
+                    },
+                    {
+                      "type": "Microsoft.Compute/virtualMachines/extensions",
+                      "apiVersion": "2024-11-01",
+                      "name": "[format('{0}/{1}', variables('vmName'), 'MicrosoftPowershellDSC')]",
+                      "location": "[parameters('location')]",
+                      "properties": {
+                        "publisher": "Microsoft.Powershell",
+                        "type": "DSC",
+                        "typeHandlerVersion": "2.73",
+                        "autoUpgradeMinorVersion": true,
+                        "settings": {
+                          "modulesUrl": "[variables('settings').avd.configurationPackageUrl]",
+                          "configurationFunction": "Configuration.ps1\\AddSessionHost",
+                          "properties": {
+                            "hostPoolName": "[parameters('hostPoolName')]",
+                            "aadJoin": true,
+                            "UseAgentDownloadEndpoint": true
+                          }
+                        },
+                        "protectedSettings": {
+                          "properties": {
+                            "registrationInfoToken": "[parameters('registrationToken')]"
+                          }
+                        }
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Compute/virtualMachines/extensions', variables('vmName'), 'AADLoginForWindows')]",
+                        "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]"
+                      ]
+                    },
+                    {
+                      "condition": "[not(empty(parameters('customConfigurationScriptUrl')))]",
+                      "type": "Microsoft.Compute/virtualMachines/extensions",
+                      "apiVersion": "2024-11-01",
+                      "name": "[format('{0}/{1}', variables('vmName'), 'Microsoft.Compute.CustomScriptExtension')]",
+                      "location": "[parameters('location')]",
+                      "properties": {
+                        "publisher": "Microsoft.Compute",
+                        "type": "CustomScriptExtension",
+                        "typeHandlerVersion": "1.10",
+                        "autoUpgradeMinorVersion": true,
+                        "protectedSettings": {
+                          "fileUris": [
+                            "[parameters('customConfigurationScriptUrl')]"
+                          ],
+                          "commandToExecute": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$ErrorActionPreference = 'Stop'; $scripts = @(Get-ChildItem -LiteralPath . -Filter *.ps1 -File); if ($scripts.Count -ne 1) { throw 'Expected exactly one downloaded PowerShell script.' }; $LASTEXITCODE = 0; & $scripts[0].FullName; $succeeded = $?; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; if (-not $succeeded) { exit 1 }\""
+                        }
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Compute/virtualMachines/extensions', variables('vmName'), 'MicrosoftPowershellDSC')]",
+                        "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]"
+                      ]
+                    },
+                    {
+                      "type": "Microsoft.DevTestLab/schedules",
+                      "apiVersion": "2018-09-15",
+                      "name": "[format('shutdown-computevm-{0}', variables('vmName'))]",
+                      "location": "[parameters('location')]",
+                      "properties": {
+                        "dailyRecurrence": {
+                          "time": "[replace(parameters('autoShutdownTime'), ':', '')]"
+                        },
+                        "notificationSettings": {
+                          "emailRecipient": "",
+                          "status": "Disabled",
+                          "timeInMinutes": 30,
+                          "webhookUrl": ""
+                        },
+                        "status": "Enabled",
+                        "targetResourceId": "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]",
+                        "taskType": "ComputeVmShutdownTask",
+                        "timeZoneId": "Tokyo Standard Time"
+                      },
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]"
+                      ]
+                    }
+                  ],
+                  "outputs": {
+                    "sessionHostName": {
+                      "type": "string",
+                      "value": "[variables('vmName')]"
+                    }
+                  }
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.DesktopVirtualization/hostPools', variables('settings').avd.hostpoolName)]"
+              ]
+            }
+          ],
+          "outputs": {
+            "hostpoolName": {
+              "type": "string",
+              "value": "[variables('settings').avd.hostpoolName]"
+            },
+            "workspaceName": {
+              "type": "string",
+              "value": "[variables('settings').avd.workspaceName]"
+            },
+            "sessionHostName": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Resources/deployments', format('avd-session-host-{0}', range(0, parameters('vmNumberOfInstances'))[0])), '2025-04-01').outputs.sessionHostName.value]"
+            },
+            "sessionHostNames": {
+              "type": "array",
+              "copy": {
+                "count": "[length(range(0, parameters('vmNumberOfInstances')))]",
+                "input": "[reference(resourceId('Microsoft.Resources/deployments', format('avd-session-host-{0}', range(0, parameters('vmNumberOfInstances'))[range(0, parameters('vmNumberOfInstances'))[copyIndex()]])), '2025-04-01').outputs.sessionHostName.value]"
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "hostpoolName": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'avd-editable-configuration'), '2025-04-01').outputs.hostpoolName.value]"
+    },
+    "workspaceName": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'avd-editable-configuration'), '2025-04-01').outputs.workspaceName.value]"
+    },
+    "sessionHostName": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'avd-editable-configuration'), '2025-04-01').outputs.sessionHostName.value]"
+    },
+    "sessionHostNames": {
+      "type": "array",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'avd-editable-configuration'), '2025-04-01').outputs.sessionHostNames.value]"
+    }
+  }
+}
