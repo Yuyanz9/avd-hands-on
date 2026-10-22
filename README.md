@@ -6,7 +6,7 @@
 
 Deploy ボタンは `main` ブランチの ARM テンプレートを参照します。技術的な入口のみなので、PowerPoint と講師の指示なしに実行しないでください。
 
-### Network (NAT Gateway)
+### 1. Network (NAT Gateway)
 
 <!-- deploy-button-network:start -->
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2Fmain%2Ftemplates%2Fnetwork.json)
@@ -14,7 +14,7 @@ Deploy ボタンは `main` ブランチの ARM テンプレートを参照しま
 
 **Ctrl＋クリックで Azure portal を別タブで開けます（macOS は Command＋クリック）。**
 
-### Network (NAT-free validation)
+### 2. Network（検証用）
 
 <!-- deploy-button-network-validation:start -->
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2Fmain%2Ftemplates%2Fnetwork-validation.json)
@@ -22,7 +22,7 @@ Deploy ボタンは `main` ブランチの ARM テンプレートを参照しま
 
 **Ctrl＋クリックで Azure portal を別タブで開けます（macOS は Command＋クリック）。**
 
-### AVD
+### 3. AVD
 
 <!-- deploy-button-avd:start -->
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2Fmain%2Ftemplates%2Favd.json)
@@ -30,7 +30,7 @@ Deploy ボタンは `main` ブランチの ARM テンプレートを参照しま
 
 **Ctrl＋クリックで Azure portal を別タブで開けます（macOS は Command＋クリック）。**
 
-### Add session hosts
+### 4. Add session hosts
 
 <!-- deploy-button-session-host:start -->
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYuyanz9%2Favd-hands-on%2Fmain%2Ftemplates%2Fsession-host.json)
